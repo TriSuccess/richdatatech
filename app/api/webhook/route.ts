@@ -3,14 +3,15 @@ import Stripe from 'stripe';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 
-// Initialize Firebase only once
+// Initialize Firebase only once using the full service account JSON
 if (!getApps().length) {
+  const serviceAccountJSON = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  if (!serviceAccountJSON) {
+    throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY is not set in environment variables!');
+  }
+  const serviceAccount = JSON.parse(serviceAccountJSON);
   initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID!,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY!.replace(/\\n/g, '\n'),
-    }),
+    credential: cert(serviceAccount),
   });
 }
 
@@ -19,11 +20,15 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 export async function POST(req: NextRequest) {
   const sig = req.headers.get('stripe-signature');
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   if (!sig) {
     console.error('Missing Stripe signature header.');
     return NextResponse.json({ error: 'Missing Stripe signature' }, { status: 400 });
+  }
+  if (!endpointSecret) {
+    console.error('Missing STRIPE_WEBHOOK_SECRET environment variable.');
+    return NextResponse.json({ error: 'Missing Stripe webhook secret' }, { status: 500 });
   }
 
   // Get the raw request body as a Buffer
@@ -43,10 +48,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 });
   }
 
-  // Use the user id from Stripe session metadata!
+  // Handle Stripe events
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
-    const userId = session.metadata?.uid; // <-- Use the metadata uid passed when you created the session
+    const userId = session.metadata?.uid;
 
     if (userId) {
       await db
