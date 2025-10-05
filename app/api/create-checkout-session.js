@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: [
-        { price: "price_XXXX", quantity: 1 } // replace with your Stripe Price ID
+        { price: "price_1RqaLeJOLIr6wNsmGRK6tXXP", quantity: 1 } // replace with your Stripe Price ID
       ],
       success_url: `${req.headers.origin}/course1.html?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.origin}/course1.html?canceled=true`,
