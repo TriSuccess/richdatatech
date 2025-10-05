@@ -1,52 +1,74 @@
-import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
-import admin from 'firebase-admin';
+// api/webhook.js - Deploy this file to Vercel
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const admin = require('firebase-admin');
 
-// Initialize Firebase Admin SDK
+// Initialize Firebase (only once)
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
       projectId: process.env.FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
     }),
+    databaseURL: process.env.FIREBASE_DATABASE_URL
   });
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const db = admin.firestore();
 
-export async function POST(req: NextRequest) {
-  const body = await req.text(); // raw text is needed for webhook signature verification
-  const signature = req.headers.get('stripe-signature')!;
-
-  let event: Stripe.Event;
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).end(); // Method Not Allowed
+  }
+  
+  const payload = req.body;
+  const sig = req.headers['stripe-signature'];
+  let event;
 
   try {
-    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
-    console.log('Webhook received:', event.type);
+    // Verify the event came from Stripe
+    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    event = stripe.webhooks.constructEvent(
+      payload.toString(), // Vercel requires the raw body as a string
+      sig,
+      endpointSecret
+    );
   } catch (err) {
-    console.error('Webhook signature verification failed:', err);
-    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+    console.log(`⚠️ Webhook signature verification failed: ${err.message}`);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
   // Handle the event
   switch (event.type) {
     case 'checkout.session.completed':
-      const session = event.data.object as Stripe.Checkout.Session;
-      const uid = session.metadata?.firebaseUid;
-      if (uid) {
+      const session = event.data.object;
+      
+      // Extract user ID from the client_reference_id or metadata
+      const userId = session.client_reference_id || 
+                    (session.metadata && session.metadata.userId);
+      
+      if (userId) {
         try {
-          await admin.firestore().collection('users').doc(uid).update({ isPaid: true });
-          console.log(`User ${uid} marked as paid`);
-        } catch (err) {
-          console.error('Error updating Firestore:', err);
+          // Update Firestore document
+          await db.collection('users').doc(userId).collection('purchases').doc('subscription').update({
+            paid1: true,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+          console.log(`Updated payment status for user: ${userId}`);
+        } catch (error) {
+          console.error(`Error updating Firestore: ${error}`);
+          return res.status(500).send('Error updating database');
         }
+      } else {
+        console.log('No user ID found in the session');
       }
       break;
-    // Add more event types if needed
+      
+    // Add more event types as needed
     default:
-      console.log(`Unhandled event type: ${event.type}`);
+      console.log(`Unhandled event type ${event.type}`);
   }
 
-  return NextResponse.json({ received: true });
+  // Return a 200 response to acknowledge receipt of the event
+  res.status(200).json({received: true});
 }
