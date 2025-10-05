@@ -1,23 +1,21 @@
 import { NextRequest } from "next/server";
 import Stripe from "stripe";
 
-// Initialize Stripe without specifying apiVersion
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(req: NextRequest) {
-  // Get the raw request body as text
-  const body = await req.text();
+  // Get raw Uint8Array instead of string
+  const buf = await req.arrayBuffer();
+  const body = Buffer.from(buf);
 
-  // Get Stripe signature header
   const sig = req.headers.get("stripe-signature");
   if (!sig) return new Response("Missing Stripe signature", { status: 400 });
 
   let event: Stripe.Event;
 
   try {
-    // Verify webhook signature using the raw payload
     event = stripe.webhooks.constructEvent(
-      body,
+      body, // pass Buffer
       sig,
       process.env.STRIPE_WEBHOOK_SECRET!
     );
@@ -27,7 +25,6 @@ export async function POST(req: NextRequest) {
     return new Response(`Webhook Error: ${errMsg}`, { status: 400 });
   }
 
-  // Handle checkout.session.completed
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const uid = session.metadata?.uid;
@@ -35,7 +32,6 @@ export async function POST(req: NextRequest) {
 
     if (uid && productId) {
       console.log(`Purchase recorded for UID: ${uid}, product: ${productId}`);
-      // Replace this with any logic you need, e.g., call your own API
     }
   }
 
