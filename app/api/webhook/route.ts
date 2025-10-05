@@ -1,16 +1,16 @@
-// app/api/webhook/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 
-export const config = {
-  api: {
-    bodyParser: false, // 👈 disable body parsing
-  },
-};
+// Make sure you are NOT using Edge runtime
+// export const runtime = 'nodejs';
 
-// Initialize Firebase
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+  apiVersion: '2023-08-16',
+});
+
+// Firebase initialization
 if (!getApps().length) {
   initializeApp({
     credential: cert({
@@ -22,7 +22,6 @@ if (!getApps().length) {
 }
 
 const db = getFirestore();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 export async function POST(req: NextRequest) {
   const sig = req.headers.get('stripe-signature');
@@ -32,9 +31,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing Stripe signature' }, { status: 400 });
   }
 
-  // ✅ Get raw body as buffer
-  const rawBody = await req.arrayBuffer();
-  const bodyBuffer = Buffer.from(rawBody);
+  // Get the raw body as Buffer
+  const bodyBuffer = Buffer.from(await req.arrayBuffer());
 
   let event: Stripe.Event;
 
@@ -46,31 +44,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 });
   }
 
-  // Handle events
-  switch (event.type) {
-    case 'checkout.session.completed': {
-      const session = event.data.object as Stripe.Checkout.Session;
-      const userId = session.client_reference_id || session.metadata?.userId;
+  // Handle only the event(s) you want
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const userId = session.client_reference_id || session.metadata?.userId;
 
-      if (userId) {
-        await db
-          .collection('users')
-          .doc(userId)
-          .collection('purchases')
-          .doc('subscription')
-          .set(
-            { paid1: true, updatedAt: Timestamp.now() },
-            { merge: true }
-          );
-        console.log(`✅ Updated Firestore for user ${userId}`);
-      } else {
-        console.warn('⚠️ No user ID found in Stripe session');
-      }
-      break;
+    if (userId) {
+      await db
+        .collection('users')
+        .doc(userId)
+        .collection('purchases')
+        .doc('subscription')
+        .set(
+          { paid1: true, updatedAt: Timestamp.now() },
+          { merge: true }
+        );
+      console.log(`✅ Updated Firestore for user ${userId}`);
+    } else {
+      console.warn('⚠️ No user ID found in Stripe session');
     }
-
-    default:
-      console.log(`Unhandled event type: ${event.type}`);
+  } else {
+    console.log(`Unhandled event type: ${event.type}`);
   }
 
   return NextResponse.json({ received: true });
