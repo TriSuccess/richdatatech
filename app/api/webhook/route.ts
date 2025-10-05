@@ -6,9 +6,7 @@ import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 // Make sure you are NOT using Edge runtime
 // export const runtime = 'nodejs';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: '2023-08-16',
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 // Firebase initialization
 if (!getApps().length) {
