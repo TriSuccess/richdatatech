@@ -8,56 +8,20 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DIN:wght@400;700&display=swap');
 
-/* Font for links */
-nav a { 
-  font-family: 'DIN', sans-serif; 
-  text-decoration: none; 
-}
-nav a:hover { 
-  color: #2563eb; 
-}
+/* Header & Nav */
+nav a { font-family: 'DIN', sans-serif; text-decoration: none; }
+nav a:hover { color: #2563eb; }
 
-/* Header layout */
-header { 
-  background: white; 
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
-  padding: 0.15rem 1rem; 
-}
-header .header-top { 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  position: relative; 
-}
+header { background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 0.15rem 1rem; }
+header .header-top { display: flex; justify-content: space-between; align-items: center; position: relative; }
 
 /* Auth box */
 #auth-wrapper { display: table; table-layout: fixed; height: auto; }
-#message-placeholder { 
-  display: table-row; 
-  height: 1rem; 
-  text-align: right; 
-  font-size: 0.7rem; 
-  color: #047857; 
-  vertical-align: middle; 
-}
+#message-placeholder { display: table-row; height: 1rem; text-align: right; font-size: 0.7rem; color: #047857; vertical-align: middle; }
 #auth-row { display: table-row; }
-#auth-box { 
-  display: table-cell; 
-  vertical-align: middle; 
-  text-align: right; 
-  padding-left: 0.5rem; 
-}
-#logged-in-span { 
-  font-size: 0.7rem; 
-  font-weight: normal;  
-  color: #065f46;  
-  opacity: 0; 
-  transition: opacity 0.2s;
-  margin-top: 0.1rem; 
-  display: block;
-}
+#auth-box { display: table-cell; vertical-align: middle; text-align: right; padding-left: 0.5rem; }
+#logged-in-span { font-size: 0.7rem; font-weight: normal; color: #065f46; opacity: 0; transition: opacity 0.2s; margin-top: 0.1rem; display: block; }
 #logged-in-span.visible { opacity: 1; }
-
 .hidden-input { opacity: 0; pointer-events: none; }
 #toggle-link { opacity: 1; transition: opacity 0.2s; font-size: 0.7rem; }
 #toggle-link.hidden-link { opacity: 0; pointer-events: none; }
@@ -65,54 +29,35 @@ header .header-top {
 #input-row { display: flex; justify-content: flex-end; gap: 0.2rem; margin-bottom: 0.05rem; }
 #button-row { display: flex; justify-content: flex-end; gap: 0.1rem; }
 #auth-box a { margin-top: 0.15rem; }
-
 #email-input, #password-input { font-size: 13px; padding: 1px 3px; width: 115px; }
 #action-btn { font-size: 13px; padding: 2px 8px; line-height: 1.2; }
 
-nav.main-nav {
-  display: flex;
-  gap: 1.25rem;
-  font-size: 0.95rem;
-  position: absolute;
-  left: 50%;
-  top: 5%;
-  transform: translateX(-50%);
-}
+nav.main-nav { display: flex; gap: 1.25rem; font-size: 0.95rem; position: absolute; left: 50%; top: 5%; transform: translateX(-50%); }
 
+/* Mobile tweaks */
 @media (max-width: 639px) {
-  nav.main-nav {
-    position: static;
-    flex-direction: row;
-    justify-content: space-around;
-    width: 100%;
-    margin-top: 0.25rem;
-    gap: 2px;
-    font-size: 0.9rem;
-    transform: none;
-  }
+  nav.main-nav { position: static; flex-direction: row; justify-content: space-around; width: 100%; margin-top: 0.25rem; gap: 2px; font-size: 0.9rem; transform: none; }
   header { padding-bottom: 0.15rem; }
   #auth-box { display: flex; flex-direction: column; align-items: flex-end; gap: 0.05rem; }
   #input-row { flex-direction: column; align-items: flex-end; margin-bottom: 0.05rem; }
   #email-input, #password-input, #action-btn { width: 100%; }
 }
 
-/* Paid content */
-#premium-content { display: none; margin-top: 1rem; }
-#locked-content { margin-top: 1rem; }
+/* Paid content styling */
+#paid-content { margin-top: 1rem; }
+#buy-now-btn { cursor: pointer; }
 </style>
 </head>
 <body class="bg-gray-100">
 
 <header>
   <div class="header-top">
-    <!-- Logo -->
     <div>
       <a href="index.html">
         <img src="https://www.richdatatech.com/images/richdatatech.png" alt="RichDataTech Logo" class="h-14 sm:h-16 w-auto object-contain"/>
       </a>
     </div>
 
-    <!-- Auth wrapper -->
     <div id="auth-wrapper">
       <div id="message-placeholder"></div>
       <div id="auth-row">
@@ -143,27 +88,24 @@ nav.main-nav {
 <main class="pt-4 px-4">
   <h1 class="text-xl font-bold">Paid Course Lesson 1</h1>
 
-  <!-- Locked -->
-  <div id="locked-content" class="text-center bg-white p-6 rounded shadow">
-    <p class="mb-4 text-gray-600">This is premium content. Please purchase to unlock full access.</p>
-    <button id="buy-btn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Buy Now</button>
-  </div>
-
-  <!-- Premium -->
-  <div id="premium-content" class="bg-white p-6 rounded shadow">
-    <video controls class="w-full mb-4">
-      <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
-    <p>This is premium text content visible only to paying users.</p>
+  <div id="paid1-wrapper">
+    <button id="buy-now-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Buy Now</button>
+    <div id="paid-content" style="display:none;">
+      <video width="100%" controls>
+        <source src="lesson1.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+      <p>This is premium content for Paid Course 1.</p>
+    </div>
   </div>
 </main>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyBorPU13tVHj-o-28ADUkrXE944GIWhGOI",
   authDomain: "course2-f1bdb.firebaseapp.com",
@@ -178,6 +120,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const COURSE_COLLECTION = "course2";
 
+// DOM elements
 const emailInput = document.getElementById("email-input");
 const passwordInput = document.getElementById("password-input");
 const actionBtn = document.getElementById("action-btn");
@@ -185,18 +128,19 @@ const toggleLink = document.getElementById("toggle-link");
 const loggedInSpan = document.getElementById("logged-in-span");
 const messagePlaceholder = document.getElementById("message-placeholder");
 
-const lockedContent = document.getElementById("locked-content");
-const premiumContent = document.getElementById("premium-content");
-const buyBtn = document.getElementById("buy-btn");
+const buyBtn = document.getElementById("buy-now-btn");
+const paidContent = document.getElementById("paid-content");
 
 let isRegisterMode = false;
 
+// Show temporary messages
 function showMessage(msg, color="green") {
   messagePlaceholder.textContent = msg;
   messagePlaceholder.style.color = color;
   setTimeout(() => { messagePlaceholder.textContent = ""; }, 4000);
 }
 
+// Toggle register/login
 toggleLink.addEventListener("click", e => {
   e.preventDefault();
   if (auth.currentUser) return;
@@ -205,6 +149,7 @@ toggleLink.addEventListener("click", e => {
   toggleLink.textContent = isRegisterMode ? "Already have an account?" : "Don't have an account?";
 });
 
+// Auth handler
 async function handleAuth() {
   const email = emailInput.value.trim();
   const password = passwordInput.value;
@@ -213,10 +158,6 @@ async function handleAuth() {
   if (isRegisterMode) {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      const purchasesMap = {};
-      for (let i=1;i<=10;i++) purchasesMap[`paid${i}`] = false;
-      await setDoc(doc(db, COURSE_COLLECTION, user.uid), { user_id: user.uid, purchases: purchasesMap });
       showMessage("Welcome!");
       passwordInput.value = "";
     } catch (err) { showMessage("Registration failed: "+err.message, "red"); }
@@ -232,36 +173,23 @@ async function handleAuth() {
 actionBtn.addEventListener("click", handleAuth);
 [emailInput, passwordInput].forEach(input => input.addEventListener("keyup", e => { if(e.key==="Enter") handleAuth(); }));
 
-function updatePremiumVisibility(uid) {
+// Check paid access
+async function checkAccess(uid) {
   const docRef = doc(db, COURSE_COLLECTION, uid);
-  onSnapshot(docRef, snap => {
+  const snap = await getDoc(docRef);
+  if (snap.exists()) {
     const data = snap.data();
-    if (data?.purchases?.paid1) {
-      premiumContent.style.display = "block";
-      lockedContent.style.display = "none";
+    if (data.purchases?.paid1) {
+      paidContent.style.display = "block";
+      buyBtn.style.display = "none";
     } else {
-      premiumContent.style.display = "none";
-      lockedContent.style.display = "block";
+      paidContent.style.display = "none";
+      buyBtn.style.display = "block";
     }
-  });
+  }
 }
 
-// Stripe Buy Now click
-buyBtn.addEventListener("click", async () => {
-  const user = auth.currentUser;
-  if (!user) { showMessage("Please log in first", "red"); return; }
-  try {
-    const res = await fetch("/api/create-checkout-session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ uid: user.uid }),
-    });
-    const data = await res.json();
-    if (data.url) window.location.href = data.url;
-    else showMessage("Failed to start checkout", "red");
-  } catch (err) { showMessage("Error connecting to Stripe", "red"); }
-});
-
+// Auth state listener
 onAuthStateChanged(auth, user => {
   if (user) {
     loggedInSpan.classList.add("visible");
@@ -270,7 +198,7 @@ onAuthStateChanged(auth, user => {
     toggleLink.classList.add("hidden-link");
     actionBtn.textContent = "Logout";
     actionBtn.onclick = async () => { await signOut(auth); location.reload(); };
-    updatePremiumVisibility(user.uid);
+    checkAccess(user.uid);
   } else {
     loggedInSpan.classList.remove("visible");
     emailInput.classList.remove("hidden-input");
@@ -278,9 +206,23 @@ onAuthStateChanged(auth, user => {
     toggleLink.classList.remove("hidden-link");
     actionBtn.textContent = isRegisterMode ? "Register" : "Login";
     actionBtn.onclick = handleAuth;
-    premiumContent.style.display = "none";
-    lockedContent.style.display = "block";
+    paidContent.style.display = "none";
+    buyBtn.style.display = "block";
   }
+});
+
+// Stripe checkout
+buyBtn.addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user) return alert("You must log in to purchase.");
+  const res = await fetch("/api/create-checkout-session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ uid: user.uid }),
+  });
+  const data = await res.json();
+  if (data.url) window.location.href = data.url;
+  else alert("Failed to start checkout.");
 });
 </script>
 
