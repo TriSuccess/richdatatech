@@ -1,7 +1,7 @@
 // app/api/webhook/route.ts
 import { NextRequest } from "next/server";
 import Stripe from "stripe";
-import { initializeApp, cert } from "firebase-admin/app";
+import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 // Declare global property for TypeScript
@@ -9,15 +9,29 @@ declare global {
   var firebaseAdminInitialized: boolean | undefined;
 }
 
-// Initialize Stripe without specifying apiVersion
+// Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-// Initialize Firebase Admin once
+// Safely initialize Firebase Admin once
 if (!globalThis.firebaseAdminInitialized) {
-  initializeApp({
-    credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT!)),
-  });
-  globalThis.firebaseAdminInitialized = true;
+  const serviceAccountStr = process.env.FIREBASE_SERVICE_ACCOUNT;
+
+  if (!serviceAccountStr) {
+    throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is missing");
+  }
+
+  try {
+    const serviceAccount = JSON.parse(serviceAccountStr);
+    if (!getApps().length) {
+      initializeApp({
+        credential: cert(serviceAccount),
+      });
+    }
+    globalThis.firebaseAdminInitialized = true;
+  } catch (err) {
+    console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT:", err);
+    throw new Error("Invalid FIREBASE_SERVICE_ACCOUNT JSON");
+  }
 }
 
 const db = getFirestore();
@@ -29,6 +43,7 @@ export async function POST(req: NextRequest) {
   if (!sig) return new Response("Missing Stripe signature", { status: 400 });
 
   let event: Stripe.Event;
+
   try {
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (err: unknown) {
