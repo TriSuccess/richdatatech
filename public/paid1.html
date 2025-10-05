@@ -3,19 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paid Courses – RichDataTech</title>
+<title>Paid Course 1 – RichDataTech</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DIN:wght@400;700&display=swap');
 
-/* Header & Nav */
 nav a { font-family: 'DIN', sans-serif; text-decoration: none; }
 nav a:hover { color: #2563eb; }
 
 header { background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 0.15rem 1rem; }
 header .header-top { display: flex; justify-content: space-between; align-items: center; position: relative; }
 
-/* Auth box */
 #auth-wrapper { display: table; table-layout: fixed; height: auto; }
 #message-placeholder { display: table-row; height: 1rem; text-align: right; font-size: 0.7rem; color: #047857; vertical-align: middle; }
 #auth-row { display: table-row; }
@@ -34,7 +32,6 @@ header .header-top { display: flex; justify-content: space-between; align-items:
 
 nav.main-nav { display: flex; gap: 1.25rem; font-size: 0.95rem; position: absolute; left: 50%; top: 5%; transform: translateX(-50%); }
 
-/* Mobile tweaks */
 @media (max-width: 639px) {
   nav.main-nav { position: static; flex-direction: row; justify-content: space-around; width: 100%; margin-top: 0.25rem; gap: 2px; font-size: 0.9rem; transform: none; }
   header { padding-bottom: 0.15rem; }
@@ -43,7 +40,6 @@ nav.main-nav { display: flex; gap: 1.25rem; font-size: 0.95rem; position: absolu
   #email-input, #password-input, #action-btn { width: 100%; }
 }
 
-/* Paid content styling */
 .paid-content { margin-top: 1rem; display: none; }
 .buy-btn { cursor: pointer; margin-bottom: 0.5rem; }
 </style>
@@ -86,32 +82,17 @@ nav.main-nav { display: flex; gap: 1.25rem; font-size: 0.95rem; position: absolu
 </header>
 
 <main class="pt-4 px-4">
-  <h1 class="text-xl font-bold">Paid Courses</h1>
+  <h1 class="text-xl font-bold">Paid Course 1</h1>
 
-  <div id="courses-wrapper">
-    <!-- Repeat for paid1 to paid10 -->
-    <div class="course-item" data-product-id="paid1">
-      <button class="buy-btn bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Buy Course 1</button>
-      <div class="paid-content">
-        <video width="100%" controls>
-          <source src="lesson1.mp4" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
-        <p>This is premium content for Course 1.</p>
-      </div>
+  <div class="course-item" data-product-id="paid1">
+    <button class="buy-btn bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Buy Course 1</button>
+    <div class="paid-content">
+      <video width="100%" controls>
+        <source src="lesson1.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+      <p>This is premium content for Course 1.</p>
     </div>
-
-    <div class="course-item" data-product-id="paid2">
-      <button class="buy-btn bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Buy Course 2</button>
-      <div class="paid-content">
-        <video width="100%" controls>
-          <source src="lesson2.mp4" type="video/mp4">
-        </video>
-        <p>This is premium content for Course 2.</p>
-      </div>
-    </div>
-
-    <!-- Add more courses up to paid10 similarly -->
   </div>
 </main>
 
@@ -120,7 +101,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyBorPU13tVHj-o-28ADUkrXE944GIWhGOI",
   authDomain: "course2-f1bdb.firebaseapp.com",
@@ -135,7 +115,6 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const COURSE_COLLECTION = "course2";
 
-// DOM elements
 const emailInput = document.getElementById("email-input");
 const passwordInput = document.getElementById("password-input");
 const actionBtn = document.getElementById("action-btn");
@@ -143,16 +122,17 @@ const toggleLink = document.getElementById("toggle-link");
 const loggedInSpan = document.getElementById("logged-in-span");
 const messagePlaceholder = document.getElementById("message-placeholder");
 
+const buyBtn = document.querySelector(".buy-btn");
+const paidContent = document.querySelector(".paid-content");
+
 let isRegisterMode = false;
 
-// Show temporary messages
 function showMessage(msg, color="green") {
   messagePlaceholder.textContent = msg;
   messagePlaceholder.style.color = color;
   setTimeout(() => { messagePlaceholder.textContent = ""; }, 4000);
 }
 
-// Toggle register/login
 toggleLink.addEventListener("click", e => {
   e.preventDefault();
   if (auth.currentUser) return;
@@ -161,7 +141,6 @@ toggleLink.addEventListener("click", e => {
   toggleLink.textContent = isRegisterMode ? "Already have an account?" : "Don't have an account?";
 });
 
-// Auth handler
 async function handleAuth() {
   const email = emailInput.value.trim();
   const password = passwordInput.value;
@@ -185,26 +164,18 @@ async function handleAuth() {
 actionBtn.addEventListener("click", handleAuth);
 [emailInput, passwordInput].forEach(input => input.addEventListener("keyup", e => { if(e.key==="Enter") handleAuth(); }));
 
-// Check paid access for multiple courses
 async function checkAccess(uid) {
   const docRef = doc(db, COURSE_COLLECTION, uid);
   const snap = await getDoc(docRef);
-  if (snap.exists()) {
-    const data = snap.data();
-    document.querySelectorAll(".course-item").forEach(course => {
-      const productId = course.dataset.productId;
-      if (data.purchases?.[productId]) {
-        course.querySelector(".paid-content").style.display = "block";
-        course.querySelector(".buy-btn").style.display = "none";
-      } else {
-        course.querySelector(".paid-content").style.display = "none";
-        course.querySelector(".buy-btn").style.display = "block";
-      }
-    });
+  if (snap.exists() && snap.data().purchases?.["paid1"]) {
+    paidContent.style.display = "block";
+    buyBtn.style.display = "none";
+  } else {
+    paidContent.style.display = "none";
+    buyBtn.style.display = "block";
   }
 }
 
-// Auth state listener
 onAuthStateChanged(auth, user => {
   if (user) {
     loggedInSpan.classList.add("visible");
@@ -221,44 +192,37 @@ onAuthStateChanged(auth, user => {
     toggleLink.classList.remove("hidden-link");
     actionBtn.textContent = isRegisterMode ? "Register" : "Login";
     actionBtn.onclick = handleAuth;
-    document.querySelectorAll(".course-item").forEach(course => {
-      course.querySelector(".paid-content").style.display = "none";
-      course.querySelector(".buy-btn").style.display = "block";
-    });
+    paidContent.style.display = "none";
+    buyBtn.style.display = "block";
   }
 });
 
-// Stripe checkout for multiple courses
-document.querySelectorAll(".buy-btn").forEach(btn => {
-  btn.addEventListener("click", async () => {
-    const user = auth.currentUser;
-    if (!user) return alert("You must log in to purchase.");
-    const courseDiv = btn.closest(".course-item");
-    const productId = courseDiv.dataset.productId;
+// Stripe checkout for paid1 only
+buyBtn.addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user) return alert("You must log in to purchase.");
 
-    try {
-      const res = await fetch("https://richdatatech.vercel.app/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          uid: user.uid,
-          productId,
-          items: [
-            { name: `Course ${productId.replace("paid","")}`, price: 1000, quantity: 1 }
-          ]
-        }),
-      });
+  try {
+    const res = await fetch("https://richdatatech.vercel.app/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        uid: user.uid,
+        productId: "paid1",
+        items: [
+          { price: "price_1RqaLeJOLIr6wNsmGRK6tXXP" }
+        ]
+      }),
+    });
 
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else alert("Failed to start checkout.");
-    } catch (err) {
-      console.error("Checkout error:", err);
-      alert("Checkout failed.");
-    }
-  });
+    const data = await res.json();
+    if (data.url) window.location.href = data.url;
+    else alert("Failed to start checkout.");
+  } catch (err) {
+    console.error("Checkout error:", err);
+    alert("Checkout failed.");
+  }
 });
 </script>
-
 </body>
 </html>

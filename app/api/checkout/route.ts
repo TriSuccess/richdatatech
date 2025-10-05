@@ -17,22 +17,21 @@ export async function POST(req: NextRequest) {
   try {
     const { uid, items } = (await req.json()) as {
       uid: string;
-      items: { name: string; price: number; quantity: number }[];
+      items: { price: string }[]; // only Price ID now
     };
 
     if (!uid || !items?.length) {
-      return new Response(JSON.stringify({ error: "Missing UID or items" }), { status: 400, headers: corsHeaders });
+      return new Response(JSON.stringify({ error: "Missing UID or items" }), {
+        status: 400,
+        headers: corsHeaders,
+      });
     }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: items.map((item) => ({
-        price_data: {
-          currency: "usd",
-          product_data: { name: item.name },
-          unit_amount: item.price * 100,
-        },
-        quantity: item.quantity,
+        price: item.price, // Stripe Price ID
+        quantity: 1,       // default to 1
       })),
       mode: "payment",
       success_url: `${req.headers.get("origin")}/success`,
@@ -40,10 +39,16 @@ export async function POST(req: NextRequest) {
       metadata: { uid }, // store UID for webhook
     });
 
-    return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: corsHeaders });
+    return new Response(JSON.stringify({ url: session.url }), {
+      status: 200,
+      headers: corsHeaders,
+    });
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : "Unknown error";
     console.error("Stripe Checkout error:", errMsg);
-    return new Response(JSON.stringify({ error: errMsg }), { status: 500, headers: corsHeaders });
+    return new Response(JSON.stringify({ error: errMsg }), {
+      status: 500,
+      headers: corsHeaders,
+    });
   }
 }
