@@ -4,12 +4,13 @@ import Stripe from "stripe";
 import { initializeApp, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
-// Declare global property for Firebase Admin initialization
+// Declare global property for TypeScript
 declare global {
   var firebaseAdminInitialized: boolean | undefined;
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2022-11-15" });
+// Initialize Stripe without specifying apiVersion
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 // Initialize Firebase Admin once
 if (!globalThis.firebaseAdminInitialized) {
@@ -28,7 +29,6 @@ export async function POST(req: NextRequest) {
   if (!sig) return new Response("Missing Stripe signature", { status: 400 });
 
   let event: Stripe.Event;
-
   try {
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (err: unknown) {
@@ -40,13 +40,13 @@ export async function POST(req: NextRequest) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const uid = session.metadata?.uid;
-    const productId = session.metadata?.productId; // e.g., "paid1", "paid2", ..., "paid10"
+    const productId = session.metadata?.productId; // e.g., "paid1", "paid2"
 
     if (uid && productId) {
       try {
         await db.collection("course2").doc(uid).set(
-          { purchases: { [productId]: true } }, // dynamic course key
-          { merge: true } // preserve other purchases
+          { purchases: { [productId]: true } },
+          { merge: true } // preserves existing purchases
         );
         console.log(`Purchase recorded for UID: ${uid}, product: ${productId}`);
       } catch (err) {
