@@ -15,17 +15,16 @@ export async function POST(req: NextRequest) {
 
   try {
     event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
-  } catch (err: any) {
-    console.error('Webhook signature verification failed:', err.message);
-    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : 'Unknown error';
+    console.error('Webhook signature verification failed:', errMsg);
+    return new Response(`Webhook Error: ${errMsg}`, { status: 400 });
   }
 
-  // Handle specific event types
   switch (event.type) {
     case 'checkout.session.completed':
       const session = event.data.object as Stripe.Checkout.Session;
       console.log('Checkout session completed:', session);
-      // You can fulfill the order here
       break;
 
     default:

@@ -5,7 +5,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(req: NextRequest) {
   try {
-    const { items } = await req.json();
+    const { items } = await req.json() as { items: { name: string; price: number; quantity: number }[] };
 
     if (!items || !items.length) {
       return new Response(JSON.stringify({ error: 'No items provided' }), { status: 400 });
@@ -30,8 +30,9 @@ export async function POST(req: NextRequest) {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
-  } catch (error: any) {
-    console.error('Stripe Checkout error:', error.message);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Stripe Checkout error:', errMsg);
+    return new Response(JSON.stringify({ error: errMsg }), { status: 500 });
   }
 }
