@@ -22,9 +22,7 @@ if (!getApps().length) {
 }
 
 const db = getFirestore();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20', // always good to pin a version
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 export async function POST(req: NextRequest) {
   const sig = req.headers.get('stripe-signature');
