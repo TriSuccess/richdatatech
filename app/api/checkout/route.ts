@@ -1,19 +1,22 @@
+import { NextRequest } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-export async function POST(req) {
+export async function POST(req: NextRequest) {
   try {
     const { items } = await req.json();
+
+    if (!items || !items.length) {
+      return new Response(JSON.stringify({ error: 'No items provided' }), { status: 400 });
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: items.map(item => ({
         price_data: {
           currency: 'usd',
-          product_data: {
-            name: item.name,
-          },
+          product_data: { name: item.name },
           unit_amount: item.price * 100,
         },
         quantity: item.quantity,
@@ -27,8 +30,8 @@ export async function POST(req) {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
-  } catch (err) {
-    console.error(err);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+  } catch (error: any) {
+    console.error('Stripe Checkout error:', error.message);
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 }

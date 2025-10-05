@@ -1,43 +1,36 @@
-import Stripe from "stripe";
-import { getFirestore, doc, updateDoc } from "firebase-admin/firestore";
-import admin from "firebase-admin";
+import { NextRequest } from 'next/server';
+import Stripe from 'stripe';
 
-if (!admin.apps.length) {
-  admin.initializeApp({ credential: admin.credential.applicationDefault() });
-}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+export async function POST(req: NextRequest) {
+  const sig = req.headers.get('stripe-signature');
+  const body = await req.text();
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+  if (!sig) {
+    return new Response('Missing Stripe signature', { status: 400 });
+  }
 
-export default async function handler(req, res) {
-  const sig = req.headers["stripe-signature"];
-  const buf = await new Promise((resolve) => {
-    let data = "";
-    req.on("data", (chunk) => (data += chunk));
-    req.on("end", () => resolve(Buffer.from(data)));
-  });
+  let event: Stripe.Event;
 
-  let event;
   try {
-    event = stripe.webhooks.constructEvent(buf, sig, process.env.STRIPE_WEBHOOK_SECRET);
-  } catch (err) {
-    console.error("Webhook signature error:", err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
+  } catch (err: any) {
+    console.error('Webhook signature verification failed:', err.message);
+    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
-    const uid = session.metadata.uid;
-    const db = getFirestore();
-    await updateDoc(doc(db, "course2", uid), {
-      "purchases.paid1": true,
-    });
+  // Handle specific event types
+  switch (event.type) {
+    case 'checkout.session.completed':
+      const session = event.data.object as Stripe.Checkout.Session;
+      console.log('Checkout session completed:', session);
+      // You can fulfill the order here
+      break;
+
+    default:
+      console.log(`Unhandled event type: ${event.type}`);
   }
 
-  res.status(200).json({ received: true });
+  return new Response(JSON.stringify({ received: true }), { status: 200 });
 }
