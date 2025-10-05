@@ -1,74 +1,115 @@
-// api/webhook.js - Deploy this file to Vercel
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const admin = require('firebase-admin');
+// app/api/webhook/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import Stripe from 'stripe';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 
-// Initialize Firebase (only once)
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+// Initialize Firebase
+if (!getApps().length) {
+  initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID as string,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL as string,
+      privateKey: (process.env.FIREBASE_PRIVATE_KEY as string).replace(/\\n/g, '\n'),
     }),
-    databaseURL: process.env.FIREBASE_DATABASE_URL
   });
 }
 
-const db = admin.firestore();
+const db = getFirestore();
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+  apiVersion: '2023-10-16', // Use the latest API version
+});
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).end(); // Method Not Allowed
+// This is required for Next.js App Router
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+async function getRawBody(req: NextRequest): Promise<string> {
+  const reader = req.body?.getReader();
+  if (!reader) throw new Error('Request body is empty');
+  
+  const chunks: Uint8Array[] = [];
+  
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
   }
   
-  const payload = req.body;
-  const sig = req.headers['stripe-signature'];
-  let event;
+  const concatenated = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+  let position = 0;
+  
+  for (const chunk of chunks) {
+    concatenated.set(chunk, position);
+    position += chunk.length;
+  }
+  
+  return new TextDecoder().decode(concatenated);
+}
 
+export async function POST(req: NextRequest) {
   try {
-    // Verify the event came from Stripe
-    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    event = stripe.webhooks.constructEvent(
-      payload.toString(), // Vercel requires the raw body as a string
-      sig,
-      endpointSecret
-    );
-  } catch (err) {
-    console.log(`⚠️ Webhook signature verification failed: ${err.message}`);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  // Handle the event
-  switch (event.type) {
-    case 'checkout.session.completed':
-      const session = event.data.object;
-      
-      // Extract user ID from the client_reference_id or metadata
-      const userId = session.client_reference_id || 
-                    (session.metadata && session.metadata.userId);
-      
-      if (userId) {
-        try {
-          // Update Firestore document
-          await db.collection('users').doc(userId).collection('purchases').doc('subscription').update({
-            paid1: true,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-          });
-          console.log(`Updated payment status for user: ${userId}`);
-        } catch (error) {
-          console.error(`Error updating Firestore: ${error}`);
-          return res.status(500).send('Error updating database');
+    // Get the raw request body as a string
+    const payload = await getRawBody(req);
+    
+    // Get the signature from the headers
+    const signature = req.headers.get('stripe-signature');
+    
+    if (!signature) {
+      return NextResponse.json({ error: 'No signature header found' }, { status: 400 });
+    }
+    
+    // Verify the event
+    let event: Stripe.Event;
+    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
+    
+    try {
+      event = stripe.webhooks.constructEvent(payload, signature, endpointSecret);
+    } catch (err: any) {
+      console.log(`⚠️ Webhook signature verification failed: ${err.message}`);
+      return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+    }
+    
+    // Handle the event
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        
+        // Extract user ID from client_reference_id or metadata
+        const userId = session.client_reference_id || 
+                      (session.metadata && session.metadata.userId);
+        
+        if (userId) {
+          try {
+            // Update Firestore document
+            await db.collection('users').doc(userId).collection('purchases').doc('subscription').update({
+              paid1: true,
+              updatedAt: Timestamp.now()
+            });
+            console.log(`Updated payment status for user: ${userId}`);
+          } catch (error) {
+            console.error(`Error updating Firestore: ${error}`);
+            return NextResponse.json({ error: 'Error updating database' }, { status: 500 });
+          }
+        } else {
+          console.log('No user ID found in the session');
         }
-      } else {
-        console.log('No user ID found in the session');
+        break;
       }
-      break;
-      
-    // Add more event types as needed
-    default:
-      console.log(`Unhandled event type ${event.type}`);
+        
+      // Add more event types as needed
+      default:
+        console.log(`Unhandled event type ${event.type}`);
+    }
+    
+    // Return a 200 response to acknowledge receipt of the event
+    return NextResponse.json({ received: true });
+    
+  } catch (error) {
+    console.error('Webhook error:', error);
+    return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
   }
-
-  // Return a 200 response to acknowledge receipt of the event
-  res.status(200).json({received: true});
 }
