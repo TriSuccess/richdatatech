@@ -58,9 +58,10 @@ export async function POST(req: NextRequest) {
         await db
           .collection('course2')
           .doc(userId)
-          .collection('purchases')
-          .doc('paid1')
-          .set({ paid1: true, updatedAt: Timestamp.now() }, { merge: true });
+          .set(
+            { purchases: { paid1: true }, updatedAt: Timestamp.now() },
+            { merge: true }
+          );
         console.log(`✅ Updated Firestore for user ${userId}`);
       } catch (firestoreErr) {
         console.error(`❌ Firestore update failed for user ${userId}:`, firestoreErr);
