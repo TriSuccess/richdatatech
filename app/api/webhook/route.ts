@@ -55,13 +55,11 @@ export async function POST(req: NextRequest) {
 
     if (userId) {
       await db
-        .collection('users')
+        .collection('course2')
         .doc(userId)
         .collection('purchases')
-        .doc('subscription')
-        .set(
-          { paid1: true, updatedAt: Timestamp.now() },
-          { merge: true }
+        .doc('paid1')
+        .set({ paid1: true, updatedAt: Timestamp.now() }, { merge: true });
         );
       console.log(`✅ Updated Firestore for user ${userId}`);
     } else {
