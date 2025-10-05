@@ -18,40 +18,10 @@ if (!getApps().length) {
 const db = getFirestore();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
-// This is required for Next.js App Router
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-async function getRawBody(req: NextRequest): Promise<string> {
-  const reader = req.body?.getReader();
-  if (!reader) throw new Error('Request body is empty');
-  
-  const chunks: Uint8Array[] = [];
-  
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-  }
-  
-  const concatenated = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
-  let position = 0;
-  
-  for (const chunk of chunks) {
-    concatenated.set(chunk, position);
-    position += chunk.length;
-  }
-  
-  return new TextDecoder().decode(concatenated);
-}
-
 export async function POST(req: NextRequest) {
   try {
-    // Get the raw request body as a string
-    const payload = await getRawBody(req);
+    // Get the raw request body
+    const text = await req.text();
     
     // Get the signature from the headers
     const signature = req.headers.get('stripe-signature');
@@ -65,9 +35,12 @@ export async function POST(req: NextRequest) {
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
     
     try {
-      event = stripe.webhooks.constructEvent(payload, signature, endpointSecret);
+      event = stripe.webhooks.constructEvent(
+        text,
+        signature,
+        endpointSecret
+      );
     } catch (err) {
-      // Properly type the error
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       console.log(`⚠️ Webhook signature verification failed: ${errorMessage}`);
       return NextResponse.json({ error: `Webhook Error: ${errorMessage}` }, { status: 400 });
@@ -91,7 +64,6 @@ export async function POST(req: NextRequest) {
             });
             console.log(`Updated payment status for user: ${userId}`);
           } catch (error) {
-            // Properly type the error
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             console.error(`Error updating Firestore: ${errorMessage}`);
             return NextResponse.json({ error: 'Error updating database' }, { status: 500 });
@@ -102,7 +74,6 @@ export async function POST(req: NextRequest) {
         break;
       }
         
-      // Add more event types as needed
       default:
         console.log(`Unhandled event type ${event.type}`);
     }
@@ -111,7 +82,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true });
     
   } catch (error) {
-    // Properly type the error
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Webhook error:', errorMessage);
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
