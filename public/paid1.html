@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paid Course – RichDataTech</title>
+<title>Paid Courses – RichDataTech</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DIN:wght@400;700&display=swap');
@@ -44,8 +44,8 @@ nav.main-nav { display: flex; gap: 1.25rem; font-size: 0.95rem; position: absolu
 }
 
 /* Paid content styling */
-#paid-content { margin-top: 1rem; }
-#buy-now-btn { cursor: pointer; }
+.paid-content { margin-top: 1rem; display: none; }
+.buy-btn { cursor: pointer; margin-bottom: 0.5rem; }
 </style>
 </head>
 <body class="bg-gray-100">
@@ -86,17 +86,32 @@ nav.main-nav { display: flex; gap: 1.25rem; font-size: 0.95rem; position: absolu
 </header>
 
 <main class="pt-4 px-4">
-  <h1 class="text-xl font-bold">Paid Course Lesson 1</h1>
+  <h1 class="text-xl font-bold">Paid Courses</h1>
 
-  <div id="paid1-wrapper">
-    <button id="buy-now-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Buy Now</button>
-    <div id="paid-content" style="display:none;">
-      <video width="100%" controls>
-        <source src="lesson1.mp4" type="video/mp4">
-        Your browser does not support the video tag.
-      </video>
-      <p>This is premium content for Paid Course 1.</p>
+  <div id="courses-wrapper">
+    <!-- Repeat for paid1 to paid10 -->
+    <div class="course-item" data-product-id="paid1">
+      <button class="buy-btn bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Buy Course 1</button>
+      <div class="paid-content">
+        <video width="100%" controls>
+          <source src="lesson1.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+        <p>This is premium content for Course 1.</p>
+      </div>
     </div>
+
+    <div class="course-item" data-product-id="paid2">
+      <button class="buy-btn bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Buy Course 2</button>
+      <div class="paid-content">
+        <video width="100%" controls>
+          <source src="lesson2.mp4" type="video/mp4">
+        </video>
+        <p>This is premium content for Course 2.</p>
+      </div>
+    </div>
+
+    <!-- Add more courses up to paid10 similarly -->
   </div>
 </main>
 
@@ -128,9 +143,6 @@ const toggleLink = document.getElementById("toggle-link");
 const loggedInSpan = document.getElementById("logged-in-span");
 const messagePlaceholder = document.getElementById("message-placeholder");
 
-const buyBtn = document.getElementById("buy-now-btn");
-const paidContent = document.getElementById("paid-content");
-
 let isRegisterMode = false;
 
 // Show temporary messages
@@ -157,7 +169,7 @@ async function handleAuth() {
 
   if (isRegisterMode) {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await createUserWithEmailAndPassword(auth, email, password);
       showMessage("Welcome!");
       passwordInput.value = "";
     } catch (err) { showMessage("Registration failed: "+err.message, "red"); }
@@ -173,19 +185,22 @@ async function handleAuth() {
 actionBtn.addEventListener("click", handleAuth);
 [emailInput, passwordInput].forEach(input => input.addEventListener("keyup", e => { if(e.key==="Enter") handleAuth(); }));
 
-// Check paid access
+// Check paid access for multiple courses
 async function checkAccess(uid) {
   const docRef = doc(db, COURSE_COLLECTION, uid);
   const snap = await getDoc(docRef);
   if (snap.exists()) {
     const data = snap.data();
-    if (data.purchases?.paid1) {
-      paidContent.style.display = "block";
-      buyBtn.style.display = "none";
-    } else {
-      paidContent.style.display = "none";
-      buyBtn.style.display = "block";
-    }
+    document.querySelectorAll(".course-item").forEach(course => {
+      const productId = course.dataset.productId;
+      if (data.purchases?.[productId]) {
+        course.querySelector(".paid-content").style.display = "block";
+        course.querySelector(".buy-btn").style.display = "none";
+      } else {
+        course.querySelector(".paid-content").style.display = "none";
+        course.querySelector(".buy-btn").style.display = "block";
+      }
+    });
   }
 }
 
@@ -206,35 +221,42 @@ onAuthStateChanged(auth, user => {
     toggleLink.classList.remove("hidden-link");
     actionBtn.textContent = isRegisterMode ? "Register" : "Login";
     actionBtn.onclick = handleAuth;
-    paidContent.style.display = "none";
-    buyBtn.style.display = "block";
+    document.querySelectorAll(".course-item").forEach(course => {
+      course.querySelector(".paid-content").style.display = "none";
+      course.querySelector(".buy-btn").style.display = "block";
+    });
   }
 });
 
-// Stripe checkout
-buyBtn.addEventListener("click", async () => {
-  const user = auth.currentUser;
-  if (!user) return alert("You must log in to purchase.");
+// Stripe checkout for multiple courses
+document.querySelectorAll(".buy-btn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const user = auth.currentUser;
+    if (!user) return alert("You must log in to purchase.");
+    const courseDiv = btn.closest(".course-item");
+    const productId = courseDiv.dataset.productId;
 
-  try {
-    const res = await fetch("https://richdatatech.vercel.app/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        uid: user.uid,
-        items: [
-          { name: "Paid Course 1", price: 1000, quantity: 1 }
-        ]
-      }),
-    });
+    try {
+      const res = await fetch("https://richdatatech.vercel.app/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid: user.uid,
+          productId,
+          items: [
+            { name: `Course ${productId.replace("paid","")}`, price: 1000, quantity: 1 }
+          ]
+        }),
+      });
 
-    const data = await res.json();
-    if (data.url) window.location.href = data.url;
-    else alert("Failed to start checkout. Check console.");
-  } catch (err) {
-    console.error("Checkout error:", err);
-    alert("Checkout failed.");
-  }
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else alert("Failed to start checkout.");
+    } catch (err) {
+      console.error("Checkout error:", err);
+      alert("Checkout failed.");
+    }
+  });
 });
 </script>
 
