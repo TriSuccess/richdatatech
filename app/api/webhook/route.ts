@@ -16,9 +16,7 @@ if (!getApps().length) {
 }
 
 const db = getFirestore();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: '2023-10-16', // Use the latest API version
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 // This is required for Next.js App Router
 export const config = {
