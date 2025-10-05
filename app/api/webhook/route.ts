@@ -54,14 +54,17 @@ export async function POST(req: NextRequest) {
     const userId = session.metadata?.uid;
 
     if (userId) {
-      await db
-        .collection('course2')
-        .doc(userId)
-        .collection('purchases')
-        .doc('paid1')
-        .set({ paid1: true, updatedAt: Timestamp.now() }, { merge: true });
-        );
-      console.log(`✅ Updated Firestore for user ${userId}`);
+      try {
+        await db
+          .collection('course2')
+          .doc(userId)
+          .collection('purchases')
+          .doc('paid1')
+          .set({ paid1: true, updatedAt: Timestamp.now() }, { merge: true });
+        console.log(`✅ Updated Firestore for user ${userId}`);
+      } catch (firestoreErr) {
+        console.error(`❌ Firestore update failed for user ${userId}:`, firestoreErr);
+      }
     } else {
       console.warn('⚠️ No user ID found in Stripe session metadata');
     }
