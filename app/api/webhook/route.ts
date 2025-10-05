@@ -68,9 +68,11 @@ export async function POST(req: NextRequest) {
     
     try {
       event = stripe.webhooks.constructEvent(payload, signature, endpointSecret);
-    } catch (err: any) {
-      console.log(`⚠️ Webhook signature verification failed: ${err.message}`);
-      return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+    } catch (err) {
+      // Properly type the error
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.log(`⚠️ Webhook signature verification failed: ${errorMessage}`);
+      return NextResponse.json({ error: `Webhook Error: ${errorMessage}` }, { status: 400 });
     }
     
     // Handle the event
@@ -91,7 +93,9 @@ export async function POST(req: NextRequest) {
             });
             console.log(`Updated payment status for user: ${userId}`);
           } catch (error) {
-            console.error(`Error updating Firestore: ${error}`);
+            // Properly type the error
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.error(`Error updating Firestore: ${errorMessage}`);
             return NextResponse.json({ error: 'Error updating database' }, { status: 500 });
           }
         } else {
@@ -109,7 +113,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true });
     
   } catch (error) {
-    console.error('Webhook error:', error);
+    // Properly type the error
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Webhook error:', errorMessage);
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
   }
 }
