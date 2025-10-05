@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    const origin = req.headers.get("origin") ?? ""; // fallback to empty string
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: items.map((item) => ({
@@ -34,9 +35,9 @@ export async function POST(req: NextRequest) {
         quantity: 1,       // default to 1
       })),
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/success`,
-      cancel_url: `${req.headers.get("origin")}/cancel`,
-      metadata: { uid }, // store UID for webhook
+      success_url: origin, // go back to the page that called checkout
+      cancel_url: origin,  // also return to the page if cancelled
+      metadata: { uid },   // store UID for webhook
     });
 
     return new Response(JSON.stringify({ url: session.url }), {

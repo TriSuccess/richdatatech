@@ -3,17 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paid Course 1 – RichDataTech</title>
+<title>Paid Course – RichDataTech</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DIN:wght@400;700&display=swap');
 
+/* Header & Nav */
 nav a { font-family: 'DIN', sans-serif; text-decoration: none; }
 nav a:hover { color: #2563eb; }
 
 header { background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 0.15rem 1rem; }
 header .header-top { display: flex; justify-content: space-between; align-items: center; position: relative; }
 
+/* Auth box */
 #auth-wrapper { display: table; table-layout: fixed; height: auto; }
 #message-placeholder { display: table-row; height: 1rem; text-align: right; font-size: 0.7rem; color: #047857; vertical-align: middle; }
 #auth-row { display: table-row; }
@@ -40,8 +42,9 @@ nav.main-nav { display: flex; gap: 1.25rem; font-size: 0.95rem; position: absolu
   #email-input, #password-input, #action-btn { width: 100%; }
 }
 
-.paid-content { margin-top: 1rem; display: none; }
-.buy-btn { cursor: pointer; margin-bottom: 0.5rem; }
+/* Paid content styling */
+#paid-content { margin-top: 1rem; display: none; }
+#buy-now-btn { cursor: pointer; margin-bottom: 0.5rem; }
 </style>
 </head>
 <body class="bg-gray-100">
@@ -53,7 +56,6 @@ nav.main-nav { display: flex; gap: 1.25rem; font-size: 0.95rem; position: absolu
         <img src="https://www.richdatatech.com/images/richdatatech.png" alt="RichDataTech Logo" class="h-14 sm:h-16 w-auto object-contain"/>
       </a>
     </div>
-
     <div id="auth-wrapper">
       <div id="message-placeholder"></div>
       <div id="auth-row">
@@ -71,7 +73,6 @@ nav.main-nav { display: flex; gap: 1.25rem; font-size: 0.95rem; position: absolu
       </div>
     </div>
   </div>
-
   <nav class="main-nav">
     <a href="course1.html">Course 1</a>
     <a href="course2.html">Course 2</a>
@@ -83,16 +84,13 @@ nav.main-nav { display: flex; gap: 1.25rem; font-size: 0.95rem; position: absolu
 
 <main class="pt-4 px-4">
   <h1 class="text-xl font-bold">Paid Course 1</h1>
-
-  <div class="course-item" data-product-id="paid1">
-    <button class="buy-btn bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Buy Course 1</button>
-    <div class="paid-content">
-      <video width="100%" controls>
-        <source src="lesson1.mp4" type="video/mp4">
-        Your browser does not support the video tag.
-      </video>
-      <p>This is premium content for Course 1.</p>
-    </div>
+  <button id="buy-now-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Buy Now</button>
+  <div id="paid-content">
+    <video width="100%" controls>
+      <source src="lesson1.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <p>This is premium content for Course 1.</p>
   </div>
 </main>
 
@@ -101,6 +99,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyBorPU13tVHj-o-28ADUkrXE944GIWhGOI",
   authDomain: "course2-f1bdb.firebaseapp.com",
@@ -115,6 +114,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const COURSE_COLLECTION = "course2";
 
+// DOM
 const emailInput = document.getElementById("email-input");
 const passwordInput = document.getElementById("password-input");
 const actionBtn = document.getElementById("action-btn");
@@ -122,8 +122,8 @@ const toggleLink = document.getElementById("toggle-link");
 const loggedInSpan = document.getElementById("logged-in-span");
 const messagePlaceholder = document.getElementById("message-placeholder");
 
-const buyBtn = document.querySelector(".buy-btn");
-const paidContent = document.querySelector(".paid-content");
+const buyBtn = document.getElementById("buy-now-btn");
+const paidContent = document.getElementById("paid-content");
 
 let isRegisterMode = false;
 
@@ -133,6 +133,7 @@ function showMessage(msg, color="green") {
   setTimeout(() => { messagePlaceholder.textContent = ""; }, 4000);
 }
 
+// Login/register toggle
 toggleLink.addEventListener("click", e => {
   e.preventDefault();
   if (auth.currentUser) return;
@@ -141,6 +142,7 @@ toggleLink.addEventListener("click", e => {
   toggleLink.textContent = isRegisterMode ? "Already have an account?" : "Don't have an account?";
 });
 
+// Auth handler
 async function handleAuth() {
   const email = emailInput.value.trim();
   const password = passwordInput.value;
@@ -164,10 +166,11 @@ async function handleAuth() {
 actionBtn.addEventListener("click", handleAuth);
 [emailInput, passwordInput].forEach(input => input.addEventListener("keyup", e => { if(e.key==="Enter") handleAuth(); }));
 
+// Check access
 async function checkAccess(uid) {
   const docRef = doc(db, COURSE_COLLECTION, uid);
   const snap = await getDoc(docRef);
-  if (snap.exists() && snap.data().purchases?.["paid1"]) {
+  if (snap.exists() && snap.data().purchases?.paid1) {
     paidContent.style.display = "block";
     buyBtn.style.display = "none";
   } else {
@@ -176,7 +179,8 @@ async function checkAccess(uid) {
   }
 }
 
-onAuthStateChanged(auth, user => {
+// Auth state listener
+onAuthStateChanged(auth, async user => {
   if (user) {
     loggedInSpan.classList.add("visible");
     emailInput.classList.add("hidden-input");
@@ -184,7 +188,7 @@ onAuthStateChanged(auth, user => {
     toggleLink.classList.add("hidden-link");
     actionBtn.textContent = "Logout";
     actionBtn.onclick = async () => { await signOut(auth); location.reload(); };
-    checkAccess(user.uid);
+    await checkAccess(user.uid);
   } else {
     loggedInSpan.classList.remove("visible");
     emailInput.classList.remove("hidden-input");
@@ -208,10 +212,8 @@ buyBtn.addEventListener("click", async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         uid: user.uid,
-        productId: "paid1",
-        items: [
-          { price: "price_1RqaLeJOLIr6wNsmGRK6tXXP" }
-        ]
+        items: [{ price: "price_1RqaLeJOLIr6wNsmGRK6tXXP" }],
+        productId: "paid1"
       }),
     });
 
@@ -224,5 +226,6 @@ buyBtn.addEventListener("click", async () => {
   }
 });
 </script>
+
 </body>
 </html>
