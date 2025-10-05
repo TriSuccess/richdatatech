@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paid Course – RichDataTech</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DIN:wght@400;700&display=swap');
+
+/* Font for links */
+nav a { 
+  font-family: 'DIN', sans-serif; 
+  text-decoration: none; 
+}
+nav a:hover { 
+  color: #2563eb; 
+}
+
+/* Header layout - compact version */
+header { 
+  background: white; 
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+  padding: 0.15rem 1rem; 
+}
+
+/* Header top row: logo + auth aligned */
+header .header-top { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  position: relative; 
+}
+
+/* Auth box */
+#auth-wrapper { display: table; table-layout: fixed; height: auto; }
+#message-placeholder { 
+  display: table-row; 
+  height: 1rem; 
+  text-align: right; 
+  font-size: 0.7rem; 
+  color: #047857; 
+  vertical-align: middle; 
+}
+#auth-row { display: table-row; }
+#auth-box { 
+  display: table-cell; 
+  vertical-align: middle; 
+  text-align: right; 
+  padding-left: 0.5rem; 
+}
+#logged-in-span { 
+  font-size: 0.7rem; 
+  font-weight: normal;  /* no longer bold */
+  color: #555;          /* neutral gray instead of green */
+  opacity: 0; 
+  transition: opacity 0.2s, margin-top 0.2s;
+  margin-top: 0.1rem; 
+  display: block;
+}
+#logged-in-span.visible { opacity: 1; }
+
+.hidden-input { opacity: 0; pointer-events: none; }
+#toggle-link { opacity: 1; transition: opacity 0.2s; font-size: 0.7rem; }
+#toggle-link.hidden-link { opacity: 0; pointer-events: none; }
+
+#input-row { 
+  display: flex; 
+  justify-content: flex-end; 
+  gap: 0.2rem; 
+  margin-bottom: 0.05rem; 
+}
+#button-row { 
+  display: flex; 
+  justify-content: flex-end; 
+  gap: 0.1rem; 
+}
+#auth-box a { margin-top: 0.15rem; }
+
+#email-input, #password-input { 
+  font-size: 13px; 
+  padding: 1px 3px; 
+  width: 115px; 
+}
+#action-btn { 
+  font-size: 13px; 
+  padding: 2px 8px; /* slightly more padding for cleaner button */
+  line-height: 1.2;
+}
+
+/* Desktop nav: slightly below top, visually centered */
+nav.main-nav {
+  display: flex;
+  gap: 1.25rem;
+  font-size: 0.95rem;
+  position: absolute;
+  left: 50%;
+  top: 5%;
+  transform: translateX(-50%);
+}
+
+/* Mobile tweaks */
+@media (max-width: 639px) {
+  nav.main-nav {
+    position: static;
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    margin-top: 0.25rem;
+    gap: 2px;
+    font-size: 0.9rem;
+    transform: none;
+  }
+  header { padding-bottom: 0.15rem; }
+  #auth-box { display: flex; flex-direction: column; align-items: flex-end; gap: 0.05rem; }
+  #input-row { flex-direction: column; align-items: flex-end; margin-bottom: 0.05rem; }
+  #email-input, #password-input, #action-btn { width: 100%; }
+}
+</style>
+</head>
+<body class="bg-gray-100">
+
+<header>
+  <div class="header-top">
+    <!-- Logo -->
+    <div>
+      <a href="index.html">
+<img 
+  src="https://www.richdatatech.com/images/richdatatech.png" 
+  alt="RichDataTech Logo" 
+  class="h-14 sm:h-16 w-auto object-contain"
+/></a>
+    </div>
+
+    <!-- Auth wrapper -->
+    <div id="auth-wrapper">
+      <div id="message-placeholder"></div>
+      <div id="auth-row">
+        <div id="auth-box">
+          <div id="input-row">
+            <input id="email-input" type="email" placeholder="Email" class="px-2 py-1 border rounded"/>
+            <input id="password-input" type="password" placeholder="Password" class="px-2 py-1 border rounded"/>
+          </div>
+          <div id="button-row">
+            <button id="action-btn" class="bg-blue-500 hover:bg-blue-600 text-white rounded">Login</button>
+          </div>
+          <a href="#" id="toggle-link" class="text-blue-600 text-xs block mt-0.5">Don't have an account? Register here.</a>
+          <span id="logged-in-span" style="color:white">Logged In</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main nav: single element for both desktop & mobile -->
+  <nav class="main-nav">
+    <a href="course1.html">Course 1</a>
+    <a href="course2.html">Course 2</a>
+    <a href="courses.html">All Courses</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+</header>
+
+<main class="pt-4 px-4">
+  <h1 class="text-xl font-bold">Paid Course Lesson 1</h1>
+  <p>Content goes here...</p>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBorPU13tVHj-o-28ADUkrXE944GIWhGOI",
+  authDomain: "course2-f1bdb.firebaseapp.com",
+  projectId: "course2-f1bdb",
+  storageBucket: "course2-f1bdb.appspot.com",
+  messagingSenderId: "954972853845",
+  appId: "1:954972853845:web:8bb39ddce360654214e6dc"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const COURSE_COLLECTION = "course2";
+
+const emailInput = document.getElementById("email-input");
+const passwordInput = document.getElementById("password-input");
+const actionBtn = document.getElementById("action-btn");
+const toggleLink = document.getElementById("toggle-link");
+const loggedInSpan = document.getElementById("logged-in-span");
+const messagePlaceholder = document.getElementById("message-placeholder");
+
+let isRegisterMode = false;
+
+function showMessage(msg, color="green") {
+  messagePlaceholder.textContent = msg;
+  messagePlaceholder.style.color = color;
+  setTimeout(() => { messagePlaceholder.textContent = ""; }, 4000);
+}
+
+toggleLink.addEventListener("click", e => {
+  e.preventDefault();
+  if (auth.currentUser) return;
+  isRegisterMode = !isRegisterMode;
+  actionBtn.textContent = isRegisterMode ? "Register" : "Login";
+  toggleLink.textContent = isRegisterMode ? "Already have an account?" : "Don't have an account?";
+});
+
+async function handleAuth() {
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+  if (!email || !password) { showMessage("Enter email & password", "red"); return; }
+
+  if (isRegisterMode) {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      const purchasesMap = {};
+      for (let i=1;i<=10;i++) purchasesMap[`paid${i}`] = false;
+      await setDoc(doc(db, COURSE_COLLECTION, user.uid), { user_id: user.uid, purchases: purchasesMap });
+      showMessage("Welcome!");
+      passwordInput.value = "";
+    } catch (err) { showMessage("Registration failed: "+err.message, "red"); }
+  } else {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      showMessage("Logged in");
+      passwordInput.value = "";
+    } catch (err) { showMessage("Login failed: "+err.message, "red"); }
+  }
+}
+
+actionBtn.addEventListener("click", handleAuth);
+[emailInput, passwordInput].forEach(input => input.addEventListener("keyup", e => { if(e.key==="Enter") handleAuth(); }));
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    loggedInSpan.classList.add("visible");
+    emailInput.classList.add("hidden-input");
+    passwordInput.classList.add("hidden-input");
+    toggleLink.classList.add("hidden-link");
+    actionBtn.textContent = "Logout";
+    actionBtn.onclick = async () => { await signOut(auth); location.reload(); };
+  } else {
+    loggedInSpan.classList.remove("visible");
+    emailInput.classList.remove("hidden-input");
+    passwordInput.classList.remove("hidden-input");
+    toggleLink.classList.remove("hidden-link");
+    actionBtn.textContent = isRegisterMode ? "Register" : "Login";
+    actionBtn.onclick = handleAuth;
+  }
+});
+</script>
+
+</body>
+</html>
