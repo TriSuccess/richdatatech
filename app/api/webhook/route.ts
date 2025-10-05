@@ -1,38 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import admin from 'firebase-admin';
 
-console.log('STRIPE_SECRET_KEY exists?', !!process.env.STRIPE_SECRET_KEY);
+// Initialize Firebase Admin SDK
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+  });
+}
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(req: NextRequest) {
+  const body = await req.text(); // raw text is needed for webhook signature verification
+  const signature = req.headers.get('stripe-signature')!;
+
+  let event: Stripe.Event;
+
   try {
-    console.log('Received request');
-
-    const body = await req.json();
-    console.log('Request body:', body);
-
-    if (!body.uid) {
-      console.error('No uid provided');
-      return NextResponse.json({ error: 'Missing uid' }, { status: 400 });
-    }
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        { price: 'price_1RqaLeJOLIr6wNsmGRK6tXXP', quantity: 1 } // <-- Replace with your Stripe Price ID
-      ],
-      mode: 'payment',
-      success_url: `${req.headers.get('origin')}/success`,
-      cancel_url: `${req.headers.get('origin')}/cancel`,
-      metadata: { firebaseUid: body.uid },
-    });
-
-    console.log('Stripe session created:', session.id);
-
-    return NextResponse.json({ sessionId: session.id });
+    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
+    console.log('Webhook received:', event.type);
   } catch (err) {
-    console.error('Error creating Stripe session:', err);
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Failed' }, { status: 500 });
+    console.error('Webhook signature verification failed:', err);
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
+
+  // Handle the event
+  switch (event.type) {
+    case 'checkout.session.completed':
+      const session = event.data.object as Stripe.Checkout.Session;
+      const uid = session.metadata?.firebaseUid;
+      if (uid) {
+        try {
+          await admin.firestore().collection('users').doc(uid).update({ isPaid: true });
+          console.log(`User ${uid} marked as paid`);
+        } catch (err) {
+          console.error('Error updating Firestore:', err);
+        }
+      }
+      break;
+    // Add more event types if needed
+    default:
+      console.log(`Unhandled event type: ${event.type}`);
+  }
+
+  return NextResponse.json({ received: true });
 }
