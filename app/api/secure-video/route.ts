@@ -68,12 +68,18 @@ export async function POST(req: NextRequest) {
       expires: Date.now() + 5 * 60 * 1000,
     });
 
+    // Log the signed URL for debugging (will appear in Vercel logs)
+    // eslint-disable-next-line no-console
+    console.log("Generated signed video URL:", signedUrl);
+
     return new NextResponse(
       JSON.stringify({ url: signedUrl }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal server error";
+    // eslint-disable-next-line no-console
+    console.error("Error in /api/secure-video:", message);
     return new NextResponse(
       JSON.stringify({ error: message }),
       { status: 500, headers: corsHeaders }
