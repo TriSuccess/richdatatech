@@ -17,7 +17,7 @@ let adminApp: App;
 if (!getApps().length) {
   adminApp = initializeApp({
     credential: cert(serviceAccount),
-    storageBucket: "course2-f1bdb.appspot.com",
+    storageBucket: "course2-f1bdb.firebasestorage.app",
   });
 } else {
   adminApp = getApps()[0];
