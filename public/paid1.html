@@ -101,48 +101,18 @@ nav.main-nav {
   </nav>
 </header>
 
-
-<main class="flex-grow flex flex-col items-center justify-start pt-4 px-4">
-  <div id="content" class="max-w-5xl w-full flex flex-col items-center space-y-4">
-    <h1 class="text-4xl font-bold text-blue-700 text-center mb-4">🎓 Data Bricks Course</h1>
-
-    <div class="mx-auto max-w-3xl w-full mb-8">
-      <video class="w-full rounded shadow-md block mx-auto" controls autoplay muted playsinline>
-        <source src="gs://course2-f1bdb.firebasestorage.app/videos/paid_2.mp4" type="video/mp4">
-        Your browser does not support the video tag.
-      </video>
-
-      <div class="flex items-center justify-between mt-4">
-        <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
-        <h2 class="text-xl font-semibold text-gray-800">Lesson 1</h2>
-        <a href="powerbi1.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
-      </div>
-    </div>
-
-    <div class="grid md:grid-cols-2 gap-8 w-full">
-     <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
-        <p class="text-base leading-relaxed text-black">
-          This is a free-access lesson in the Power BI beginner course. 
-          You can view it without logging in, but feel free to register or log in above to access members-only perks.
-        </p>
-      </div>
-
-      <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
-        <h3 class="text-lg font-semibold mb-4 text-black">📘 Lesson Focus</h3>
-        <ul class="list-disc pl-5 space-y-2 text-black text-base">
-          <li>Loading Excel and CSV data into Power BI</li>
-          <li>Basic Power Query cleanup</li>
-          <li>Simple visuals and charts</li>
-          <li>Saving your first report</li>
-        </ul>
-      </div>
-    </div>
+<!-- MAIN -->
+<main class="pt-4 px-4 flex-grow">
+  <h1 class="text-xl font-bold">Paid Course 1</h1>
+  <button id="buy-now-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded hidden">Buy Now</button>
+  <div id="paid-content" class="hidden mt-4">
+<video controls autoplay muted playsinline controlsList="nodownload" class="w-full rounded shadow-md block mx-auto">
+<source src="https://richdatatech.vercel.app/api/secure-video?file=paid_2.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+    <p>This is premium content for Course 1.</p>
   </div>
 </main>
-
-<br><br>
-
-
 
 <!-- FOOTER (never hidden by JS) -->
 <footer style="background:#23272a; color:#fff; padding:38px 0 18px 0;">
@@ -233,17 +203,6 @@ AI tools, and valuable resources.</div>
     <p id="auth-message" class="text-center text-xs mt-3 text-green-600"></p>
   </div>
 </div>
-
-<script>
-// Disable right-click context menu everywhere
-document.addEventListener('contextmenu', function(e) {
-  e.preventDefault();
-});
-// Disable dragging on video and images
-document.querySelectorAll('video, img').forEach(el => {
-  el.setAttribute('draggable', 'false');
-});
-</script>
 
 <!-- FIREBASE + LOGIC -->
 <script type="module">
@@ -464,15 +423,8 @@ buyBtn.addEventListener("click", async () => {
   }
 });
 
-
-
 // 🕒 Dynamic year
 document.getElementById("year").textContent = new Date().getFullYear();
 </script>
-
-
-
-
-
 </body>
 </html>
