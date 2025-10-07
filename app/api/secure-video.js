@@ -1,34 +1,40 @@
-// /api/video-access endpoint (Node.js/Express)
-const admin = require("firebase-admin");
-const express = require("express");
-const app = express();
+import { NextResponse } from 'next/server';
+import admin from 'firebase-admin';
 
-app.post("/api/video-access", async (req, res) => {
-  const { uid, productId } = req.body;
+// Initialize Firebase Admin if not already initialized
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)),
+    storageBucket: "course2-f1bdb.appspot.com"
+  });
+}
 
-  // 1. Verify Firebase ID token!
-  const idToken = req.headers.authorization?.split("Bearer ")[1];
+export async function POST(req) {
+  const { uid, productId } = await req.json();
+  const idToken = req.headers.get('authorization')?.split('Bearer ')[1];
+
+  // 1. Verify Firebase ID token
   let decoded;
   try {
     decoded = await admin.auth().verifyIdToken(idToken);
-    if (decoded.uid !== uid) return res.status(401).send("Unauthorized");
+    if (decoded.uid !== uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   } catch {
-    return res.status(401).send("Invalid token");
+    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
 
-  // 2. Check Firestore purchase record
+  // 2. Check Firestore purchase
   const userDoc = await admin.firestore().collection("course2").doc(uid).get();
   if (!userDoc.exists || !userDoc.data().purchases?.[productId]) {
-    return res.status(403).send("Not purchased");
+    return NextResponse.json({ error: "Not purchased" }, { status: 403 });
   }
 
-  // 3. Generate signed URL, valid 5 min
+  // 3. Generate signed URL (valid 5 min)
   const bucket = admin.storage().bucket();
   const file = bucket.file("videos/paid_2.mp4");
   const [url] = await file.getSignedUrl({
     action: "read",
-    expires: Date.now() + 5 * 60 * 1000 // 5 minutes
+    expires: Date.now() + 5 * 60 * 1000
   });
 
-  res.json({ url });
-});
+  return NextResponse.json({ url });
+}
