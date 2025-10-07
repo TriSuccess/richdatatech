@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "course2-f1bdb"
-  }
+    "default": "course2-f1bdb",
+    "staging": "course2-f1bdb"
+  },
+  "targets": {},
+  "etags": {}
 }

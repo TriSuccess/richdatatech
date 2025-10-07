@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Play Video from Firebase Storage</title>
+</head>
+<body>
+  <h1>Firebase Storage Video Player</h1>
+  <video id="videoPlayer" width="640" height="360" controls>
+    Your browser does not support the video tag.
+  </video>
+
+  <!-- ✅ Firebase v9+ Modular SDK (correct .mjs paths) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.mjs";
+    import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-storage.mjs";
+
+    // ✅ Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBorPU13tVHj-o-28ADUkrXE944GIWhGOI",
+      authDomain: "course2-f1bdb.firebaseapp.com",
+      projectId: "course2-f1bdb",
+      storageBucket: "course2-f1bdb.appspot.com",
+      messagingSenderId: "954972853845",
+      appId: "1:954972853845:web:8bb39ddce360654214e6dc"
+    };
+
+    // ✅ Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const storage = getStorage(app);
+
+    // ✅ Get a reference to your video
+    const videoRef = ref(storage, "videos/1.mp4");
+
+    // ✅ Fetch and set the video source
+    getDownloadURL(videoRef)
+      .then((url) => {
+        const video = document.getElementById("videoPlayer");
+        video.src = url;
+        video.load();
+        console.log("Video URL loaded:", url);
+      })
+      .catch((error) => {
+        console.error("Error loading video:", error);
+        alert("Failed to load video: " + error.message);
+      });
+  </script>
+</body>
+</html>

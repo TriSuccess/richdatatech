@@ -1,29 +1,34 @@
-import fetch from "node-fetch";
+// /api/video-access endpoint (Node.js/Express)
+const admin = require("firebase-admin");
+const express = require("express");
+const app = express();
 
-export default async function handler(req, res) {
-  const { file } = req.query;
-  if (!file) {
-    res.status(400).send("Missing file parameter");
-    return;
+app.post("/api/video-access", async (req, res) => {
+  const { uid, productId } = req.body;
+
+  // 1. Verify Firebase ID token!
+  const idToken = req.headers.authorization?.split("Bearer ")[1];
+  let decoded;
+  try {
+    decoded = await admin.auth().verifyIdToken(idToken);
+    if (decoded.uid !== uid) return res.status(401).send("Unauthorized");
+  } catch {
+    return res.status(401).send("Invalid token");
   }
 
-  // The true location is hidden from the client!
-  const videoUrl = `https://www.richdatatech.com/videos/${encodeURIComponent(file)}`;
+  // 2. Check Firestore purchase record
+  const userDoc = await admin.firestore().collection("course2").doc(uid).get();
+  if (!userDoc.exists || !userDoc.data().purchases?.[productId]) {
+    return res.status(403).send("Not purchased");
+  }
 
-  // Forward Range header for streaming/seek support in the browser
-  const range = req.headers.range ? req.headers.range : undefined;
-
-  // Fetch the video from the origin server
-  const response = await fetch(videoUrl, {
-    headers: range ? { Range: range } : {},
+  // 3. Generate signed URL, valid 5 min
+  const bucket = admin.storage().bucket();
+  const file = bucket.file("videos/paid_2.mp4");
+  const [url] = await file.getSignedUrl({
+    action: "read",
+    expires: Date.now() + 5 * 60 * 1000 // 5 minutes
   });
 
-  // Set status and headers for streaming (video seeking support)
-  res.status(response.status);
-  response.headers.forEach((value, key) => {
-    res.setHeader(key, value);
-  });
-
-  // Stream the video data to the client
-  response.body.pipe(res);
-}
+  res.json({ url });
+});

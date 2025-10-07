@@ -1,0 +1,12 @@
+[
+  {
+    "origin": [
+      "http://localhost:5000",
+      "http://localhost:3000",
+      "https://www.richdatatech.com"
+    ],
+    "method": ["GET", "HEAD", "OPTIONS"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type", "Authorization"]
+  }
+]
