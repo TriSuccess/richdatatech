@@ -1,3 +1,5 @@
+res.setHeader("Access-Control-Allow-Origin", "*"); // Or your domain
+res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
 import admin from "firebase-admin";
 
 // Only initialize once
