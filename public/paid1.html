@@ -155,7 +155,7 @@ async function showPaidVideo() {
   if (!user) return;
   const idToken = await user.getIdToken();
   // Get signed URL from backend
-  const res = await fetch("https://richdatatech.vercel.app/api/secure-video.js", {
+  const res = await fetch("https://richdatatech.vercel.app/api/secure-video", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
