@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Generate signed URL for video
-    const filePath = "videos/paid_2.mp4";
+    const filePath = "videos/1.mp4";
     const [signedUrl] = await storage.bucket().file(filePath).getSignedUrl({
       action: "read",
       expires: Date.now() + 5 * 60 * 1000,
