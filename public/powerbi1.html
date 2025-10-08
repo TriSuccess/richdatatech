@@ -346,6 +346,7 @@ async function renderMembersContent(user) {
   document.getElementById("course-content").innerHTML = `<div class="text-blue-700 text-center text-xl font-semibold py-10">Loading your lesson...</div>`;
   try {
     const idToken = await user.getIdToken();
+    // POST to your API that returns a SIGNED or PROXIED URL to the domain file
     const res = await fetch("https://richdatatech.vercel.app/api/secure-video2", {
       method: "POST",
       headers: {
@@ -360,6 +361,7 @@ async function renderMembersContent(user) {
     });
     if (!res.ok) throw new Error("Could not load video. Please try again.");
     const data = await res.json();
+    // data.url should be a signed or proxied URL for the real file (NOT the public video URL)
     document.getElementById("course-content").innerHTML = `
       <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
         <h1 class="text-3xl font-bold text-blue-700 text-center mb-4">🎓 Paid Power BI Lesson 1</h1>
@@ -403,7 +405,7 @@ async function renderMembersContent(user) {
       </div>
     `;
     // Disable right-click on video
-    const video = document.getElementById("secure-video");
+    const video = document.getElementById("secure-video2");
     if (video) {
       video.addEventListener('contextmenu', e => e.preventDefault());
     }
