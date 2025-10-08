@@ -19,8 +19,8 @@ export async function GET(req: Request) {
   }
 
   // HTTP Basic Auth credentials for your protected folder
-  const username = "YOUR_USERNAME";
-  const password = "YOUR_PASSWORD";
+  const username = "YOUR_USERNAME"; // <-- CHANGE THIS
+  const password = "YOUR_PASSWORD"; // <-- CHANGE THIS
   const basic = btoa(username + ":" + password);
 
   // Fetch the protected video from your server
