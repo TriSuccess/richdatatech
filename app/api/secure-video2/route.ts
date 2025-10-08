@@ -1,19 +1,16 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest, NextResponse } from "next/server";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import fetch from "node-fetch"; // ensure you have node-fetch installed if using Node < 18
 
-// ---- Initialize Firebase Admin ----
+// Initialize Firebase Admin once globally
 if (!getApps().length) {
-  try {
-    const projectId = process.env.FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
 
-    if (!projectId || !clientEmail || !privateKey) {
-      throw new Error("Missing Firebase Admin environment variables");
-    }
-
+  if (!projectId || !clientEmail || !privateKey) {
+    console.error("Missing Firebase Admin environment variables");
+  } else {
     initializeApp({
       credential: cert({
         projectId,
@@ -21,68 +18,69 @@ if (!getApps().length) {
         privateKey,
       }),
     });
-  } catch (error) {
-    console.error("Firebase Admin initialization failed:", error);
   }
 }
 
-// ---- API Handler ----
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+// 👇 This replaces `export default handler`
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const file = searchParams.get("file");
+  if (!file) return NextResponse.json({ error: "Missing file" }, { status: 400 });
+
+  // Verify Firebase ID Token
+  const authHeader = req.headers.get("authorization");
+  const idToken = authHeader?.startsWith("Bearer ") ? authHeader.split("Bearer ")[1] : null;
+
+  if (!idToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   try {
-    const file = req.query.file as string;
-    if (!file) return res.status(400).send("Missing file");
-
-    // Verify Firebase ID token
-    const authHeader = req.headers.authorization;
-    const idToken = authHeader?.startsWith("Bearer ") ? authHeader.split("Bearer ")[1] : null;
-
-    if (!idToken) return res.status(401).send("Unauthorized");
-
-    try {
-      await getAuth().verifyIdToken(idToken);
-    } catch (err) {
-      console.error("Token verification failed:", err);
-      return res.status(403).send("Invalid token");
-    }
-
-    // Allowlisted videos
-    const allowedFiles = [
-      ...Array.from({ length: 8 }, (_, i) => `powerbi${i + 1}.mp4`),
-      ...Array.from({ length: 8 }, (_, i) => `python${i + 1}.mp4`),
-    ];
-
-    if (!allowedFiles.includes(file)) {
-      return res.status(403).send("Invalid file");
-    }
-
-    // ---- Fetch the video from external server ----
-    const username = process.env.VIDEO_SERVER_USER || "YOUR_USERNAME";
-    const password = process.env.VIDEO_SERVER_PASS || "YOUR_PASSWORD";
-    const basic = Buffer.from(`${username}:${password}`).toString("base64");
-
-    const videoUrl = `https://www.richdatatech.com/videos/pbic7i/${encodeURIComponent(file)}`;
-    const videoRes = await fetch(videoUrl, {
-      headers: {
-        Authorization: `Basic ${basic}`,
-        Range: req.headers.range || "",
-      },
-    });
-
-    if (!videoRes.ok || !videoRes.body) {
-      return res.status(404).send("Video not found or failed to load");
-    }
-
-    // ---- Stream video ----
-    res.writeHead(videoRes.status, {
-      "Content-Type": "video/mp4",
-      "Accept-Ranges": "bytes",
-      ...(videoRes.headers.get("content-length") ? { "Content-Length": videoRes.headers.get("content-length") } : {}),
-      ...(videoRes.headers.get("content-range") ? { "Content-Range": videoRes.headers.get("content-range") } : {}),
-    });
-
-    videoRes.body.pipe(res);
+    await getAuth().verifyIdToken(idToken);
   } catch (err) {
-    console.error("Handler error:", err);
-    res.status(500).send("Internal Server Error");
+    console.error("Token verification failed:", err);
+    return NextResponse.json({ error: "Invalid token" }, { status: 403 });
   }
+
+  // Whitelisted videos
+  const allowedFiles = [
+    ...Array.from({ length: 8 }, (_, i) => `powerbi${i + 1}.mp4`),
+    ...Array.from({ length: 8 }, (_, i) => `python${i + 1}.mp4`),
+  ];
+
+  if (!allowedFiles.includes(file)) {
+    return NextResponse.json({ error: "Invalid file" }, { status: 403 });
+  }
+
+  // External video server auth
+  const username = process.env.VIDEO_SERVER_USER || "YOUR_USERNAME";
+  const password = process.env.VIDEO_SERVER_PASS || "YOUR_PASSWORD";
+  const basic = Buffer.from(`${username}:${password}`).toString("base64");
+
+  const videoUrl = `https://www.richdatatech.com/videos/pbic7i/${encodeURIComponent(file)}`;
+
+  const videoRes = await fetch(videoUrl, {
+    headers: {
+      Authorization: `Basic ${basic}`,
+      Range: req.headers.get("range") || "",
+    },
+  });
+
+  if (!videoRes.ok || !videoRes.body) {
+    return NextResponse.json({ error: "Video not found" }, { status: 404 });
+  }
+
+  // Build the streaming response
+  const headers = new Headers();
+  headers.set("Content-Type", "video/mp4");
+  headers.set("Accept-Ranges", "bytes");
+
+  const contentLength = videoRes.headers.get("content-length");
+  const contentRange = videoRes.headers.get("content-range");
+
+  if (contentLength) headers.set("Content-Length", contentLength);
+  if (contentRange) headers.set("Content-Range", contentRange);
+
+  return new Response(videoRes.body, {
+    status: videoRes.status,
+    headers,
+  });
 }
