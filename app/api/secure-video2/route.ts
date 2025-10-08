@@ -2,7 +2,7 @@ export const config = {
   runtime: "edge",
 };
 
-export default async function handler(req: Request) {
+export async function GET(req: Request) {
   const { searchParams } = new URL(req.url!);
   const file = searchParams.get("file");
   if (!file) {
@@ -35,7 +35,6 @@ export default async function handler(req: Request) {
     return new Response("Video not found", { status: 404 });
   }
 
-  // Pass through appropriate headers for streaming
   return new Response(videoRes.body, {
     status: 200,
     headers: {
