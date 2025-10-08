@@ -3,7 +3,7 @@ import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 
-// Initialize Firebase Admin only once (Vercel hot reload)
+// Initialize Firebase Admin only once
 if (!getApps().length) {
   initializeApp({
     credential: cert({
@@ -61,8 +61,11 @@ export async function POST(req: NextRequest) {
     // Build the secure video URL
     const url = `https://www.richdatatech.com/videos/pbic7i/${encodeURIComponent(file)}`;
     return NextResponse.json({ url });
-  } catch (err: any) {
-    // Handle Firebase errors, token errors, etc.
-    return NextResponse.json({ error: err?.message || "Unauthorized" }, { status: 401 });
+  } catch (err) {
+    let message = "Unauthorized";
+    if (err && typeof err === "object" && "message" in err) {
+      message = String((err as { message?: string }).message);
+    }
+    return NextResponse.json({ error: message }, { status: 401 });
   }
 }
