@@ -1,18 +1,13 @@
 export const config = { runtime: "edge" };
 
-// --- CORS helper ---
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", // For production, set to your static site's domain for security!
+  "Access-Control-Allow-Origin": "*", // For production, set to your static site's domain
   "Access-Control-Allow-Methods": "GET, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, Range",
 };
 
 export async function OPTIONS() {
-  // Pre-flight CORS handler
-  return new Response(null, {
-    status: 204,
-    headers: corsHeaders,
-  });
+  return new Response(null, { status: 204, headers: corsHeaders });
 }
 
 export async function GET(req: Request) {
@@ -37,28 +32,7 @@ export async function GET(req: Request) {
     });
   }
 
-  // ----- (Optional) Firebase ID Token verification -----
-  // If you want to enforce Firebase login, uncomment below and make sure you have firebase-admin set up!
-  /*
-  import { initializeApp, cert, getApps } from "firebase-admin/app";
-  import { getAuth } from "firebase-admin/auth";
-  if (!getApps().length) {
-    initializeApp({ credential: cert({ projectId: "...", clientEmail: "...", privateKey: "..." }) });
-  }
-  const authHeader = req.headers.get("authorization");
-  const idToken = authHeader?.startsWith("Bearer ") ? authHeader.split("Bearer ")[1] : null;
-  if (!idToken) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
-  }
-  try {
-    await getAuth().verifyIdToken(idToken);
-  } catch (err) {
-    return new Response(JSON.stringify({ error: "Invalid token" }), { status: 403, headers: corsHeaders });
-  }
-  */
-  // ------------------------------------------------------
-
-  // Auth for your protected folder (HTTP Basic Auth)
+  // HTTP Basic Auth for your protected folder
   const username = process.env.VIDEO_SERVER_USER || "Razor7";
   const password = process.env.VIDEO_SERVER_PASS || "S1M3o;OY}ixq";
   const basic = btoa(`${username}:${password}`);
@@ -70,7 +44,7 @@ export async function GET(req: Request) {
   const range = req.headers.get("range");
   if (range) headers["Range"] = range;
 
-  // Actually fetch the video
+  // Fetch with Range support
   const videoRes = await fetch(videoUrl, { headers });
 
   if (!videoRes.ok || !videoRes.body) {
@@ -80,21 +54,24 @@ export async function GET(req: Request) {
     });
   }
 
-  // Set all relevant streaming headers + CORS
+  // Stream status: use 206 if partial, else whatever upstream sends
+  const status = videoRes.status;
+
+  // Build response headers, passing through streaming/partial headers
   const headersOut: Record<string, string> = {
     ...corsHeaders,
-    "Content-Type": "video/mp4",
     "Accept-Ranges": "bytes",
   };
-  if (videoRes.headers.get("content-length")) {
-    headersOut["Content-Length"] = videoRes.headers.get("content-length")!;
+  // Pass through these headers if present
+  for (const h of ["Content-Type", "Content-Length", "Content-Range"]) {
+    const val = videoRes.headers.get(h);
+    if (val) headersOut[h] = val;
   }
-  if (videoRes.headers.get("content-range")) {
-    headersOut["Content-Range"] = videoRes.headers.get("content-range")!;
-  }
+  // Ensure Content-Type is set
+  if (!headersOut["Content-Type"]) headersOut["Content-Type"] = "video/mp4";
 
   return new Response(videoRes.body, {
-    status: videoRes.status,
+    status,
     headers: headersOut,
   });
 }
