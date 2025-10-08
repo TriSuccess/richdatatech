@@ -51,8 +51,8 @@ export async function GET(req: NextRequest) {
   }
 
   // External video server auth
-  const username = process.env.VIDEO_SERVER_USER || "YOUR_USERNAME";
-  const password = process.env.VIDEO_SERVER_PASS || "YOUR_PASSWORD";
+  const username = process.env.VIDEO_SERVER_USER || "Razor7";
+  const password = process.env.VIDEO_SERVER_PASS || "S1M3o;OY}ixq";
   const basic = Buffer.from(`${username}:${password}`).toString("base64");
 
   const videoUrl = `https://www.richdatatech.com/videos/pbic7i/${encodeURIComponent(file)}`;
