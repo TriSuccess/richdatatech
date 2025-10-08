@@ -82,7 +82,7 @@
   <div class="header-top">
     <div>
       <a href="index.html">
-      <img src="https://www.richdatatech.com/images/richdatatech.png" alt="RichDataTech Logo" class="h-12 sm:h-16 w-auto object-contain"/>
+        <img src="https://www.richdatatech.com/images/richdatatech.png" alt="RichDataTech Logo" class="h-16 sm:h-20 w-auto object-contain"/>
       </a>
     </div>
     <div id="auth-box" class="flex flex-col items-end">
@@ -94,17 +94,21 @@
   <nav class="main-nav">
     <a href="powerbi.html">Power BI</a>
     <a href="courses.html">All Courses</a>
-    <a href="aipowertips.html">AI Power Tips</a>
+    <a href="aitools.html">AI Tools</a>
     <a href="about.html">About</a>
     <a href="contact.html">Contact</a>
   </nav>
 </header>
 
 <!-- MAIN -->
-<main class="pt-4 px-4 flex-grow bg-gradient-to-r from-gray-300 via-gray-300 to-gray-200">
-  <div id="course-content" class="mt-8"></div>
-  <br><br>
+<main class="pt-4 px-4 flex-grow">
+  <h1 class="text-xl font-bold mb-4">Paid Course 1</h1>
+  <button id="buy-now-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded hidden">Buy Now</button>
+  <div id="paid-content" class="hidden mt-4">
+    <!-- Video is injected here -->
+  </div>
 </main>
+
 
 <!-- FOOTER (never hidden by JS) -->
 <footer style="background:#23272a; color:#fff; padding:38px 0 18px 0;">
@@ -138,18 +142,17 @@ AI tools, and valuable resources.</div>
       <div>
         <div style="font-weight:600; font-size:1.09rem; margin-bottom:7px;">Follow Us</div>
         <div style="margin-bottom:10px;">
-          <!-- YouTube - added to the left of all icon links -->
-          <a href="https://www.youtube.com/channel/UClGGQ59Z_VawCYuElS1dJ2A" target="_blank" title="YouTube" style="margin:0 7px; display:inline-block;">
-            <!-- YouTube SVG -->
-            <svg width="26" height="26" viewBox="0 0 576 512"><path fill="#555" d="M549.655 124.083c-6.281-23.725-24.926-42.369-48.648-48.649C458.281 64 288 64 288 64s-170.281 0-212.998 11.434c-23.722 6.28-42.367 24.924-48.648 48.649C16 166.8 16 256 16 256s0 89.201 10.354 131.918c6.281 23.726 24.926 42.369 48.648 48.649C117.719 448 288 448 288 448s170.281 0 212.998-11.433c23.722-6.28 42.367-24.923 48.648-48.649C560 345.2 560 256 560 256s0-89.2-10.345-131.917zM232 336V176l142.857 80L232 336z"/></svg>
+          <a href="https://google.com/search?q=RichDataTech" target="_blank" title="Google" style="margin:0 7px; display:inline-block;">
+            <!-- Google SVG -->
+            <svg width="26" height="26" viewBox="0 0 48 48"><g><path fill="#555" d="M44.5 20H24v8.5h11.7C34.6 33.9 29.8 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 6 .9 8.3 2.6l6.3-6.3C34.4 4.9 29.5 3 24 3 12.7 3 3 12.7 3 24s9.7 21 21 21c10.5 0 20-8 20-20 0-1.3-.1-2.7-.5-4z"/></g></svg>
           </a>
-                   <a href="https://www.instagram.com/richdatatech?igsh=MWl0eHdoZGdoeWVxeA==" target="_blank" title="Instagram" style="margin:0 7px; display:inline-block;">
+          <a href="https://instagram.com/yourprofile" target="_blank" title="Instagram" style="margin:0 7px; display:inline-block;">
             <svg width="26" height="26" viewBox="0 0 448 512"><path fill="#555" d="M224 202.66A53.34 53.34 0 1 0 277.34 256 53.38 53.38 0 0 0 224 202.66zm124.71-41a54 54 0 0 0-30.37-30.37C286.82 118.09 256 112 224 112s-62.82 6.09-94.34 19.29a54 54 0 0 0-30.37 30.37C118.09 161.18 112 192 112 224s6.09 62.82 19.29 94.34a54 54 0 0 0 30.37 30.37C161.18 393.91 192 400 224 400s62.82-6.09 94.34-19.29a54 54 0 0 0 30.37-30.37C393.91 286.82 400 256 400 224s-6.09-62.82-19.29-94.34z"/></svg>
           </a>
-          <a href="https://www.facebook.com/profile.php?id=61581771099083" target="_blank" title="Facebook" style="margin:0 7px; display:inline-block;">
+          <a href="https://facebook.com/yourprofile" target="_blank" title="Facebook" style="margin:0 7px; display:inline-block;">
             <svg width="26" height="26" viewBox="0 0 320 512"><path fill="#555" d="M279.14 288l14.22-92.66h-88.91V136.89c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S264.43 0 225.36 0c-73.22 0-121.26 44.38-121.26 124.72V195.3H22.89V288h81.21v224h100.2V288z"/></svg>
           </a>
-          <a href="mailto:rich@richdatatech.com" title="Email" style="margin:0 7px; display:inline-block;">
+          <a href="mailto:your@email.com" title="Email" style="margin:0 7px; display:inline-block;">
             <svg width="26" height="26" viewBox="0 0 512 512"><path fill="#555" d="M502.3 190.8L327.4 338.3c-13.7 11.6-33.1 11.6-46.8 0L9.7 190.8C3.9 186.1 0 178.9 0 170.9V144c0-35.3 28.7-64 64-64h384c35.3 0 64 28.7 64 64v26.9c0 8-3.9 15.2-9.7 20zM0 400V212.2l218.1 184.5c19.5 16.5 48.4 16.5 67.9 0L512 212.2V400c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64z"/></svg>
           </a>
         </div>
@@ -167,7 +170,7 @@ AI tools, and valuable resources.</div>
   </script>
 </footer>
 
-<!-- AUTH MODAL (use your existing modal code) -->
+<!-- 🔐 AUTH MODAL -->
 <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
   <div class="bg-white rounded-lg shadow-lg p-6 w-80 relative">
     <button id="close-auth" class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
@@ -200,7 +203,7 @@ import {
   getFirestore, doc, getDoc, onSnapshot, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// Firebase Config (unchanged)
+// 🔧 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyBorPU13tVHj-o-28ADUkrXE944GIWhGOI",
   authDomain: "course2-f1bdb.firebaseapp.com",
@@ -215,7 +218,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const COURSE_COLLECTION = "course2";
 
-// Elements
+// 📄 Elements
 const openAuthBtn = document.getElementById("open-auth-btn");
 const closeAuth = document.getElementById("close-auth");
 const authModal = document.getElementById("auth-modal");
@@ -226,100 +229,15 @@ const authMessage = document.getElementById("auth-message");
 const forgotPass = document.getElementById("forgot-pass");
 const loggedInSpan = document.getElementById("logged-in-span");
 const statusSpan = document.getElementById("status-span");
+const buyBtn = document.getElementById("buy-now-btn");
+const paidContent = document.getElementById("paid-content");
 const emailInput = document.getElementById("email-input");
 const passwordInput = document.getElementById("password-input");
 
 let isRegisterMode = false;
 let unsubscribeAccess = null;
 
-function showMsg(msg, color="green") {
-  authMessage.textContent = msg;
-  authMessage.style.color = color;
-  setTimeout(()=>authMessage.textContent="",4000);
-}
-
-function showStatus(msg) {
-  statusSpan.textContent = msg;
-  statusSpan.classList.remove("hidden");
-  setTimeout(() => {
-    statusSpan.classList.add("hidden");
-  }, 4000);
-}
-
-// Modal open/close
-openAuthBtn.addEventListener("click", () => authModal.classList.remove("hidden"));
-closeAuth.addEventListener("click", () => { authModal.classList.add("hidden"); authMessage.textContent=""; });
-window.addEventListener("click", e => { if (e.target === authModal) authModal.classList.add("hidden"); });
-
-// Toggle login/register
-toggleLink.addEventListener("click", e => {
-  e.preventDefault();
-  isRegisterMode = !isRegisterMode;
-  authTitle.textContent = isRegisterMode ? "Register" : "Login";
-  actionBtn.textContent = isRegisterMode ? "Register" : "Login";
-  toggleLink.innerHTML = isRegisterMode
-    ? `Already have an account? <a href="#" class="text-blue-600 hover:underline">Login</a>`
-    : `Don’t have an account? <a href="#" class="text-blue-600 hover:underline">Register here</a>`;
-});
-
-// ENTER key triggers login/register
-[emailInput, passwordInput].forEach(input => {
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      actionBtn.click();
-    }
-  });
-});
-
-// Auth handler
-actionBtn.addEventListener("click", async () => {
-  const email = emailInput.value.trim();
-  const password = passwordInput.value;
-  if (!email || !password) return showMsg("Enter email & password", "red");
-  try {
-    if (isRegisterMode) {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await ensureUserRecord(cred.user);
-      showMsg("Registered successfully!");
-      showStatus(`Welcome! ${cred.user.email}`);
-    } else {
-      await signInWithEmailAndPassword(auth, email, password);
-      showMsg("Logged in!");
-      showStatus(`Welcome back! ${email}`);
-    }
-    authModal.classList.add("hidden");
-  } catch (err) { showMsg(err.message, "red"); }
-});
-
-// Forgot password
-forgotPass.addEventListener("click", async (e) => {
-  e.preventDefault();
-  const email = emailInput.value.trim();
-  if (!email) return showMsg("Enter your email first", "red");
-  try {
-    await sendPasswordResetEmail(auth, email);
-    showMsg("Password reset email sent!");
-  } catch (err) { showMsg(err.message, "red"); }
-});
-
-// OAuth (Google + GitHub)
-const googleBtn = document.getElementById("google-login");
-const githubBtn = document.getElementById("github-login");
-const googleProvider = new GoogleAuthProvider();
-const githubProvider = new GithubAuthProvider();
-googleBtn.addEventListener("click", ()=>handleOAuthLogin(googleProvider));
-githubBtn.addEventListener("click", ()=>handleOAuthLogin(githubProvider));
-async function handleOAuthLogin(provider) {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    await ensureUserRecord(result.user);
-    authModal.classList.add("hidden");
-    showStatus(`Welcome back! ${result.user.email}`);
-  } catch (err) { showMsg(err.message, "red"); }
-}
-
-// Firestore helper
+// 🧱 Firestore helper
 async function ensureUserRecord(user) {
   const userRef = doc(db, COURSE_COLLECTION, user.uid);
   const snap = await getDoc(userRef);
@@ -337,152 +255,97 @@ async function ensureUserRecord(user) {
   }
 }
 
-// Main dynamic content rendering
-function renderFreeContent() {
-  document.getElementById("course-content").innerHTML = `
-    <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
-      <h1 class="text-3xl font-bold text-blue-700 text-center mb-4">🔓 Free Power BI Lesson 1 Preview</h1>
-      <div class="mx-auto max-w-3xl w-full mb-8">
-        <video id="free-video" class="w-full rounded shadow-md block mx-auto" controls playsinline>
-          <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
-        <div class="flex items-center justify-between mt-4">
-          <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
-          <h2 class="text-xl font-semibold text-gray-800">Lesson 1 Preview</h2>
-          <a href="powerbi1.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
-        </div>
-      </div>
-      <div class="grid md:grid-cols-2 gap-8 w-full">
-        <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
-          <p class="text-base leading-relaxed text-black">
-            This is a <span class="font-semibold text-blue-700">free preview</span> of our Power BI beginner course!
-            Enjoy the introductory tips and see what you’ll unlock as a member.
-          </p>
-          <ul class="list-disc pl-5 space-y-2 text-black text-base mt-4">
-            <li>How to import data into Power BI</li>
-            <li>Basic Power Query steps</li>
-            <li>Building your first visual</li>
-          </ul>
-        </div>
-        <div class="bg-white border border-blue-400 rounded-lg p-6 shadow-sm flex flex-col items-center justify-center">
-          <h3 class="text-lg font-semibold mb-2 text-blue-700">Unlock Full Lesson</h3>
-          <p class="text-base text-gray-700 mb-4 text-center">
-            Get full access to all premium lessons and resources by upgrading now!
-          </p>
-          <button id="buy-now-btn" class="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white px-6 py-2 rounded-md text-base font-semibold shadow transition-all duration-150">
-            Buy Now to Unlock
-          </button>
-          <p class="text-xs text-gray-500 mt-3 text-center">One-time payment, instant access.</p>
-        </div>
-      </div>
-    </div>
-  `;
-  // Attach event after rendering
+// --- ENTER KEY triggers login/register ---
+[emailInput, passwordInput].forEach(input => {
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      actionBtn.click();
+    }
+  });
+});
+
+// --- Status message helper ---
+function showStatus(msg) {
+  statusSpan.textContent = msg;
+  statusSpan.classList.remove("hidden");
   setTimeout(() => {
-    const buyBtn = document.getElementById("buy-now-btn");
-    if (buyBtn) buyBtn.onclick = handleStripeCheckout;
-  }, 0);
+    statusSpan.classList.add("hidden");
+  }, 4000);
 }
 
-async function showPaidVideoAndContent() {
-  const user = auth.currentUser;
-  if (!user) return;
-  const idToken = await user.getIdToken();
-  const res = await fetch("https://richdatatech.vercel.app/api/secure-video", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + idToken
-    },
-    body: JSON.stringify({
-      uid: user.uid,
-      productId: "paid1"
-    })
-  });
-  if (!res.ok) {
-    document.getElementById("course-content").innerHTML = `<div class="text-red-600">You do not have access.</div>`;
-    return;
-  }
-  const data = await res.json();
-  document.getElementById("course-content").innerHTML = `
-    <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
-      <h1 class="text-3xl font-bold text-blue-700 text-center mb-4">🎓 Paid Power BI Lesson 1</h1>
-      <div class="mx-auto max-w-3xl w-full mb-8">
-        <video id="secure-video" class="w-full rounded shadow-md block mx-auto" controls autoplay playsinline>
-          <source src="${data.url}" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
+// ⚙️ Modal open/close
+openAuthBtn.addEventListener("click", () => authModal.classList.remove("hidden"));
+closeAuth.addEventListener("click", () => { authModal.classList.add("hidden"); authMessage.textContent=""; });
+window.addEventListener("click", e => { if (e.target === authModal) authModal.classList.add("hidden"); });
 
-<!-- Progress Bar Start -->
-    <div class="w-full my-3">
-      <div class="flex items-center justify-between mb-1">
-        <span class="text-xs text-blue-700 font-semibold">Progress</span>
-        <span id="progress-label" class="text-xs text-blue-700 font-semibold">2 / 10 lessons (20%)</span>
-      </div>
-      <div class="relative h-2 rounded-full bg-blue-100 overflow-hidden">
-        <div id="progress-bar" class="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500" style="width: 20%;"></div>
-      </div>
-    </div>
-    <!-- Progress Bar End -->
+// 🔄 Toggle login/register
+toggleLink.addEventListener("click", e => {
+  e.preventDefault();
+  isRegisterMode = !isRegisterMode;
+  authTitle.textContent = isRegisterMode ? "Register" : "Login";
+  actionBtn.textContent = isRegisterMode ? "Register" : "Login";
+  toggleLink.innerHTML = isRegisterMode
+    ? `Already have an account? <a href="#" class="text-blue-600 hover:underline">Login</a>`
+    : `Don’t have an account? <a href="#" class="text-blue-600 hover:underline">Register here</a>`;
+});
 
+// 🔐 Auth handler
+actionBtn.addEventListener("click", async () => {
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+  if (!email || !password) return showMsg("Enter email & password", "red");
 
-        <div class="flex items-center justify-between mt-4">
-          <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
-          <h2 class="text-xl font-semibold text-gray-800">Lesson 1</h2>
-          <a href="powerbi1.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
-        </div>
-      </div>
-      <div class="grid md:grid-cols-2 gap-8 w-full">
-        <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
-          <p class="text-base leading-relaxed text-black">
-            This is a <span class="font-semibold text-green-700">members-only</span> lesson in the Power BI beginner course.
-            You have full access to the lesson video and content!
-          </p>
-        </div>
-        <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
-          <h3 class="text-lg font-semibold mb-4 text-black">📘 Lesson Focus</h3>
-          <ul class="list-disc pl-5 space-y-2 text-black text-base">
-            <li>Loading Excel and CSV data into Power BI</li>
-            <li>Basic Power Query cleanup</li>
-            <li>Simple visuals and charts</li>
-            <li>Saving your first report</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  `;
-  // Disable right-click on video
-  const video = document.getElementById("secure-video");
-  if (video) {
-    video.addEventListener('contextmenu', e => e.preventDefault());
-  }
+  try {
+    if (isRegisterMode) {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await ensureUserRecord(cred.user);
+      showMsg("Registered successfully!");
+      showStatus(`Welcome! ${cred.user.email}`);
+    } else {
+      await signInWithEmailAndPassword(auth, email, password);
+      showMsg("Logged in!");
+      showStatus(`Welcome back! ${email}`);
+    }
+    authModal.classList.add("hidden");
+  } catch (err) { showMsg(err.message, "red"); }
+});
+
+function showMsg(msg, color="green") {
+  authMessage.textContent = msg;
+  authMessage.style.color = color;
+  setTimeout(()=>authMessage.textContent="",4000);
 }
 
-// Stripe checkout logic
-function handleStripeCheckout() {
-  const user = auth.currentUser;
-  if (!user) return alert("You must log in to purchase.");
-  fetch("https://richdatatech.vercel.app/api/checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      uid: user.uid,
-      items: [{ price: "price_1RqaLeJOLIr6wNsmGRK6tXXP" }],
-      productId: "paid1"
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.url) window.location.href = data.url;
-    else alert("Failed to start checkout.");
-  })
-  .catch(() => {
-    alert("Checkout failed.");
-  });
-}
+// 🔑 Forgot password
+forgotPass.addEventListener("click", async (e) => {
+  e.preventDefault();
+  const email = emailInput.value.trim();
+  if (!email) return showMsg("Enter your email first", "red");
+  try {
+    await sendPasswordResetEmail(auth, email);
+    showMsg("Password reset email sent!");
+  } catch (err) { showMsg(err.message, "red"); }
+});
 
-// Auth state and Firestore access logic
+// 🌐 OAuth (Google + GitHub)
+const googleBtn = document.getElementById("google-login");
+const githubBtn = document.getElementById("github-login");
+const googleProvider = new GoogleAuthProvider();
+const githubProvider = new GithubAuthProvider();
+
+async function handleOAuthLogin(provider) {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    await ensureUserRecord(result.user);
+    authModal.classList.add("hidden");
+    showStatus(`Welcome back! ${result.user.email}`);
+  } catch (err) { showMsg(err.message, "red"); }
+}
+googleBtn.addEventListener("click", ()=>handleOAuthLogin(googleProvider));
+githubBtn.addEventListener("click", ()=>handleOAuthLogin(githubProvider));
+
+// 🧠 Auth state
 onAuthStateChanged(auth, async (user) => {
   openAuthBtn.classList.remove("hidden");
   if (user) {
@@ -502,25 +365,88 @@ onAuthStateChanged(auth, async (user) => {
       authModal.classList.remove("hidden");
     };
     if (unsubscribeAccess) unsubscribeAccess();
-    renderFreeContent();
+    paidContent.classList.add("hidden");
+    buyBtn.classList.remove("hidden");
   }
 });
 
+// 🎧 Real-time access (never hides footer/header)
 function listenForAccess(uid) {
   if (unsubscribeAccess) unsubscribeAccess();
   const ref = doc(db, COURSE_COLLECTION, uid);
   unsubscribeAccess = onSnapshot(ref, (snap) => {
     if (snap.exists() && snap.data().purchases?.paid1) {
-      showPaidVideoAndContent();
+      showPaidVideo();
+      buyBtn.classList.add("hidden");
     } else {
-      renderFreeContent();
+      paidContent.classList.add("hidden");
+      buyBtn.classList.remove("hidden");
     }
   });
 }
 
-// Render free content on first load (even before auth)
-renderFreeContent();
+// 💳 Stripe checkout
+buyBtn.addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user) return alert("You must log in to purchase.");
+  try {
+    const res = await fetch("https://richdatatech.vercel.app/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        uid: user.uid,
+        items: [{ price: "price_1RqaLeJOLIr6wNsmGRK6tXXP" }],
+        productId: "paid1"
+      })
+    });
+    const data = await res.json();
+    if (data.url) window.location.href = data.url;
+    else alert("Failed to start checkout.");
+  } catch (err) {
+    alert("Checkout failed.");
+  }
+});
 
+// 🕒 Dynamic year
+document.getElementById("year").textContent = new Date().getFullYear();
+
+// Inject video and prevent right click
+async function showPaidVideo() {
+  const user = auth.currentUser;
+  if (!user) return;
+  const idToken = await user.getIdToken();
+  // Get signed URL from backend
+  const res = await fetch("https://richdatatech.vercel.app/api/secure-video", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + idToken
+    },
+    body: JSON.stringify({
+      uid: user.uid,
+      productId: "paid1"
+    })
+  });
+  if (!res.ok) {
+    paidContent.innerHTML = `<div class="text-red-600">You do not have access.</div>`;
+    paidContent.classList.remove("hidden");
+    return;
+  }
+  const data = await res.json();
+  paidContent.innerHTML = `
+    <video id="secure-video" width="100%" controls autoplay>
+      <source src="${data.url}" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <p class="mt-2">This is premium content for Course 1.</p>
+  `;
+  paidContent.classList.remove("hidden");
+  // Disable right-click on video
+  const video = document.getElementById("secure-video");
+  if (video) {
+    video.addEventListener('contextmenu', e => e.preventDefault());
+  }
+}
 </script>
 </body>
 </html>

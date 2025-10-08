@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Paid Course – RichDataTech</title>
+  <title>Power BI – Members Only</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body, * { font-family: 'Proxima Nova', sans-serif; }
@@ -100,32 +100,19 @@
   </nav>
 </header>
 
-<!-- MAIN -->
 <main class="pt-4 px-4 flex-grow bg-gradient-to-r from-gray-300 via-gray-300 to-gray-200">
   <div id="course-content" class="mt-8"></div>
   <br><br>
 </main>
 
-<!-- FOOTER (never hidden by JS) -->
+<!-- FOOTER -->
 <footer style="background:#23272a; color:#fff; padding:38px 0 18px 0;">
   <div style="max-width:950px; margin:0 auto;">
-    <!-- Table-like 3-column grid with responsive stacking -->
-    <div style="
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 32px;
-      align-items: flex-start;
-      justify-items: center;
-      text-align: center;
-    " class="footer-table">
-      <!-- Left Cell: Blurb -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; align-items: flex-start; justify-items: center; text-align: center;" class="footer-table">
       <div>
         <div style="font-weight:600; font-size:1.09rem; margin-bottom:5px;">RichDataTech</div>
-        <div style="font-size:0.97rem; color:#d1d5db;">Advance your future with
-premium courses,
-AI tools, and valuable resources.</div>
+        <div style="font-size:0.97rem; color:#d1d5db;">Advance your future with premium courses, AI tools, and valuable resources.</div>
       </div>
-      <!-- Center Cell: Quick Links -->
       <div>
         <div style="font-weight:600; font-size:1.09rem; margin-bottom:7px;">Quick Links</div>
         <ul style="list-style:none; padding:0; margin:0; font-size:0.97rem;">
@@ -134,16 +121,13 @@ AI tools, and valuable resources.</div>
           <li style="margin-bottom:4px;"><a href="courses.html" style="color:#fff; text-decoration:none;">All Courses</a></li>
         </ul>
       </div>
-      <!-- Right Cell: Social + Email -->
       <div>
         <div style="font-weight:600; font-size:1.09rem; margin-bottom:7px;">Follow Us</div>
         <div style="margin-bottom:10px;">
-          <!-- YouTube - added to the left of all icon links -->
           <a href="https://www.youtube.com/channel/UClGGQ59Z_VawCYuElS1dJ2A" target="_blank" title="YouTube" style="margin:0 7px; display:inline-block;">
-            <!-- YouTube SVG -->
             <svg width="26" height="26" viewBox="0 0 576 512"><path fill="#555" d="M549.655 124.083c-6.281-23.725-24.926-42.369-48.648-48.649C458.281 64 288 64 288 64s-170.281 0-212.998 11.434c-23.722 6.28-42.367 24.924-48.648 48.649C16 166.8 16 256 16 256s0 89.201 10.354 131.918c6.281 23.726 24.926 42.369 48.648 48.649C117.719 448 288 448 288 448s170.281 0 212.998-11.433c23.722-6.28 42.367-24.923 48.648-48.649C560 345.2 560 256 560 256s0-89.2-10.345-131.917zM232 336V176l142.857 80L232 336z"/></svg>
           </a>
-                   <a href="https://www.instagram.com/richdatatech?igsh=MWl0eHdoZGdoeWVxeA==" target="_blank" title="Instagram" style="margin:0 7px; display:inline-block;">
+          <a href="https://www.instagram.com/richdatatech?igsh=MWl0eHdoZGdoeWVxeA==" target="_blank" title="Instagram" style="margin:0 7px; display:inline-block;">
             <svg width="26" height="26" viewBox="0 0 448 512"><path fill="#555" d="M224 202.66A53.34 53.34 0 1 0 277.34 256 53.38 53.38 0 0 0 224 202.66zm124.71-41a54 54 0 0 0-30.37-30.37C286.82 118.09 256 112 224 112s-62.82 6.09-94.34 19.29a54 54 0 0 0-30.37 30.37C118.09 161.18 112 192 112 224s6.09 62.82 19.29 94.34a54 54 0 0 0 30.37 30.37C161.18 393.91 192 400 224 400s62.82-6.09 94.34-19.29a54 54 0 0 0 30.37-30.37C393.91 286.82 400 256 400 224s-6.09-62.82-19.29-94.34z"/></svg>
           </a>
           <a href="https://www.facebook.com/profile.php?id=61581771099083" target="_blank" title="Facebook" style="margin:0 7px; display:inline-block;">
@@ -167,7 +151,7 @@ AI tools, and valuable resources.</div>
   </script>
 </footer>
 
-<!-- AUTH MODAL (use your existing modal code) -->
+<!-- AUTH MODAL -->
 <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
   <div class="bg-white rounded-lg shadow-lg p-6 w-80 relative">
     <button id="close-auth" class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
@@ -196,9 +180,6 @@ import {
   sendPasswordResetEmail, GoogleAuthProvider, GithubAuthProvider,
   signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import {
-  getFirestore, doc, getDoc, onSnapshot, setDoc
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // Firebase Config (unchanged)
 const firebaseConfig = {
@@ -212,8 +193,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
-const COURSE_COLLECTION = "course2";
 
 // Elements
 const openAuthBtn = document.getElementById("open-auth-btn");
@@ -229,29 +208,13 @@ const statusSpan = document.getElementById("status-span");
 const emailInput = document.getElementById("email-input");
 const passwordInput = document.getElementById("password-input");
 
-let isRegisterMode = false;
-let unsubscribeAccess = null;
-
-function showMsg(msg, color="green") {
-  authMessage.textContent = msg;
-  authMessage.style.color = color;
-  setTimeout(()=>authMessage.textContent="",4000);
-}
-
-function showStatus(msg) {
-  statusSpan.textContent = msg;
-  statusSpan.classList.remove("hidden");
-  setTimeout(() => {
-    statusSpan.classList.add("hidden");
-  }, 4000);
-}
-
 // Modal open/close
 openAuthBtn.addEventListener("click", () => authModal.classList.remove("hidden"));
 closeAuth.addEventListener("click", () => { authModal.classList.add("hidden"); authMessage.textContent=""; });
 window.addEventListener("click", e => { if (e.target === authModal) authModal.classList.add("hidden"); });
 
 // Toggle login/register
+let isRegisterMode = false;
 toggleLink.addEventListener("click", e => {
   e.preventDefault();
   isRegisterMode = !isRegisterMode;
@@ -273,16 +236,27 @@ toggleLink.addEventListener("click", e => {
 });
 
 // Auth handler
+function showMsg(msg, color="green") {
+  authMessage.textContent = msg;
+  authMessage.style.color = color;
+  setTimeout(()=>authMessage.textContent="",4000);
+}
+function showStatus(msg) {
+  statusSpan.textContent = msg;
+  statusSpan.classList.remove("hidden");
+  setTimeout(() => {
+    statusSpan.classList.add("hidden");
+  }, 4000);
+}
 actionBtn.addEventListener("click", async () => {
   const email = emailInput.value.trim();
   const password = passwordInput.value;
   if (!email || !password) return showMsg("Enter email & password", "red");
   try {
     if (isRegisterMode) {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await ensureUserRecord(cred.user);
+      await createUserWithEmailAndPassword(auth, email, password);
       showMsg("Registered successfully!");
-      showStatus(`Welcome! ${cred.user.email}`);
+      showStatus(`Welcome! ${email}`);
     } else {
       await signInWithEmailAndPassword(auth, email, password);
       showMsg("Logged in!");
@@ -312,33 +286,14 @@ googleBtn.addEventListener("click", ()=>handleOAuthLogin(googleProvider));
 githubBtn.addEventListener("click", ()=>handleOAuthLogin(githubProvider));
 async function handleOAuthLogin(provider) {
   try {
-    const result = await signInWithPopup(auth, provider);
-    await ensureUserRecord(result.user);
+    await signInWithPopup(auth, provider);
     authModal.classList.add("hidden");
-    showStatus(`Welcome back! ${result.user.email}`);
+    showStatus(`Welcome back!`);
   } catch (err) { showMsg(err.message, "red"); }
 }
 
-// Firestore helper
-async function ensureUserRecord(user) {
-  const userRef = doc(db, COURSE_COLLECTION, user.uid);
-  const snap = await getDoc(userRef);
-  if (!snap.exists()) {
-    const purchases = {};
-    for (let i = 1; i <= 10; i++) {
-      purchases[`paid${i}`] = false;
-    }
-    await setDoc(userRef, {
-      email: user.email,
-      createdAt: new Date(),
-      provider: user.providerData[0].providerId,
-      purchases: purchases
-    });
-  }
-}
-
-// Main dynamic content rendering
-function renderFreeContent() {
+// Teaser for not logged in
+function renderTeaserContent() {
   document.getElementById("course-content").innerHTML = `
     <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
       <h1 class="text-3xl font-bold text-blue-700 text-center mb-4">🔓 Free Power BI Lesson 1 Preview</h1>
@@ -368,122 +323,94 @@ function renderFreeContent() {
         <div class="bg-white border border-blue-400 rounded-lg p-6 shadow-sm flex flex-col items-center justify-center">
           <h3 class="text-lg font-semibold mb-2 text-blue-700">Unlock Full Lesson</h3>
           <p class="text-base text-gray-700 mb-4 text-center">
-            Get full access to all premium lessons and resources by upgrading now!
+            Get full access to all premium lessons and resources by logging in!
           </p>
-          <button id="buy-now-btn" class="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white px-6 py-2 rounded-md text-base font-semibold shadow transition-all duration-150">
-            Buy Now to Unlock
+          <button id="login-btn" class="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white px-6 py-2 rounded-md text-base font-semibold shadow transition-all duration-150">
+            Login to Unlock
           </button>
-          <p class="text-xs text-gray-500 mt-3 text-center">One-time payment, instant access.</p>
+          <p class="text-xs text-gray-500 mt-3 text-center">Instant access after logging in.</p>
         </div>
       </div>
     </div>
   `;
-  // Attach event after rendering
   setTimeout(() => {
-    const buyBtn = document.getElementById("buy-now-btn");
-    if (buyBtn) buyBtn.onclick = handleStripeCheckout;
+    const loginBtn = document.getElementById("login-btn");
+    if (loginBtn) loginBtn.onclick = () => authModal.classList.remove("hidden");
   }, 0);
 }
 
-async function showPaidVideoAndContent() {
-  const user = auth.currentUser;
-  if (!user) return;
-  const idToken = await user.getIdToken();
-  const res = await fetch("https://richdatatech.vercel.app/api/secure-video", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + idToken
-    },
-    body: JSON.stringify({
-      uid: user.uid,
-      productId: "paid1"
-    })
-  });
-  if (!res.ok) {
-    document.getElementById("course-content").innerHTML = `<div class="text-red-600">You do not have access.</div>`;
-    return;
-  }
-  const data = await res.json();
-  document.getElementById("course-content").innerHTML = `
-    <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
-      <h1 class="text-3xl font-bold text-blue-700 text-center mb-4">🎓 Paid Power BI Lesson 1</h1>
-      <div class="mx-auto max-w-3xl w-full mb-8">
-        <video id="secure-video" class="w-full rounded shadow-md block mx-auto" controls autoplay playsinline>
-          <source src="${data.url}" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
-
-<!-- Progress Bar Start -->
-    <div class="w-full my-3">
-      <div class="flex items-center justify-between mb-1">
-        <span class="text-xs text-blue-700 font-semibold">Progress</span>
-        <span id="progress-label" class="text-xs text-blue-700 font-semibold">2 / 10 lessons (20%)</span>
-      </div>
-      <div class="relative h-2 rounded-full bg-blue-100 overflow-hidden">
-        <div id="progress-bar" class="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500" style="width: 20%;"></div>
-      </div>
-    </div>
-    <!-- Progress Bar End -->
-
-
-        <div class="flex items-center justify-between mt-4">
-          <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
-          <h2 class="text-xl font-semibold text-gray-800">Lesson 1</h2>
-          <a href="powerbi1.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
+// Members-only content (fetches signed URL from your API)
+async function renderMembersContent(user) {
+  document.getElementById("course-content").innerHTML = `<div class="text-blue-700 text-center text-xl font-semibold py-10">Loading your lesson...</div>`;
+  try {
+    const idToken = await user.getIdToken();
+    const res = await fetch("https://richdatatech.vercel.app/api/secure-video", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + idToken
+      },
+      body: JSON.stringify({
+        uid: user.uid,
+        productId: "members" // your backend should allow members access with this productId
+      })
+    });
+    if (!res.ok) throw new Error("Could not load video. Please try again.");
+    const data = await res.json();
+    document.getElementById("course-content").innerHTML = `
+      <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
+        <h1 class="text-3xl font-bold text-blue-700 text-center mb-4">🎓 Paid Power BI Lesson 1</h1>
+        <div class="mx-auto max-w-3xl w-full mb-8">
+          <video id="secure-video" class="w-full rounded shadow-md block mx-auto" controls autoplay playsinline>
+            <source src="${data.url}" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+          <div class="w-full my-3">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs text-blue-700 font-semibold">Progress</span>
+              <span id="progress-label" class="text-xs text-blue-700 font-semibold">2 / 10 lessons (20%)</span>
+            </div>
+            <div class="relative h-2 rounded-full bg-blue-100 overflow-hidden">
+              <div id="progress-bar" class="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500" style="width: 20%;"></div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between mt-4">
+            <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
+            <h2 class="text-xl font-semibold text-gray-800">Lesson 1</h2>
+            <a href="powerbi1.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-8 w-full">
+          <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
+            <p class="text-base leading-relaxed text-black">
+              This is a <span class="font-semibold text-green-700">members-only</span> lesson in the Power BI beginner course.
+              You have full access to the lesson video and content!
+            </p>
+          </div>
+          <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
+            <h3 class="text-lg font-semibold mb-4 text-black">📘 Lesson Focus</h3>
+            <ul class="list-disc pl-5 space-y-2 text-black text-base">
+              <li>Loading Excel and CSV data into Power BI</li>
+              <li>Basic Power Query cleanup</li>
+              <li>Simple visuals and charts</li>
+              <li>Saving your first report</li>
+            </ul>
+          </div>
         </div>
       </div>
-      <div class="grid md:grid-cols-2 gap-8 w-full">
-        <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
-          <p class="text-base leading-relaxed text-black">
-            This is a <span class="font-semibold text-green-700">members-only</span> lesson in the Power BI beginner course.
-            You have full access to the lesson video and content!
-          </p>
-        </div>
-        <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
-          <h3 class="text-lg font-semibold mb-4 text-black">📘 Lesson Focus</h3>
-          <ul class="list-disc pl-5 space-y-2 text-black text-base">
-            <li>Loading Excel and CSV data into Power BI</li>
-            <li>Basic Power Query cleanup</li>
-            <li>Simple visuals and charts</li>
-            <li>Saving your first report</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  `;
-  // Disable right-click on video
-  const video = document.getElementById("secure-video");
-  if (video) {
-    video.addEventListener('contextmenu', e => e.preventDefault());
+    `;
+    // Disable right-click on video
+    const video = document.getElementById("secure-video");
+    if (video) {
+      video.addEventListener('contextmenu', e => e.preventDefault());
+    }
+  } catch (err) {
+    document.getElementById("course-content").innerHTML = `<div class="text-red-600 text-center py-10">${err.message}</div>`;
   }
 }
 
-// Stripe checkout logic
-function handleStripeCheckout() {
-  const user = auth.currentUser;
-  if (!user) return alert("You must log in to purchase.");
-  fetch("https://richdatatech.vercel.app/api/checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      uid: user.uid,
-      items: [{ price: "price_1RqaLeJOLIr6wNsmGRK6tXXP" }],
-      productId: "paid1"
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.url) window.location.href = data.url;
-    else alert("Failed to start checkout.");
-  })
-  .catch(() => {
-    alert("Checkout failed.");
-  });
-}
-
-// Auth state and Firestore access logic
-onAuthStateChanged(auth, async (user) => {
+// Auth state logic
+onAuthStateChanged(auth, (user) => {
   openAuthBtn.classList.remove("hidden");
   if (user) {
     loggedInSpan.classList.remove("hidden");
@@ -494,33 +421,19 @@ onAuthStateChanged(auth, async (user) => {
       showStatus("Logged out!");
       location.reload();
     };
-    listenForAccess(user.uid);
+    renderMembersContent(user);
   } else {
     loggedInSpan.classList.add("hidden");
     openAuthBtn.textContent = "Login / Register";
     openAuthBtn.onclick = () => {
       authModal.classList.remove("hidden");
     };
-    if (unsubscribeAccess) unsubscribeAccess();
-    renderFreeContent();
+    renderTeaserContent();
   }
 });
 
-function listenForAccess(uid) {
-  if (unsubscribeAccess) unsubscribeAccess();
-  const ref = doc(db, COURSE_COLLECTION, uid);
-  unsubscribeAccess = onSnapshot(ref, (snap) => {
-    if (snap.exists() && snap.data().purchases?.paid1) {
-      showPaidVideoAndContent();
-    } else {
-      renderFreeContent();
-    }
-  });
-}
-
-// Render free content on first load (even before auth)
-renderFreeContent();
-
+// Render teaser on first load
+renderTeaserContent();
 </script>
 </body>
 </html>
