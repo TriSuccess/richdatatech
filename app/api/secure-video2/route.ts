@@ -1,10 +1,8 @@
-import { NextRequest } from "next/server";
-
 export const config = {
   runtime: "edge",
 };
 
-export default async function handler(req: NextRequest) {
+export default async function handler(req: Request) {
   const { searchParams } = new URL(req.url!);
   const file = searchParams.get("file");
   if (!file) {
@@ -20,12 +18,13 @@ export default async function handler(req: NextRequest) {
     return new Response("Invalid file", { status: 403 });
   }
 
-  // PROXY with BASIC AUTH
-  const videoUrl = `https://www.richdatatech.com/videos/pbic7i/${encodeURIComponent(file)}`;
+  // HTTP Basic Auth credentials for your protected folder
   const username = "YOUR_USERNAME";
   const password = "YOUR_PASSWORD";
   const basic = btoa(username + ":" + password);
 
+  // Fetch the protected video from your server
+  const videoUrl = `https://www.richdatatech.com/videos/pbic7i/${encodeURIComponent(file)}`;
   const videoRes = await fetch(videoUrl, {
     headers: {
       'Authorization': `Basic ${basic}`,
@@ -36,6 +35,7 @@ export default async function handler(req: NextRequest) {
     return new Response("Video not found", { status: 404 });
   }
 
+  // Pass through appropriate headers for streaming
   return new Response(videoRes.body, {
     status: 200,
     headers: {
