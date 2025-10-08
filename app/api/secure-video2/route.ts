@@ -1,7 +1,11 @@
 import { NextRequest } from "next/server";
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
+export const config = {
+  runtime: "edge",
+};
+
+export default async function handler(req: NextRequest) {
+  const { searchParams } = new URL(req.url!);
   const file = searchParams.get("file");
   if (!file) {
     return new Response("Missing file parameter", { status: 400 });
@@ -16,26 +20,27 @@ export async function GET(req: NextRequest) {
     return new Response("Invalid file", { status: 403 });
   }
 
-  // Fetch the protected video from your server (use credentials if needed)
+  // PROXY with BASIC AUTH
   const videoUrl = `https://www.richdatatech.com/videos/pbic7i/${encodeURIComponent(file)}`;
+  const username = "YOUR_USERNAME";
+  const password = "YOUR_PASSWORD";
+  const basic = btoa(username + ":" + password);
+
   const videoRes = await fetch(videoUrl, {
-    // Uncomment and set these if your server uses HTTP Basic Auth!
-    // headers: {
-    //   Authorization: 'Basic ' + Buffer.from('username:password').toString('base64'),
-    // }
+    headers: {
+      'Authorization': `Basic ${basic}`,
+    }
   });
 
   if (!videoRes.ok) {
     return new Response("Video not found", { status: 404 });
   }
 
-  // Set headers for video streaming
   return new Response(videoRes.body, {
     status: 200,
     headers: {
       "Content-Type": "video/mp4",
       "Accept-Ranges": "bytes",
-      // Pass through content length and range headers if needed:
       ...(videoRes.headers.get("content-length") ? { "Content-Length": videoRes.headers.get("content-length")! } : {}),
       ...(videoRes.headers.get("content-range") ? { "Content-Range": videoRes.headers.get("content-range")! } : {}),
     }

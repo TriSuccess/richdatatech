@@ -184,16 +184,15 @@ AI tools, and valuable resources.</div>
   </div>
 </div>
 
-<!-- Only the JS part is shown below for clarity. Replace your <script type="module">...</script> with this: -->
 <script type="module">
 // ===== EDIT THESE FOR EACH LESSON PAGE =====
 const course = "powerbi";
-const lessonNum = 8; // e.g. 2 means "2 / 10" and 20%
+const lessonNum = 8;
 const totalLessons = 10;
-const lessonTitle = "Lesson 2: Power BI Data Model";
-const lessonFilename = "powerbi8.mp4"; // change this for each lesson!
-const lessonNextUrl = "powerbi3.html";
-const lessonPrevUrl = "powerbi1.html";
+const lessonTitle = "Lesson 8: Power BI Data Model";
+const lessonFilename = "powerbi1.mp4";
+const lessonNextUrl = "powerbi9.html";
+const lessonPrevUrl = "powerbi7.html";
 const lessonFocus = [
   "Building relationships between tables",
   "Star schema and snowflake basics",
@@ -369,74 +368,52 @@ function renderTeaserContent() {
   }, 100);
 }
 
-// Members-only content (fetches signed URL from your API)
-async function renderMembersContent(user) {
-  document.getElementById("video-content").innerHTML = `<div class="text-blue-700 text-center text-xl font-semibold py-10">Loading your lesson...</div>`;
-  try {
-    const idToken = await user.getIdToken();
-    const res = await fetch("https://richdatatech.vercel.app/api/secure-video2", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + idToken
-      },
-      body: JSON.stringify({
-        uid: user.uid,
-        productId: "members",
-        file: lessonFilename
-      })
-    });
-    if (!res.ok) throw new Error("Could not load video. Please try again.");
-    const data = await res.json();
-    const percent = Math.round((lessonNum / totalLessons) * 100);
-    document.getElementById("video-content").innerHTML = `
-      <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
-        <h1 class="text-3xl font-bold text-blue-700 text-center mb-4">🎓 Power BI Course</h1>
-        <div class="mx-auto max-w-3xl w-full mb-8">
-          <video id="secure-video" class="w-full rounded shadow-md block mx-auto" controls autoplay playsinline>
-            <source src="${data.url}" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
-          <div class="w-full my-3">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-xs text-blue-700 font-semibold">Progress</span>
-              <span id="progress-label" class="text-xs text-blue-700 font-semibold">${lessonNum} / ${totalLessons} lessons (${percent}%)</span>
-            </div>
-            <div class="relative h-2 rounded-full bg-blue-100 overflow-hidden">
-              <div id="progress-bar" class="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500" style="width: ${percent}%;"></div>
-            </div>
+// Members-only content (use API proxy as video src)
+function renderMembersContent(user) {
+  const percent = Math.round((lessonNum / totalLessons) * 100);
+  document.getElementById("video-content").innerHTML = `
+    <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
+      <h1 class="text-3xl font-bold text-blue-700 text-center mb-4">🎓 Power BI Course</h1>
+      <div class="mx-auto max-w-3xl w-full mb-8">
+        <video id="secure-video2" class="w-full rounded shadow-md block mx-auto" controls autoplay playsinline>
+          <source src="https://richdatatech.vercel.app/api/secure-video2?file=${encodeURIComponent(lessonFilename)}" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+        <div class="w-full my-3">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-blue-700 font-semibold">Progress</span>
+            <span id="progress-label" class="text-xs text-blue-700 font-semibold">${lessonNum} / ${totalLessons} lessons (${percent}%)</span>
           </div>
-          <div class="flex items-center justify-between mt-4">
-            <a href="${lessonPrevUrl}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
-            <h2 class="text-xl font-semibold text-gray-800">${lessonTitle}</h2>
-            <a href="${lessonNextUrl}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
+          <div class="relative h-2 rounded-full bg-blue-100 overflow-hidden">
+            <div id="progress-bar" class="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500" style="width: ${percent}%;"></div>
           </div>
         </div>
-        <div class="grid md:grid-cols-2 gap-8 w-full">
-          <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
-            <p class="text-base leading-relaxed text-black">
-              This is a <span class="font-semibold text-green-700">members-only</span> lesson in the Power BI course.
-              You have full access to the lesson video and content!
-            </p>
-          </div>
-          <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
-            <h3 class="text-lg font-semibold mb-4 text-black">Lesson Focus</h3>
-            <ul class="list-disc pl-5 space-y-2 text-black text-base">
-              ${lessonFocus.map(item => `<li>${item}</li>`).join("")}
-            </ul>
-          </div>
+        <div class="flex items-center justify-between mt-4">
+          <a href="${lessonPrevUrl}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
+          <h2 class="text-xl font-semibold text-gray-800">${lessonTitle}</h2>
+          <a href="${lessonNextUrl}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
         </div>
       </div>
-    `;
-    // Disable right-click on video
-    const video = document.getElementById("secure-video");
-    if (video) {
-      video.addEventListener('contextmenu', e => e.preventDefault());
-      video.muted = false; video.volume = 1.0;
-    }
-  } catch (err) {
-    document.getElementById("video-content").innerHTML = `<div class="text-red-600 text-center py-10">${err.message}</div>`;
-  }
+      <div class="grid md:grid-cols-2 gap-8 w-full">
+        <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
+          <p class="text-base leading-relaxed text-black">
+            This is a <span class="font-semibold text-green-700">members-only</span> lesson in the Power BI course.
+            You have full access to the lesson video and content!
+          </p>
+        </div>
+        <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
+          <h3 class="text-lg font-semibold mb-4 text-black">Lesson Focus</h3>
+          <ul class="list-disc pl-5 space-y-2 text-black text-base">
+            ${lessonFocus.map(item => `<li>${item}</li>`).join("")}
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+  setTimeout(() => {
+    const secureVideo = document.getElementById("secure-video2");
+    if (secureVideo) { secureVideo.muted = false; secureVideo.volume = 1.0; }
+  }, 100);
 }
 
 // Auth state logic
