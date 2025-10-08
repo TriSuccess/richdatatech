@@ -9,14 +9,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization"
 };
 
-// --- Firebase Admin setup (singleton) ---
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY as string);
 
 let adminApp: App;
 if (!getApps().length) {
   adminApp = initializeApp({
     credential: cert(serviceAccount),
-    storageBucket: "course2-f1bdb.appspot.com", // fixed typo: was 'firebasestorage.app'
+    storageBucket: "course2-f1bdb.appspot.com", // Correct bucket name!
   });
 } else {
   adminApp = getApps()[0];
@@ -24,7 +23,6 @@ if (!getApps().length) {
 const authAdmin = getAuth(adminApp);
 const storage = getStorage(adminApp);
 
-// --- CORS preflight ---
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
@@ -34,7 +32,6 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Parse body & get token
     const body: { uid?: string } = await req.json();
     const { uid } = body;
     const authHeader = req.headers.get("authorization");
@@ -43,7 +40,6 @@ export async function POST(req: NextRequest) {
     }
     const idToken = authHeader.split("Bearer ")[1];
 
-    // 2. Verify Firebase ID token
     let decoded: DecodedIdToken;
     try {
       decoded = await authAdmin.verifyIdToken(idToken);
@@ -52,10 +48,9 @@ export async function POST(req: NextRequest) {
       return new NextResponse(JSON.stringify({ error: "Invalid token" }), { status: 401, headers: corsHeaders });
     }
 
-    // 3. No paywall: Any logged-in user is allowed!
+    // Any logged-in user is allowed, no Firestore/paywall check!
 
-    // 4. Generate signed URL for video
-    const filePath = "videos/1.mp4"; // Change this if you want a different video for members
+    const filePath = "videos/1.mp4";
     const [signedUrl] = await storage.bucket().file(filePath).getSignedUrl({
       action: "read",
       expires: Date.now() + 5 * 60 * 1000,
