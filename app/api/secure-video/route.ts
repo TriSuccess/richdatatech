@@ -1,20 +1,68 @@
+import { NextRequest, NextResponse } from "next/server";
+import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
+import { getFirestore } from "firebase-admin/firestore";
+
+// Initialize Firebase Admin only once (Vercel hot reload)
+if (!getApps().length) {
+  initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    }),
+  });
+}
+
 export async function POST(req: NextRequest) {
-  // ...auth checks as before...
-  const { file, productId } = await req.json();
-  // Only allow files in this array
-  const allowedFiles = [
-    "databricks1.mp4", "databricks2.mp4", "databricks3.mp4",
-    "databricks4.mp4", "databricks5.mp4", "databricks6.mp4",
-    "databricks7.mp4", "databricks8.mp4", "databricks9.mp4", "databricks10.mp4"
-  ];
-  if (!allowedFiles.includes(file)) {
-    return new NextResponse(JSON.stringify({ error: "Invalid file" }), { status: 403 });
+  try {
+    // Parse the Bearer token from headers
+    const authHeader = req.headers.get("authorization") || "";
+    const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    if (!idToken) {
+      return NextResponse.json({ error: "Missing token" }, { status: 401 });
+    }
+
+    // Verify Firebase ID token
+    const decoded = await getAuth().verifyIdToken(idToken);
+    const uid = decoded.uid;
+
+    // Parse POST body
+    const { file, productId } = await req.json();
+
+    // Only allow these files (protects against path traversal)
+    const allowedFiles = [
+      "databricks1.mp4",
+      "databricks2.mp4",
+      "databricks3.mp4",
+      "databricks4.mp4",
+      "databricks5.mp4",
+      "databricks6.mp4",
+      "databricks7.mp4",
+      "databricks8.mp4",
+      "databricks9.mp4",
+      "databricks10.mp4",
+    ];
+    if (!allowedFiles.includes(file)) {
+      return NextResponse.json({ error: "Invalid file request" }, { status: 403 });
+    }
+
+    // Check Firestore for purchases
+    const db = getFirestore();
+    const userDoc = await db.collection("course2").doc(uid).get();
+    if (!userDoc.exists) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+    const purchases = userDoc.data()?.purchases || {};
+    if (!purchases[productId]) {
+      return NextResponse.json({ error: "Not paid" }, { status: 403 });
+    }
+
+    // Build the secure video URL
+    const url = `https://www.richdatatech.com/videos/pbic7i/${encodeURIComponent(file)}`;
+    return NextResponse.json({ url });
+  } catch (err: any) {
+    // Handle Firebase errors, token errors, etc.
+    return NextResponse.json({ error: err?.message || "Unauthorized" }, { status: 401 });
   }
-  // Firestore user check as before...
-  // For productId "paid1", check purchases.paid1, etc.
-  const paid = userDoc.data()?.purchases?.[productId];
-  if (!paid) return NextResponse.json({ error: "Not paid" }, { status: 403 });
-  // Serve video
-  const url = `https://www.richdatatech.com/videos/pbic7i/${encodeURIComponent(file)}`;
-  return NextResponse.json({ url });
 }

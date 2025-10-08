@@ -385,10 +385,72 @@ function renderFreeContent() {
   }, 0);
 }
 
-async function showPaidVideoAndContent() {
+// Multi-lesson, Databricks-based version: supports 10 lessons/videos, dynamic navigation, progress, and security
+
+async function showPaidVideoAndContent(lessonNum = 1) {
   const user = auth.currentUser;
   if (!user) return;
+  // Define lessons: filename and title for each lesson
+  const lessons = [
+    { file: "databricks1.mp4", title: "Lesson 1: Databricks Introduction", focus: [
+      "Overview of Databricks platform",
+      "Workspace navigation",
+      "Basic cluster setup",
+      "First notebook run"
+    ]},
+    { file: "databricks2.mp4", title: "Lesson 2: Spark Basics", focus: [
+      "Understanding Spark architecture",
+      "RDDs and DataFrames",
+      "Running Spark jobs"
+    ]},
+    { file: "databricks3.mp4", title: "Lesson 3: DataFrames in Action", focus: [
+      "Creating DataFrames",
+      "Basic DataFrame operations",
+      "Filtering and aggregating data"
+    ]},
+    { file: "databricks4.mp4", title: "Lesson 4: Notebooks and Collaboration", focus: [
+      "Using Databricks notebooks",
+      "Collaboration features",
+      "Version control basics"
+    ]},
+    { file: "databricks5.mp4", title: "Lesson 5: Visualizations", focus: [
+      "Built-in visualizations",
+      "Custom charts",
+      "Sharing insights"
+    ]},
+    { file: "databricks6.mp4", title: "Lesson 6: Delta Lake Essentials", focus: [
+      "Delta Lake intro",
+      "Managing tables",
+      "Time travel and data reliability"
+    ]},
+    { file: "databricks7.mp4", title: "Lesson 7: Machine Learning Pipelines", focus: [
+      "MLflow basics",
+      "Creating ML pipelines",
+      "Tracking experiments"
+    ]},
+    { file: "databricks8.mp4", title: "Lesson 8: Job Scheduling", focus: [
+      "Databricks jobs",
+      "Scheduling and monitoring",
+      "Alerts and notifications"
+    ]},
+    { file: "databricks9.mp4", title: "Lesson 9: Performance Optimization", focus: [
+      "Spark tuning fundamentals",
+      "Caching and partitioning",
+      "Best practices"
+    ]},
+    { file: "databricks10.mp4", title: "Lesson 10: Real-World Projects", focus: [
+      "End-to-end project demo",
+      "Deploying pipelines",
+      "Q&A and summary"
+    ]}
+  ];
+  const maxLesson = lessons.length;
+  // Clamp lessonNum to valid range
+  lessonNum = Math.max(1, Math.min(lessonNum, maxLesson));
+  const lesson = lessons[lessonNum - 1];
+
   const idToken = await user.getIdToken();
+  // Secure API call with lesson and product
   const res = await fetch("https://richdatatech.vercel.app/api/secure-video", {
     method: "POST",
     headers: {
@@ -397,66 +459,67 @@ async function showPaidVideoAndContent() {
     },
     body: JSON.stringify({
       uid: user.uid,
-      productId: "paid1"
+      productId: "paid" + lessonNum,
+      file: lesson.file
     })
   });
   if (!res.ok) {
-    document.getElementById("course-content").innerHTML = `<div class="text-red-600">You do not have access.</div>`;
+    document.getElementById("course-content").innerHTML = `<div class="text-red-600">You do not have access to this lesson.</div>`;
     return;
   }
   const data = await res.json();
   document.getElementById("course-content").innerHTML = `
     <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
-      <h1 class="text-3xl font-bold text-blue-700 text-center mb-4">🎓 Paid Power BI Lesson 1</h1>
+      <h1 class="text-3xl font-bold text-blue-700 text-center mb-4">🎓 Paid Databricks Course</h1>
       <div class="mx-auto max-w-3xl w-full mb-8">
         <video id="secure-video" class="w-full rounded shadow-md block mx-auto" controls autoplay playsinline>
           <source src="${data.url}" type="video/mp4">
           Your browser does not support the video tag.
         </video>
-
-<!-- Progress Bar Start -->
-    <div class="w-full my-3">
-      <div class="flex items-center justify-between mb-1">
-        <span class="text-xs text-blue-700 font-semibold">Progress</span>
-        <span id="progress-label" class="text-xs text-blue-700 font-semibold">2 / 10 lessons (20%)</span>
-      </div>
-      <div class="relative h-2 rounded-full bg-blue-100 overflow-hidden">
-        <div id="progress-bar" class="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500" style="width: 20%;"></div>
-      </div>
-    </div>
-    <!-- Progress Bar End -->
-
-
+        <div class="w-full my-3">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs text-blue-700 font-semibold">Progress</span>
+            <span id="progress-label" class="text-xs text-blue-700 font-semibold">${lessonNum} / ${maxLesson} lessons (${Math.round(lessonNum / maxLesson * 100)}%)</span>
+          </div>
+          <div class="relative h-2 rounded-full bg-blue-100 overflow-hidden">
+            <div id="progress-bar" class="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500" style="width: ${(lessonNum / maxLesson) * 100}%;"></div>
+          </div>
+        </div>
         <div class="flex items-center justify-between mt-4">
           <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
-          <h2 class="text-xl font-semibold text-gray-800">Lesson 1</h2>
-          <a href="powerbi1.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
+          <h2 class="text-xl font-semibold text-gray-800">${lesson.title}</h2>
+          <button id="prev-lesson" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow" ${lessonNum === 1 ? "disabled" : ""}>← Previous</button>
+          <button id="next-lesson" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow" ${lessonNum === maxLesson ? "disabled" : ""}>Next →</button>
         </div>
       </div>
       <div class="grid md:grid-cols-2 gap-8 w-full">
         <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
           <p class="text-base leading-relaxed text-black">
-            This is a <span class="font-semibold text-green-700">members-only</span> lesson in the Power BI beginner course.
+            This is a <span class="font-semibold text-green-700">members-only</span> lesson in the Databricks course.
             You have full access to the lesson video and content!
           </p>
         </div>
         <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
           <h3 class="text-lg font-semibold mb-4 text-black">📘 Lesson Focus</h3>
           <ul class="list-disc pl-5 space-y-2 text-black text-base">
-            <li>Loading Excel and CSV data into Power BI</li>
-            <li>Basic Power Query cleanup</li>
-            <li>Simple visuals and charts</li>
-            <li>Saving your first report</li>
+            ${lesson.focus.map(item => `<li>${item}</li>`).join("")}
           </ul>
         </div>
       </div>
     </div>
   `;
+  // Navigation buttons
+  const nextBtn = document.getElementById("next-lesson");
+  if (nextBtn && lessonNum < maxLesson) {
+    nextBtn.onclick = () => showPaidVideoAndContent(lessonNum + 1);
+  }
+  const prevBtn = document.getElementById("prev-lesson");
+  if (prevBtn && lessonNum > 1) {
+    prevBtn.onclick = () => showPaidVideoAndContent(lessonNum - 1);
+  }
   // Disable right-click on video
   const video = document.getElementById("secure-video");
-  if (video) {
-    video.addEventListener('contextmenu', e => e.preventDefault());
-  }
+  if (video) video.addEventListener('contextmenu', e => e.preventDefault());
 }
 
 // Stripe checkout logic
