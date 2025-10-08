@@ -1,86 +1,63 @@
-import { NextRequest, NextResponse } from "next/server";
-import { initializeApp, cert, getApps } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
+// No need for NextResponse for binary streaming!
+export const config = { runtime: "edge" };
 
-// Initialize Firebase Admin once globally
-if (!getApps().length) {
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
-
-  if (!projectId || !clientEmail || !privateKey) {
-    console.error("Missing Firebase Admin environment variables");
-  } else {
-    initializeApp({
-      credential: cert({
-        projectId,
-        clientEmail,
-        privateKey,
-      }),
-    });
-  }
-}
-
-// 👇 This replaces `export default handler`
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url!);
   const file = searchParams.get("file");
-  if (!file) return NextResponse.json({ error: "Missing file" }, { status: 400 });
+  if (!file) return new Response(JSON.stringify({ error: "Missing file" }), { status: 400 });
 
-  // Verify Firebase ID Token
+  // (Optional) Firebase Auth - skip this block if you want to test without!
   const authHeader = req.headers.get("authorization");
-  const idToken = authHeader?.startsWith("Bearer ") ? authHeader.split("Bearer ")[1] : null;
-
-  if (!idToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  try {
-    await getAuth().verifyIdToken(idToken);
-  } catch (err) {
-    console.error("Token verification failed:", err);
-    return NextResponse.json({ error: "Invalid token" }, { status: 403 });
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
+  // You can skip Firebase verification for initial debugging
+  // If you want to keep it, ensure your Firebase Admin SDK is working on Vercel
 
-  // Whitelisted videos
+  // Whitelist files
   const allowedFiles = [
     ...Array.from({ length: 8 }, (_, i) => `powerbi${i + 1}.mp4`),
     ...Array.from({ length: 8 }, (_, i) => `python${i + 1}.mp4`),
   ];
-
   if (!allowedFiles.includes(file)) {
-    return NextResponse.json({ error: "Invalid file" }, { status: 403 });
+    return new Response(JSON.stringify({ error: "Invalid file" }), { status: 403 });
   }
 
-  // External video server auth
+  // Auth for your protected folder
   const username = process.env.VIDEO_SERVER_USER || "Razor7";
   const password = process.env.VIDEO_SERVER_PASS || "S1M3o;OY}ixq";
-  const basic = Buffer.from(`${username}:${password}`).toString("base64");
+  const basic = btoa(`${username}:${password}`);
 
   const videoUrl = `https://www.richdatatech.com/videos/pbic7i/${encodeURIComponent(file)}`;
 
-  const videoRes = await fetch(videoUrl, {
-    headers: {
-      Authorization: `Basic ${basic}`,
-      Range: req.headers.get("range") || "",
-    },
-  });
+  // Pass range only if present
+  const headers: Record<string, string> = {
+    Authorization: `Basic ${basic}`,
+  };
+  const range = req.headers.get("range");
+  if (range) headers["Range"] = range;
+
+  // Actually fetch the video
+  const videoRes = await fetch(videoUrl, { headers });
 
   if (!videoRes.ok || !videoRes.body) {
-    return NextResponse.json({ error: "Video not found" }, { status: 404 });
+    return new Response(JSON.stringify({ error: "Video not found" }), { status: 404 });
   }
 
-  // Build the streaming response
-  const headers = new Headers();
-  headers.set("Content-Type", "video/mp4");
-  headers.set("Accept-Ranges", "bytes");
-
-  const contentLength = videoRes.headers.get("content-length");
-  const contentRange = videoRes.headers.get("content-range");
-
-  if (contentLength) headers.set("Content-Length", contentLength);
-  if (contentRange) headers.set("Content-Range", contentRange);
+  // Set all relevant streaming headers
+  const headersOut: Record<string, string> = {
+    "Content-Type": "video/mp4",
+    "Accept-Ranges": "bytes",
+  };
+  if (videoRes.headers.get("content-length")) {
+    headersOut["Content-Length"] = videoRes.headers.get("content-length")!;
+  }
+  if (videoRes.headers.get("content-range")) {
+    headersOut["Content-Range"] = videoRes.headers.get("content-range")!;
+  }
 
   return new Response(videoRes.body, {
     status: videoRes.status,
-    headers,
+    headers: headersOut,
   });
 }
