@@ -19,19 +19,33 @@ async function handleVideo(filename: string) {
     return new NextResponse("Invalid file", { status: 403, headers: corsHeaders });
   }
   const remoteUrl = `https://www.richdatatech.com/videos/pbic7i/${encodeURIComponent(filename)}`;
+  console.log("Fetching video from:", remoteUrl);
   const videoRes = await fetch(remoteUrl);
+
   if (!videoRes.ok) {
+    console.log("Video fetch failed:", videoRes.status, videoRes.statusText);
     return new NextResponse("Video not found", { status: 404, headers: corsHeaders });
   }
-  return new NextResponse(videoRes.body, {
-    status: 200,
-    headers: {
-      ...corsHeaders,
-      "Content-Type": videoRes.headers.get("Content-Type") || "video/mp4",
-      "Content-Length": videoRes.headers.get("Content-Length") || "",
-      "Accept-Ranges": "bytes",
-    },
-  });
+
+  const contentType = videoRes.headers.get("Content-Type") || "video/mp4";
+  let contentLength = videoRes.headers.get("Content-Length");
+  try {
+    const arrayBuffer = await videoRes.arrayBuffer();
+    contentLength = String(arrayBuffer.byteLength);
+    console.log("Fetched video, length:", contentLength);
+    return new NextResponse(Buffer.from(arrayBuffer), {
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": contentType,
+        "Content-Length": contentLength,
+        "Accept-Ranges": "bytes",
+      },
+    });
+  } catch (e) {
+    console.log("Error buffering video:", e);
+    return new NextResponse("Error buffering video", { status: 500, headers: corsHeaders });
+  }
 }
 
 export async function GET(req: NextRequest) {
