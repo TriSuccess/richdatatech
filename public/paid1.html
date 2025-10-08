@@ -200,6 +200,20 @@ import {
   getFirestore, doc, getDoc, onSnapshot, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// ======= EASY-TO-EDIT LESSON VARIABLES =======
+const vid = "databricks1"; // just the base filename, e.g. "databricks1"
+const productNumber = 1;   // e.g. 1 for "paid1"
+const progressCurrent = 3; // set to your current lesson number, e.g. 2 for "2 / 10"
+const progressTotal = 30;  // total number of lessons
+const lessonTitle = "Lesson 1: Databricks Introduction";
+const lessonFocus = [
+  "Overview of Databricks platform",
+  "Workspace navigation",
+  "Basic cluster setup",
+  "First notebook run"
+];
+// ==============================================
+
 // Firebase Config (unchanged)
 const firebaseConfig = {
   apiKey: "AIzaSyBorPU13tVHj-o-28ADUkrXE944GIWhGOI",
@@ -385,72 +399,12 @@ function renderFreeContent() {
   }, 0);
 }
 
-// Multi-lesson, Databricks-based version: supports 10 lessons/videos, dynamic navigation, progress, and security
-
-async function showPaidVideoAndContent(lessonNum = 1) {
+// Paid lesson content, using top-of-file variables
+async function showPaidVideoAndContent() {
   const user = auth.currentUser;
   if (!user) return;
-  // Define lessons: filename and title for each lesson
-  const lessons = [
-    { file: "databricks1.mp4", title: "Lesson 1: Databricks Introduction", focus: [
-      "Overview of Databricks platform",
-      "Workspace navigation",
-      "Basic cluster setup",
-      "First notebook run"
-    ]},
-    { file: "databricks2.mp4", title: "Lesson 2: Spark Basics", focus: [
-      "Understanding Spark architecture",
-      "RDDs and DataFrames",
-      "Running Spark jobs"
-    ]},
-    { file: "databricks3.mp4", title: "Lesson 3: DataFrames in Action", focus: [
-      "Creating DataFrames",
-      "Basic DataFrame operations",
-      "Filtering and aggregating data"
-    ]},
-    { file: "databricks4.mp4", title: "Lesson 4: Notebooks and Collaboration", focus: [
-      "Using Databricks notebooks",
-      "Collaboration features",
-      "Version control basics"
-    ]},
-    { file: "databricks5.mp4", title: "Lesson 5: Visualizations", focus: [
-      "Built-in visualizations",
-      "Custom charts",
-      "Sharing insights"
-    ]},
-    { file: "databricks6.mp4", title: "Lesson 6: Delta Lake Essentials", focus: [
-      "Delta Lake intro",
-      "Managing tables",
-      "Time travel and data reliability"
-    ]},
-    { file: "databricks7.mp4", title: "Lesson 7: Machine Learning Pipelines", focus: [
-      "MLflow basics",
-      "Creating ML pipelines",
-      "Tracking experiments"
-    ]},
-    { file: "databricks8.mp4", title: "Lesson 8: Job Scheduling", focus: [
-      "Databricks jobs",
-      "Scheduling and monitoring",
-      "Alerts and notifications"
-    ]},
-    { file: "databricks9.mp4", title: "Lesson 9: Performance Optimization", focus: [
-      "Spark tuning fundamentals",
-      "Caching and partitioning",
-      "Best practices"
-    ]},
-    { file: "databricks10.mp4", title: "Lesson 10: Real-World Projects", focus: [
-      "End-to-end project demo",
-      "Deploying pipelines",
-      "Q&A and summary"
-    ]}
-  ];
-  const maxLesson = lessons.length;
-  // Clamp lessonNum to valid range
-  lessonNum = Math.max(1, Math.min(lessonNum, maxLesson));
-  const lesson = lessons[lessonNum - 1];
 
   const idToken = await user.getIdToken();
-  // Secure API call with lesson and product
   const res = await fetch("https://richdatatech.vercel.app/api/secure-video", {
     method: "POST",
     headers: {
@@ -459,8 +413,8 @@ async function showPaidVideoAndContent(lessonNum = 1) {
     },
     body: JSON.stringify({
       uid: user.uid,
-      productId: "paid" + lessonNum,
-      file: lesson.file
+      productId: "paid" + productNumber,
+      file: vid + ".mp4"
     })
   });
   if (!res.ok) {
@@ -468,6 +422,8 @@ async function showPaidVideoAndContent(lessonNum = 1) {
     return;
   }
   const data = await res.json();
+  // Calculate percent for progress bar
+  const percent = Math.round((progressCurrent / progressTotal) * 100);
   document.getElementById("course-content").innerHTML = `
     <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
       <h1 class="text-3xl font-bold text-blue-700 text-center mb-4">🎓 Paid Databricks Course</h1>
@@ -479,17 +435,15 @@ async function showPaidVideoAndContent(lessonNum = 1) {
         <div class="w-full my-3">
           <div class="flex items-center justify-between mb-1">
             <span class="text-xs text-blue-700 font-semibold">Progress</span>
-            <span id="progress-label" class="text-xs text-blue-700 font-semibold">${lessonNum} / ${maxLesson} lessons (${Math.round(lessonNum / maxLesson * 100)}%)</span>
+            <span id="progress-label" class="text-xs text-blue-700 font-semibold">${progressCurrent} / ${progressTotal} lessons (${percent}%)</span>
           </div>
           <div class="relative h-2 rounded-full bg-blue-100 overflow-hidden">
-            <div id="progress-bar" class="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500" style="width: ${(lessonNum / maxLesson) * 100}%;"></div>
+            <div id="progress-bar" class="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500" style="width: ${percent}%;"></div>
           </div>
         </div>
         <div class="flex items-center justify-between mt-4">
           <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
-          <h2 class="text-xl font-semibold text-gray-800">${lesson.title}</h2>
-          <button id="prev-lesson" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow" ${lessonNum === 1 ? "disabled" : ""}>← Previous</button>
-          <button id="next-lesson" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow" ${lessonNum === maxLesson ? "disabled" : ""}>Next →</button>
+          <h2 class="text-xl font-semibold text-gray-800">${lessonTitle}</h2>
         </div>
       </div>
       <div class="grid md:grid-cols-2 gap-8 w-full">
@@ -502,21 +456,12 @@ async function showPaidVideoAndContent(lessonNum = 1) {
         <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
           <h3 class="text-lg font-semibold mb-4 text-black">📘 Lesson Focus</h3>
           <ul class="list-disc pl-5 space-y-2 text-black text-base">
-            ${lesson.focus.map(item => `<li>${item}</li>`).join("")}
+            ${lessonFocus.map(item => `<li>${item}</li>`).join("")}
           </ul>
         </div>
       </div>
     </div>
   `;
-  // Navigation buttons
-  const nextBtn = document.getElementById("next-lesson");
-  if (nextBtn && lessonNum < maxLesson) {
-    nextBtn.onclick = () => showPaidVideoAndContent(lessonNum + 1);
-  }
-  const prevBtn = document.getElementById("prev-lesson");
-  if (prevBtn && lessonNum > 1) {
-    prevBtn.onclick = () => showPaidVideoAndContent(lessonNum - 1);
-  }
   // Disable right-click on video
   const video = document.getElementById("secure-video");
   if (video) video.addEventListener('contextmenu', e => e.preventDefault());
@@ -532,7 +477,7 @@ function handleStripeCheckout() {
     body: JSON.stringify({
       uid: user.uid,
       items: [{ price: "price_1RqaLeJOLIr6wNsmGRK6tXXP" }],
-      productId: "paid1"
+      productId: "paid" + productNumber
     })
   })
   .then(res => res.json())
@@ -573,7 +518,7 @@ function listenForAccess(uid) {
   if (unsubscribeAccess) unsubscribeAccess();
   const ref = doc(db, COURSE_COLLECTION, uid);
   unsubscribeAccess = onSnapshot(ref, (snap) => {
-    if (snap.exists() && snap.data().purchases?.paid1) {
+    if (snap.exists() && snap.data().purchases?.["paid" + productNumber]) {
       showPaidVideoAndContent();
     } else {
       renderFreeContent();
