@@ -15,13 +15,16 @@ let adminApp: App;
 if (!getApps().length) {
   adminApp = initializeApp({
     credential: cert(serviceAccount),
-    storageBucket: "course2-f1bdb.appspot.com", // Correct bucket name!
+    storageBucket: "course2-f1bdb.appspot.com",
   });
 } else {
   adminApp = getApps()[0];
 }
 const authAdmin = getAuth(adminApp);
 const storage = getStorage(adminApp);
+
+const ALLOWED_COURSES = ["powerbi", "python", "googlesheets"];
+const ALLOWED_LESSONS = ["1", "2", "3", "4", "5", "6", "7"];
 
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -32,8 +35,8 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    const body: { uid?: string } = await req.json();
-    const { uid } = body;
+    const body: { uid?: string; course?: string; lesson?: string } = await req.json();
+    const { uid, course, lesson } = body;
     const authHeader = req.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return new NextResponse(JSON.stringify({ error: "Missing auth token" }), { status: 401, headers: corsHeaders });
@@ -48,9 +51,15 @@ export async function POST(req: NextRequest) {
       return new NextResponse(JSON.stringify({ error: "Invalid token" }), { status: 401, headers: corsHeaders });
     }
 
-    // Any logged-in user is allowed, no Firestore/paywall check!
+    // Validate course and lesson
+    const safeCourse = String(course || "").toLowerCase();
+    const safeLesson = String(lesson || "");
+    if (!ALLOWED_COURSES.includes(safeCourse) || !ALLOWED_LESSONS.includes(safeLesson)) {
+      return new NextResponse(JSON.stringify({ error: "Invalid course or lesson" }), { status: 400, headers: corsHeaders });
+    }
 
-    const filePath = "videos/1.mp4";
+    const filePath = `videos/${safeCourse}${safeLesson}.mp4`;
+
     const [signedUrl] = await storage.bucket().file(filePath).getSignedUrl({
       action: "read",
       expires: Date.now() + 5 * 60 * 1000,

@@ -344,7 +344,7 @@ async function renderMembersContent(user) {
   document.getElementById("course-content").innerHTML = `<div class="text-blue-700 text-center text-xl font-semibold py-10">Loading your lesson...</div>`;
   try {
     const idToken = await user.getIdToken();
-    const res = await fetch("https://richdatatech.vercel.app/api/secure-video", {
+    const res = await fetch("https://richdatatech.vercel.app/api/secure-video2", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
