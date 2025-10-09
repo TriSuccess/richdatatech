@@ -106,10 +106,9 @@
   <br><br>
 </main>
 
-<!-- FOOTER (never hidden by JS) -->
+<!-- FOOTER -->
 <footer style="background:#23272a; color:#fff; padding:38px 0 18px 0;">
   <div style="max-width:950px; margin:0 auto;">
-    <!-- Table-like 3-column grid with responsive stacking -->
     <div style="
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -118,29 +117,26 @@
       justify-items: center;
       text-align: center;
     " class="footer-table">
-      <!-- Left Cell: Blurb -->
       <div>
         <div style="font-weight:600; font-size:1.09rem; margin-bottom:5px;">RichDataTech</div>
         <div style="font-size:0.97rem; color:#d1d5db;">Advance your future with
 premium courses,
 AI tools, and valuable resources.</div>
       </div>
-      <!-- Center Cell: Quick Links -->
       <div>
         <div style="font-weight:600; font-size:1.09rem; margin-bottom:7px;">Quick Links</div>
         <ul style="list-style:none; padding:0; margin:0; font-size:0.97rem;">
           <li style="margin-bottom:4px;"><a href="powerbi.html" style="color:#fff; text-decoration:none;">Power BI</a></li>
-          <li style="margin-bottom:4px;"><a href="aitools.html" style="color:#fff; text-decoration:none;">AI Tools</a></li>
+          <li style="margin-bottom:4px;"><a href="aipowertips.html" style="color:#fff; text-decoration:none;">AI Power Tips</a></li>
           <li style="margin-bottom:4px;"><a href="courses.html" style="color:#fff; text-decoration:none;">All Courses</a></li>
         </ul>
       </div>
-      <!-- Right Cell: Social + Email -->
       <div>
         <div style="font-weight:600; font-size:1.09rem; margin-bottom:7px;">Follow Us</div>
         <div style="margin-bottom:10px;">
           <a href="https://www.youtube.com/@richdatatech" target="_blank" title="YouTube" style="margin:0 7px; display:inline-block;">
-           <svg width="26" height="26" viewBox="0 0 576 512"><path fill="#555" d="M549.655 124.083c-6.281-23.725-24.96-42.28-48.655-48.648C465.69 64 288 64 288 64s-177.69 0-213 11.435c-23.695 6.368-42.374 24.923-48.655 48.648C16 159.405 16 256 16 256s0 96.595 10.345 131.917c6.281 23.725 24.96 42.28 48.655 48.648C110.31 448 288 448 288 448s177.69 0 213-11.435c23.695-6.368 42.374-24.923 48.655-48.648C560 352.595 560 256 560 256s0-96.595-10.345-131.917zM232 336V176l142.857 80L232 336z"/></svg>
-         </a>
+            <svg width="26" height="26" viewBox="0 0 576 512"><path fill="#555" d="M549.655 124.083c-6.281-23.725-24.96-42.28-48.655-48.648C465.69 64 288 64 288 64s-177.69 0-213 11.435c-23.695 6.368-42.374 24.923-48.655 48.648C16 159.405 16 256 16 256s0 96.595 10.345 131.917c6.281 23.725 24.96 42.28 48.655 48.648C110.31 448 288 448 288 448s177.69 0 213-11.435c23.695-6.368 42.374-24.923 48.655-48.648C560 352.595 560 256 560 256s0-96.595-10.345-131.917zM232 336V176l142.857 80L232 336z"/></svg>
+          </a>
           <a href="https://www.instagram.com/richdatatech?igsh=MWl0eHdoZGdoeWVxeA==" target="_blank" title="Instagram" style="margin:0 7px; display:inline-block;">
             <svg width="26" height="26" viewBox="0 0 448 512"><path fill="#555" d="M224 202.66A53.34 53.34 0 1 0 277.34 256 53.38 53.38 0 0 0 224 202.66zm124.71-41a54 54 0 0 0-30.37-30.37C286.82 118.09 256 112 224 112s-62.82 6.09-94.34 19.29a54 54 0 0 0-30.37 30.37C118.09 161.18 112 192 112 224s6.09 62.82 19.29 94.34a54 54 0 0 0 30.37 30.37C161.18 393.91 192 400 224 400s62.82-6.09 94.34-19.29a54 54 0 0 0 30.37-30.37C393.91 286.82 400 256 400 224s-6.09-62.82-19.29-94.34z"/></svg>
           </a>
@@ -186,21 +182,11 @@ AI tools, and valuable resources.</div>
 </div>
 
 <script type="module">
-/* ----------------------------- 
-   SECTION: COURSE/LESSON CONFIG
-   Change these values to select video!
------------------------------- */
 const courseId = "snowflake";
-const lessonId = 1; // e.g. 2 for databricks2.mp4, 3 for databricks3.mp4, etc.
+const lessonId = 1;
 const totalLessons = 7;
 const videoFileBase = `${courseId}${lessonId}.mp4`;
-// For checkout, you may also want to change productId/stripePriceId (if needed)
-const productId = `paid${lessonId}`;
-const stripePriceId = "price_1RqaLeJOLIr6wNsmGRK6tXXP"; // change if needed per lesson
 
-
-
-// Firebase Config (unchanged)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, signOut,
@@ -209,7 +195,7 @@ import {
   signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, onSnapshot, setDoc
+  getFirestore, doc, getDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -224,9 +210,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const COURSE_COLLECTION = "course2";
 
-// Elements
 const openAuthBtn = document.getElementById("open-auth-btn");
 const closeAuth = document.getElementById("close-auth");
 const authModal = document.getElementById("auth-modal");
@@ -241,7 +225,6 @@ const emailInput = document.getElementById("email-input");
 const passwordInput = document.getElementById("password-input");
 
 let isRegisterMode = false;
-let unsubscribeAccess = null;
 
 function showMsg(msg, color="green") {
   authMessage.textContent = msg;
@@ -273,7 +256,6 @@ toggleLink.addEventListener("click", e => {
     : `Don’t have an account? <a href="#" class="text-blue-600 hover:underline">Register here</a>`;
 });
 
-// ENTER key triggers login/register
 [emailInput, passwordInput].forEach(input => {
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -283,7 +265,6 @@ toggleLink.addEventListener("click", e => {
   });
 });
 
-// Auth handler
 actionBtn.addEventListener("click", async () => {
   const email = emailInput.value.trim();
   const password = passwordInput.value;
@@ -303,7 +284,6 @@ actionBtn.addEventListener("click", async () => {
   } catch (err) { showMsg(err.message, "red"); }
 });
 
-// Forgot password
 forgotPass.addEventListener("click", async (e) => {
   e.preventDefault();
   const email = emailInput.value.trim();
@@ -314,7 +294,6 @@ forgotPass.addEventListener("click", async (e) => {
   } catch (err) { showMsg(err.message, "red"); }
 });
 
-// OAuth (Google + GitHub)
 const googleBtn = document.getElementById("google-login");
 const githubBtn = document.getElementById("github-login");
 const googleProvider = new GoogleAuthProvider();
@@ -330,20 +309,15 @@ async function handleOAuthLogin(provider) {
   } catch (err) { showMsg(err.message, "red"); }
 }
 
-// Firestore helper
+// Only needed for registration completeness, does not affect video access
 async function ensureUserRecord(user) {
-  const userRef = doc(db, COURSE_COLLECTION, user.uid);
+  const userRef = doc(db, "course2", user.uid);
   const snap = await getDoc(userRef);
   if (!snap.exists()) {
-    const purchases = {};
-    for (let i = 1; i <= 10; i++) {
-      purchases[`paid${i}`] = false;
-    }
     await setDoc(userRef, {
       email: user.email,
       createdAt: new Date(),
-      provider: user.providerData[0].providerId,
-      purchases: purchases
+      provider: user.providerData[0].providerId
     });
   }
 }
@@ -379,81 +353,69 @@ function renderFreeContent() {
         <div class="bg-white border border-blue-400 rounded-lg p-6 shadow-sm flex flex-col items-center justify-center">
           <h3 class="text-lg font-semibold mb-2 text-blue-700">Unlock Full Lesson</h3>
           <p class="text-base text-gray-700 mb-4 text-center">
-            Get full access to all premium lessons and resources by upgrading now!
+            Register/login to unlock all premium lessons and resources!
           </p>
-          <button id="buy-now-btn" class="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white px-6 py-2 rounded-md text-base font-semibold shadow transition-all duration-150">
-            Buy Now to Unlock
-          </button>
-          <p class="text-xs text-gray-500 mt-3 text-center">One-time payment, instant access.</p>
         </div>
       </div>
     </div>
   `;
-  // Attach event after rendering
-  setTimeout(() => {
-    const buyBtn = document.getElementById("buy-now-btn");
-    if (buyBtn) buyBtn.onclick = handleStripeCheckout;
-  }, 0);
 }
 
 async function showPaidVideoAndContent() {
   const user = auth.currentUser;
   if (!user) return;
 
-  const idToken = await user.getIdToken();
-  const videoFile = videoFileBase;
+  // For demo, just use a free video. Replace with your actual video logic as needed.
+  const videoSrc = "https://www.w3schools.com/html/mov_bbb.mp4";
 
-  // Build URL with query params
-  const videoSrc = `https://richdatatech.vercel.app/api/secure-video?file=${encodeURIComponent(videoFile)}&token=${idToken}`;
-
-document.getElementById("course-content").innerHTML = `
-  <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
-    <h4 class="text-4xl font-bold text-blue-700 text-center mb-4">
-      🎓 Paid ${courseId.charAt(0).toUpperCase() + courseId.slice(1)} Lesson ${lessonId}
-    </h4>
-    <div class="mx-auto max-w-3xl w-full mb-8">
-      <video id="secure-video" class="w-full rounded shadow-md block mx-auto" controls autoplay playsinline>
-        <source src="${videoSrc}" type="video/mp4">
-        Your browser does not support the video tag.
-      </video>
-      <!-- Progress Bar -->
-      <div id="lesson-progress" class="w-full max-w-3xl mx-auto mt-2 mb-6">
-        <div class="flex items-center justify-between mb-1 text-sm">
-          <span id="progress-label" class="text-gray-800"></span>
-          <span>
-            <span class="text-gray-800">Progress:</span>
-            <span id="progress-percent" class="font-medium text-black-600"></span>
-          </span>
+  document.getElementById("course-content").innerHTML = `
+    <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
+      <h4 class="text-4xl font-bold text-blue-700 text-center mb-4">
+        🎓 Paid ${courseId.charAt(0).toUpperCase() + courseId.slice(1)} Lesson ${lessonId}
+      </h4>
+      <div class="mx-auto max-w-3xl w-full mb-8">
+        <video id="secure-video" class="w-full rounded shadow-md block mx-auto" controls autoplay playsinline>
+          <source src="${videoSrc}" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+        <!-- Progress Bar -->
+        <div id="lesson-progress" class="w-full max-w-3xl mx-auto mt-2 mb-6">
+          <div class="flex items-center justify-between mb-1 text-sm">
+            <span id="progress-label" class="text-gray-800"></span>
+            <span>
+              <span class="text-gray-800">Progress:</span>
+              <span id="progress-percent" class="font-medium text-blue-600"></span>
+            </span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-3">
+            <div id="progress-bar" class="bg-blue-600 h-3 rounded-full" style="width:0%"></div>
+          </div>
         </div>
-        <div class="w-full bg-gray-200 rounded-full h-3">
-          <div id="progress-bar" class="bg-blue-600 h-3 rounded-full" style="width:0%"></div>
+        <div class="flex items-center justify-between mt-4">
+          <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
+          <h2 class="text-xl font-semibold text-gray-800">Lesson ${lessonId}</h2>
+          <a href="powerbi1.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
         </div>
       </div>
-      <div class="flex items-center justify-between mt-4">
-        <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
-        <h2 class="text-xl font-semibold text-gray-800">Lesson ${lessonId}</h2>
-        <a href="powerbi1.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
+      <div class="grid md:grid-cols-2 gap-8 w-full">
+        <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
+          <p class="text-base leading-relaxed text-black">
+            This is a <span class="font-semibold text-green-700">members-only</span> lesson in the ${courseId.charAt(0).toUpperCase() + courseId.slice(1)} course.
+            You have full access to the lesson video and content!
+          </p>
+        </div>
+        <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
+          <h3 class="text-lg font-semibold mb-4 text-black">📘 Lesson Focus</h3>
+          <ul class="list-disc pl-5 space-y-2 text-black text-base">
+            <li>Loading Excel and CSV data into Power BI</li>
+            <li>Basic Power Query cleanup</li>
+            <li>Simple visuals and charts</li>
+            <li>Saving your first report</li>
+          </ul>
+        </div>
       </div>
     </div>
-    <div class="grid md:grid-cols-2 gap-8 w-full">
-      <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
-        <p class="text-base leading-relaxed text-black">
-          This is a <span class="font-semibold text-green-700">members-only</span> lesson in the ${courseId.charAt(0).toUpperCase() + courseId.slice(1)} course.
-          You have full access to the lesson video and content!
-        </p>
-      </div>
-      <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
-        <h3 class="text-lg font-semibold mb-4 text-black">📘 Lesson Focus</h3>
-        <ul class="list-disc pl-5 space-y-2 text-black text-base">
-          <li>Loading Excel and CSV data into Power BI</li>
-          <li>Basic Power Query cleanup</li>
-          <li>Simple visuals and charts</li>
-          <li>Saving your first report</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-`;
+  `;
 
   // Progress Bar Logic (runs after the HTML above is set)
   const percent = Math.round((lessonId / totalLessons) * 100);
@@ -471,30 +433,7 @@ document.getElementById("course-content").innerHTML = `
   }
 }
 
-// Stripe checkout logic
-function handleStripeCheckout() {
-  const user = auth.currentUser;
-  if (!user) return alert("You must log in to purchase.");
-  fetch("https://richdatatech.vercel.app/api/checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      uid: user.uid,
-      items: [{ price: stripePriceId }],
-      productId: productId
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.url) window.location.href = data.url;
-    else alert("Failed to start checkout.");
-  })
-  .catch(() => {
-    alert("Checkout failed.");
-  });
-}
-
-// Auth state and Firestore access logic
+// Auth state logic: show paid content if logged in, free otherwise
 onAuthStateChanged(auth, async (user) => {
   openAuthBtn.classList.remove("hidden");
   if (user) {
@@ -506,29 +445,16 @@ onAuthStateChanged(auth, async (user) => {
       showStatus("Logged out!");
       location.reload();
     };
-    listenForAccess(user.uid);
+    showPaidVideoAndContent();
   } else {
     loggedInSpan.classList.add("hidden");
     openAuthBtn.textContent = "Login / Register";
     openAuthBtn.onclick = () => {
       authModal.classList.remove("hidden");
     };
-    if (unsubscribeAccess) unsubscribeAccess();
     renderFreeContent();
   }
 });
-
-function listenForAccess(uid) {
-  if (unsubscribeAccess) unsubscribeAccess();
-  const ref = doc(db, COURSE_COLLECTION, uid);
-  unsubscribeAccess = onSnapshot(ref, (snap) => {
-    if (snap.exists() && snap.data().purchases?.[productId]) {
-      showPaidVideoAndContent();
-    } else {
-      renderFreeContent();
-    }
-  });
-}
 
 // Render free content on first load (even before auth)
 renderFreeContent();
