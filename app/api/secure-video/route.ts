@@ -1,65 +1,71 @@
-export const config = { runtime: "edge" };
+import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
+import type { NextRequest } from "next/server";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "https://course2-f1bdb.web.app", // your frontend origin
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, Range",
-};
-
-// Preflight
-export async function OPTIONS() {
-  return new Response(null, { status: 204, headers: corsHeaders });
+// ✅ Initialize Firebase Admin if not already initialized
+if (!getApps().length) {
+  initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID!,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    }),
+  });
 }
 
-async function handleVideoRequest(req: Request) {
+// ✅ Handle POST requests
+export async function POST(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const file = searchParams.get("file");
+    const { uid, file } = await req.json();
 
-    // Whitelist file(s)
-    if (!file || file !== "databricks1.mp4") {
-      return new Response("Invalid file", { status: 403, headers: corsHeaders });
+    if (!file) {
+      return new Response("Missing file", { status: 400 });
     }
 
-    // ---- Basic Auth ----
-    const username = "Razor7"; // ⚠️ Change this or use env vars
-    const password = "S1M3o;OY}ixq"; // ⚠️ Change this or use env vars
-    const basic = "Basic " + Buffer.from(`${username}:${password}`).toString("base64");
+    // ✅ Verify Firebase ID Token
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const idToken = authHeader.split("Bearer ")[1];
+    await getAuth().verifyIdToken(idToken);
+
+    // ✅ Whitelist of allowed files
+    const allowedFiles = [
+      ...Array.from({ length: 8 }, (_, i) => `powerbi${i + 1}.mp4`),
+      ...Array.from({ length: 8 }, (_, i) => `python${i + 1}.mp4`),
+      "databricks1.mp4", // ✅ Added this file
+    ];
+
+    if (!allowedFiles.includes(file)) {
+      return new Response("Invalid file", { status: 403 });
+    }
+
+    // ✅ Basic Auth credentials for your protected video server
+    const username = "Razor7"; // ⚠️ Hardcoded — consider using env vars for security
+    const password = "S1M3o;OY}ixq"; // ⚠️ Hardcoded — consider using env vars for security
+    const basic = Buffer.from(`${username}:${password}`).toString("base64");
 
     const videoUrl = `https://www.richdatatech.com/videos/pbic7i/${encodeURIComponent(file)}`;
-    const headers: Record<string, string> = { Authorization: basic };
 
-    // Forward Range header for video streaming
-    const range = req.headers.get("range");
-    if (range) headers["Range"] = range;
+    // ✅ Check if the file exists
+    const head = await fetch(videoUrl, {
+      method: "HEAD",
+      headers: { Authorization: `Basic ${basic}` },
+    });
 
-    const videoRes = await fetch(videoUrl, { headers });
-
-    if (!videoRes.ok || !videoRes.body) {
-      return new Response("Video not found", { status: 404, headers: corsHeaders });
+    if (!head.ok) {
+      return new Response("Video not found", { status: 404 });
     }
 
-    // Build response headers
-    const responseHeaders = new Headers(corsHeaders);
-    responseHeaders.set("Accept-Ranges", "bytes");
-    responseHeaders.set("Content-Type", videoRes.headers.get("Content-Type") || "video/mp4");
-
-    const contentLength = videoRes.headers.get("Content-Length");
-    const contentRange = videoRes.headers.get("Content-Range");
-
-    if (contentLength) responseHeaders.set("Content-Length", contentLength);
-    if (contentRange) responseHeaders.set("Content-Range", contentRange);
-
-    return new Response(videoRes.body, {
-      status: videoRes.status,
-      headers: responseHeaders,
+    // ✅ Return secure video URL as JSON (your frontend will load it)
+    return new Response(JSON.stringify({ url: videoUrl }), {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
     });
-  } catch (err) {
-    console.error("Video proxy error:", err);
-    return new Response("Internal Server Error", { status: 500, headers: corsHeaders });
+  } catch (err: any) {
+    console.error("secure-video2 error:", err);
+    return new Response("Server error", { status: 500 });
   }
 }
-
-// ---- Support both GET and POST ----
-export const GET = handleVideoRequest;
-export const POST = handleVideoRequest;
