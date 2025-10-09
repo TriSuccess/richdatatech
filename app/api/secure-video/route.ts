@@ -2,7 +2,7 @@ import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import type { NextRequest } from "next/server";
 
-// ✅ Initialize Firebase Admin if not already initialized
+// ✅ Initialize Firebase Admin once
 if (!getApps().length) {
   initializeApp({
     credential: cert({
@@ -13,16 +13,17 @@ if (!getApps().length) {
   });
 }
 
-// ✅ Handle POST requests
+// ✅ Handle POST requests (main endpoint)
 export async function POST(req: NextRequest) {
   try {
-    const { uid, file } = await req.json();
+    // 🔹 Parse request JSON
+    const { file } = await req.json(); // removed uid (not used)
 
     if (!file) {
       return new Response("Missing file", { status: 400 });
     }
 
-    // ✅ Verify Firebase ID Token
+    // 🔹 Verify Firebase token
     const authHeader = req.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response("Unauthorized", { status: 401 });
@@ -31,25 +32,25 @@ export async function POST(req: NextRequest) {
     const idToken = authHeader.split("Bearer ")[1];
     await getAuth().verifyIdToken(idToken);
 
-    // ✅ Whitelist of allowed files
+    // 🔹 Allow only specific files
     const allowedFiles = [
       ...Array.from({ length: 8 }, (_, i) => `powerbi${i + 1}.mp4`),
       ...Array.from({ length: 8 }, (_, i) => `python${i + 1}.mp4`),
-      "databricks1.mp4", // ✅ Added this file
+      "databricks1.mp4",
     ];
 
     if (!allowedFiles.includes(file)) {
       return new Response("Invalid file", { status: 403 });
     }
 
-    // ✅ Basic Auth credentials for your protected video server
-    const username = "Razor7"; // ⚠️ Hardcoded — consider using env vars for security
-    const password = "S1M3o;OY}ixq"; // ⚠️ Hardcoded — consider using env vars for security
+    // 🔹 Basic Auth credentials
+    const username = "Razor7"; // ⚠️ Hardcoded
+    const password = "S1M3o;OY}ixq"; // ⚠️ Hardcoded
     const basic = Buffer.from(`${username}:${password}`).toString("base64");
 
     const videoUrl = `https://www.richdatatech.com/videos/pbic7i/${encodeURIComponent(file)}`;
 
-    // ✅ Check if the file exists
+    // 🔹 Check video accessibility
     const head = await fetch(videoUrl, {
       method: "HEAD",
       headers: { Authorization: `Basic ${basic}` },
@@ -59,13 +60,15 @@ export async function POST(req: NextRequest) {
       return new Response("Video not found", { status: 404 });
     }
 
-    // ✅ Return secure video URL as JSON (your frontend will load it)
+    // 🔹 Return the secure video URL
     return new Response(JSON.stringify({ url: videoUrl }), {
       headers: { "Content-Type": "application/json" },
       status: 200,
     });
-  } catch (err: any) {
-    console.error("secure-video2 error:", err);
+  } catch (err: unknown) {
+    // ✅ Safe error handling
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("secure-video error:", message);
     return new Response("Server error", { status: 500 });
   }
 }
