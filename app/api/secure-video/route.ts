@@ -1,85 +1,51 @@
-import { NextRequest } from "next/server";
-import { initializeApp, cert, getApps } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
-import { getFirestore } from "firebase-admin/firestore";
+export const config = { runtime: "edge" };
 
-// --- CORS helper ---
 const corsHeaders = {
-  // For production, set this to your frontend domain for security!
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Origin": "*", // For production, use your actual frontend domain
+  "Access-Control-Allow-Methods": "GET,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, Range",
 };
 
-const certObj = {
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  privateKey: process.env.FIREBASE_SERVICE_ACCOUNT_KEY?.replace(/\\n/g, "\n"),
-};
-
-if (!getApps().length) {
-  initializeApp({
-    credential: cert(certObj),
-  });
-}
-
-// Handle preflight CORS
 export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: corsHeaders,
-  });
+  return new Response(null, { status: 204, headers: corsHeaders });
 }
 
-export async function POST(req: NextRequest) {
-  try {
-    // Parse auth header
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: corsHeaders,
-      });
-    }
-    const idToken = authHeader.split("Bearer ")[1];
-    await getAuth().verifyIdToken(idToken);
-
-    // Parse request body
-    const { uid, productId, file } = await req.json();
-
-    // Firestore access check (example: expects purchases.paid1 to be true)
-    const db = getFirestore();
-    const userDoc = await db.collection("course2").doc(uid).get();
-    if (!userDoc.exists) {
-      return new Response(JSON.stringify({ error: "User data not found" }), {
-        status: 403,
-        headers: corsHeaders,
-      });
-    }
-    const data = userDoc.data();
-    if (!data?.purchases?.[productId]) {
-      return new Response(JSON.stringify({ error: "No access to this content" }), {
-        status: 403,
-        headers: corsHeaders,
-      });
-    }
-
-    // Build the secure video URL (e.g., via your Vercel proxy or signed URL)
-    // This example assumes you proxy via /api/secure-video2 (adjust as needed)
-    const url = `https://richdatatech.vercel.app/api/secure-video2?file=${encodeURIComponent(file)}`;
-
-    return new Response(JSON.stringify({ url }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (err) {
-    let message = "Unauthorized";
-    if (err && typeof err === "object" && "message" in err) {
-      message = String((err as { message?: string }).message);
-    }
-    return new Response(JSON.stringify({ error: message }), {
-      status: 401,
-      headers: corsHeaders,
-    });
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url!);
+  const file = searchParams.get("file");
+  if (!file || file !== "databricks1.mp4") {
+    return new Response("Invalid file", { status: 403, headers: corsHeaders });
   }
+
+  // Build the URL to your real domain's video file
+  const videoUrl = `https://www.richdatatech.com/videos/${encodeURIComponent(file)}`;
+  const headers: Record<string, string> = {};
+  const range = req.headers.get("range");
+  if (range) headers["Range"] = range;
+
+  // If your /videos/ is password protected, uncomment and set credentials
+  // headers["Authorization"] = "Basic " + btoa("username:password");
+
+  const videoRes = await fetch(videoUrl, { headers });
+
+  if (!videoRes.ok || !videoRes.body) {
+    return new Response("Video not found", { status: 404, headers: corsHeaders });
+  }
+
+  // Copy streaming headers from the origin
+  const status = videoRes.status;
+  const headersOut: Record<string, string> = {
+    ...corsHeaders,
+    "Accept-Ranges": "bytes",
+  };
+  for (const h of ["Content-Type", "Content-Length", "Content-Range"]) {
+    const val = videoRes.headers.get(h);
+    if (val) headersOut[h] = val;
+  }
+  if (!headersOut["Content-Type"]) headersOut["Content-Type"] = "video/mp4";
+
+  return new Response(videoRes.body, {
+    status,
+    headers: headersOut,
+  });
 }
