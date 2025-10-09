@@ -32,7 +32,7 @@ function getCorsHeaders(origin?: string) {
     "Access-Control-Allow-Origin": safeOrigin,
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  } as Record<string, string>; // ✅ ensures type compatibility
+  } as Record<string, string>;
 }
 
 // ✅ OPTIONS handler (preflight)
@@ -64,11 +64,12 @@ export async function GET(req: NextRequest) {
     // 🔹 Verify Firebase ID token
     await getAuth().verifyIdToken(token);
 
-    // 🔹 Whitelisted files
+    // 🔹 Whitelisted files (now supports databricks1-10 and snowflake1-10)
     const allowedFiles = [
       ...Array.from({ length: 8 }, (_, i) => `powerbi${i + 1}.mp4`),
       ...Array.from({ length: 8 }, (_, i) => `python${i + 1}.mp4`),
-      "databricks1.mp4",
+      ...Array.from({ length: 10 }, (_, i) => `databricks${i + 1}.mp4`),
+      ...Array.from({ length: 10 }, (_, i) => `snowflake${i + 1}.mp4`)
     ];
     if (!allowedFiles.includes(file)) {
       return new Response("Invalid file", { status: 403, headers: corsHeaders });
