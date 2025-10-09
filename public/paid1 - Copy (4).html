@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paid Course – RichDataTech</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body, * { font-family: 'Proxima Nova', sans-serif; }
+    header {
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 1.25rem 1rem;
+    }
+    header .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+    nav a { text-decoration: none; }
+    nav a:hover { color: #0573ff; font-weight: bold; }
+    nav.main-nav {
+      display: flex;
+      gap: 1.25rem;
+      font-size: 1rem;
+      position: absolute;
+      left: 50%;
+      top: 5%;
+      transform: translateX(-50%);
+      margin-top: 34px;
+    }
+    #logged-in-span {
+      margin-right: 10px;
+      font-size: 0.7rem;
+      font-weight: normal;
+      color: #065f46;
+      opacity: 1;
+      transition: opacity 0.2s;
+      margin-top: 0.1rem;
+    }
+    #status-span {
+      margin-right: 10px;
+      font-size: 0.8rem;
+      color: #0573ff;
+      opacity: 1;
+      transition: opacity 0.2s;
+      margin-top: 0.1rem;
+    }
+    @media (max-width: 639px) {
+      nav.main-nav {
+        position: static;
+        flex-direction: row;
+        justify-content: space-around;
+        width: 100%;
+        margin-top: 0.25rem;
+        gap: 2px;
+        font-size: 0.9rem;
+        transform: none;
+      }
+      header { padding-bottom: 0.15rem; }
+    }
+    @media (max-width: 700px) {
+      .footer-table {
+        grid-template-columns: 1fr !important;
+        gap: 24px !important;
+        text-align: center !important;
+      }
+      .footer-table > div {
+        margin-bottom: 18px;
+      }
+    }
+    .footer-table a:hover svg path { fill: #999 !important; }
+    #auth-modal { animation: fadeIn 0.25s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+
+<!-- HEADER -->
+<header>
+  <div class="header-top">
+    <div>
+      <a href="index.html">
+        <img src="https://www.richdatatech.com/images/richdatatech.png" alt="RichDataTech Logo" class="h-16 sm:h-20 w-auto object-contain"/>
+      </a>
+    </div>
+    <div id="auth-box" class="flex flex-col items-end">
+      <button id="open-auth-btn" class="text-sm bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">Login / Register</button>
+      <span id="logged-in-span" class="hidden text-green-700 text-xs mt-1">Logged In</span>
+      <span id="status-span" class="hidden text-blue-600 text-xs mt-1"></span>
+    </div>
+  </div>
+  <nav class="main-nav">
+    <a href="powerbi.html">Power BI</a>
+    <a href="courses.html">All Courses</a>
+    <a href="aipowertips.html">AI Power Tips</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+</header>
+
+<!-- MAIN -->
+<main class="pt-4 px-4 flex-grow bg-gradient-to-r from-gray-300 via-gray-300 to-gray-200">
+  <div id="course-content" class="mt-8"></div>
+  <br><br>
+</main>
+
+<!-- FOOTER -->
+<footer style="background:#23272a; color:#fff; padding:38px 0 18px 0;">
+  <div style="max-width:950px; margin:0 auto;">
+    <div style="
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 32px;
+      align-items: flex-start;
+      justify-items: center;
+      text-align: center;
+    " class="footer-table">
+      <div>
+        <div style="font-weight:600; font-size:1.09rem; margin-bottom:5px;">RichDataTech</div>
+        <div style="font-size:0.97rem; color:#d1d5db;">Advance your future with
+premium courses,
+AI tools, and valuable resources.</div>
+      </div>
+      <div>
+        <div style="font-weight:600; font-size:1.09rem; margin-bottom:7px;">Quick Links</div>
+        <ul style="list-style:none; padding:0; margin:0; font-size:0.97rem;">
+          <li style="margin-bottom:4px;"><a href="powerbi.html" style="color:#fff; text-decoration:none;">Power BI</a></li>
+          <li style="margin-bottom:4px;"><a href="aipowertips.html" style="color:#fff; text-decoration:none;">AI Power Tips</a></li>
+          <li style="margin-bottom:4px;"><a href="courses.html" style="color:#fff; text-decoration:none;">All Courses</a></li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-weight:600; font-size:1.09rem; margin-bottom:7px;">Follow Us</div>
+        <div style="margin-bottom:10px;">
+          <!-- Social icons can be filled as before -->
+        </div>
+        <div style="font-size:0.99rem; margin-top:5px;">
+          <span>Email:</span> <a href="mailto:rich@richdatatech.com" style="color:#fff; text-decoration:underline;">rich@richdatatech.com</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center; margin-top:18px; font-size:0.9rem; color:#b3c2e0; border-top:1px solid #2a4365; padding-top:10px;">
+    © <span id="year"></span> RichDataTech. All rights reserved.
+  </div>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</footer>
+
+<!-- AUTH MODAL -->
+<div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-lg shadow-lg p-6 w-80 relative">
+    <button id="close-auth" class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
+    <h2 id="auth-title" class="text-lg font-semibold mb-4 text-center">Login</h2>
+    <input id="email-input" type="email" placeholder="Email" class="border w-full px-3 py-2 mb-2 rounded" />
+    <input id="password-input" type="password" placeholder="Password" class="border w-full px-3 py-2 mb-2 rounded" />
+    <button id="action-btn" class="bg-blue-500 hover:bg-blue-600 text-white w-full py-2 rounded mb-2">Login</button>
+    <a href="#" id="forgot-pass" class="text-xs text-blue-600 hover:underline block text-center mb-2">Forgot password?</a>
+    <p id="toggle-link" class="text-xs text-center text-gray-600">
+      Don’t have an account? <a href="#" class="text-blue-600 hover:underline">Register here</a>
+    </p>
+    <div class="mt-4 border-t pt-3">
+      <button id="google-login" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded mb-2">Continue with Google</button>
+      <button id="github-login" class="w-full bg-gray-800 hover:bg-black text-white py-2 rounded">Continue with GitHub</button>
+    </div>
+    <p id="auth-message" class="text-center text-xs mt-3 text-green-600"></p>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signOut,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  sendPasswordResetEmail, GoogleAuthProvider, GithubAuthProvider,
+  signInWithPopup
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, onSnapshot, setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// Firebase Config (unchanged)
+const firebaseConfig = {
+  apiKey: "AIzaSyBorPU13tVHj-o-28ADUkrXE944GIWhGOI",
+  authDomain: "course2-f1bdb.firebaseapp.com",
+  projectId: "course2-f1bdb",
+  storageBucket: "course2-f1bdb.appspot.com",
+  messagingSenderId: "954972853845",
+  appId: "1:954972853845:web:8bb39ddce360654214e6dc"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const COURSE_COLLECTION = "course2";
+
+// Elements
+const openAuthBtn = document.getElementById("open-auth-btn");
+const closeAuth = document.getElementById("close-auth");
+const authModal = document.getElementById("auth-modal");
+const authTitle = document.getElementById("auth-title");
+const actionBtn = document.getElementById("action-btn");
+const toggleLink = document.querySelector("#toggle-link a");
+const authMessage = document.getElementById("auth-message");
+const forgotPass = document.getElementById("forgot-pass");
+const loggedInSpan = document.getElementById("logged-in-span");
+const statusSpan = document.getElementById("status-span");
+const emailInput = document.getElementById("email-input");
+const passwordInput = document.getElementById("password-input");
+
+let isRegisterMode = false;
+let unsubscribeAccess = null;
+
+function showMsg(msg, color="green") {
+  authMessage.textContent = msg;
+  authMessage.style.color = color;
+  setTimeout(()=>authMessage.textContent="",4000);
+}
+
+function showStatus(msg) {
+  statusSpan.textContent = msg;
+  statusSpan.classList.remove("hidden");
+  setTimeout(() => {
+    statusSpan.classList.add("hidden");
+  }, 4000);
+}
+
+// Modal open/close
+openAuthBtn.addEventListener("click", () => authModal.classList.remove("hidden"));
+closeAuth.addEventListener("click", () => { authModal.classList.add("hidden"); authMessage.textContent=""; });
+window.addEventListener("click", e => { if (e.target === authModal) authModal.classList.add("hidden"); });
+
+// Toggle login/register
+toggleLink.addEventListener("click", e => {
+  e.preventDefault();
+  isRegisterMode = !isRegisterMode;
+  authTitle.textContent = isRegisterMode ? "Register" : "Login";
+  actionBtn.textContent = isRegisterMode ? "Register" : "Login";
+  toggleLink.innerHTML = isRegisterMode
+    ? `Already have an account? <a href="#" class="text-blue-600 hover:underline">Login</a>`
+    : `Don’t have an account? <a href="#" class="text-blue-600 hover:underline">Register here</a>`;
+});
+
+// ENTER key triggers login/register
+[emailInput, passwordInput].forEach(input => {
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      actionBtn.click();
+    }
+  });
+});
+
+// Auth handler
+actionBtn.addEventListener("click", async () => {
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+  if (!email || !password) return showMsg("Enter email & password", "red");
+  try {
+    if (isRegisterMode) {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await ensureUserRecord(cred.user);
+      showMsg("Registered successfully!");
+      showStatus(`Welcome! ${cred.user.email}`);
+    } else {
+      await signInWithEmailAndPassword(auth, email, password);
+      showMsg("Logged in!");
+      showStatus(`Welcome back! ${email}`);
+    }
+    authModal.classList.add("hidden");
+  } catch (err) { showMsg(err.message, "red"); }
+});
+
+// Forgot password
+forgotPass.addEventListener("click", async (e) => {
+  e.preventDefault();
+  const email = emailInput.value.trim();
+  if (!email) return showMsg("Enter your email first", "red");
+  try {
+    await sendPasswordResetEmail(auth, email);
+    showMsg("Password reset email sent!");
+  } catch (err) { showMsg(err.message, "red"); }
+});
+
+// OAuth (Google + GitHub)
+const googleBtn = document.getElementById("google-login");
+const githubBtn = document.getElementById("github-login");
+const googleProvider = new GoogleAuthProvider();
+const githubProvider = new GithubAuthProvider();
+googleBtn.addEventListener("click", ()=>handleOAuthLogin(googleProvider));
+githubBtn.addEventListener("click", ()=>handleOAuthLogin(githubProvider));
+async function handleOAuthLogin(provider) {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    await ensureUserRecord(result.user);
+    authModal.classList.add("hidden");
+    showStatus(`Welcome back! ${result.user.email}`);
+  } catch (err) { showMsg(err.message, "red"); }
+}
+
+// Firestore helper
+async function ensureUserRecord(user) {
+  const userRef = doc(db, COURSE_COLLECTION, user.uid);
+  const snap = await getDoc(userRef);
+  if (!snap.exists()) {
+    const purchases = {};
+    for (let i = 1; i <= 10; i++) {
+      purchases[`paid${i}`] = false;
+    }
+    await setDoc(userRef, {
+      email: user.email,
+      createdAt: new Date(),
+      provider: user.providerData[0].providerId,
+      purchases: purchases
+    });
+  }
+}
+
+// Main dynamic content rendering
+function renderFreeContent() {
+  document.getElementById("course-content").innerHTML = `
+    <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
+      <h4 class="text-4xl font-bold text-blue-700 text-center mb-4">🔓 Free Power BI Lesson 1 Preview</h4>
+      <div class="mx-auto max-w-3xl w-full mb-8">
+        <video id="free-video" class="w-full rounded shadow-md block mx-auto" controls playsinline>
+          <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+        <div class="flex items-center justify-between mt-4">
+          <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
+          <h2 class="text-xl font-semibold text-gray-800">Lesson 1 Preview</h2>
+          <a href="powerbi1.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
+        </div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8 w-full">
+        <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
+          <p class="text-base leading-relaxed text-black">
+            This is a <span class="font-semibold text-blue-700">free preview</span> of our Power BI beginner course!
+            Enjoy the introductory tips and see what you’ll unlock as a member.
+          </p>
+          <ul class="list-disc pl-5 space-y-2 text-black text-base mt-4">
+            <li>How to import data into Power BI</li>
+            <li>Basic Power Query steps</li>
+            <li>Building your first visual</li>
+          </ul>
+        </div>
+        <div class="bg-white border border-blue-400 rounded-lg p-6 shadow-sm flex flex-col items-center justify-center">
+          <h3 class="text-lg font-semibold mb-2 text-blue-700">Unlock Full Lesson</h3>
+          <p class="text-base text-gray-700 mb-4 text-center">
+            Get full access to all premium lessons and resources by upgrading now!
+          </p>
+          <button id="buy-now-btn" class="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white px-6 py-2 rounded-md text-base font-semibold shadow transition-all duration-150">
+            Buy Now to Unlock
+          </button>
+          <p class="text-xs text-gray-500 mt-3 text-center">One-time payment, instant access.</p>
+        </div>
+      </div>
+    </div>
+  `;
+  // Attach event after rendering
+  setTimeout(() => {
+    const buyBtn = document.getElementById("buy-now-btn");
+    if (buyBtn) buyBtn.onclick = handleStripeCheckout;
+  }, 0);
+}
+
+async function showPaidVideoAndContent() {
+  const user = auth.currentUser;
+  if (!user) return;
+  const idToken = await user.getIdToken();
+  const res = await fetch("https://richdatatech.vercel.app/api/secure-video", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + idToken
+    },
+    body: JSON.stringify({
+      uid: user.uid,
+      productId: "paid1",
+      file: "databricks1.mp4"
+    })
+  });
+  if (!res.ok) {
+    document.getElementById("course-content").innerHTML = `<div class="text-red-600">You do not have access.</div>`;
+    return;
+  }
+  const data = await res.json();
+  document.getElementById("course-content").innerHTML = `
+    <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
+      <h4 class="text-4xl font-bold text-blue-700 text-center mb-4">🎓 Paid Power BI Lesson 1</h4>
+      <div class="mx-auto max-w-3xl w-full mb-8">
+        <video id="secure-video" class="w-full rounded shadow-md block mx-auto" controls autoplay playsinline>
+          <source src="${data.url}" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+        <div class="flex items-center justify-between mt-4">
+          <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
+          <h2 class="text-xl font-semibold text-gray-800">Lesson 1</h2>
+          <a href="powerbi1.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
+        </div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8 w-full">
+        <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
+          <p class="text-base leading-relaxed text-black">
+            This is a <span class="font-semibold text-green-700">members-only</span> lesson in the Power BI beginner course.
+            You have full access to the lesson video and content!
+          </p>
+        </div>
+        <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
+          <h3 class="text-lg font-semibold mb-4 text-black">📘 Lesson Focus</h3>
+          <ul class="list-disc pl-5 space-y-2 text-black text-base">
+            <li>Loading Excel and CSV data into Power BI</li>
+            <li>Basic Power Query cleanup</li>
+            <li>Simple visuals and charts</li>
+            <li>Saving your first report</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+  // Disable right-click on video
+  const video = document.getElementById("secure-video");
+  if (video) {
+    video.addEventListener('contextmenu', e => e.preventDefault());
+  }
+}
+
+// Stripe checkout logic
+function handleStripeCheckout() {
+  const user = auth.currentUser;
+  if (!user) return alert("You must log in to purchase.");
+  fetch("https://richdatatech.vercel.app/api/checkout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      uid: user.uid,
+      items: [{ price: "price_1RqaLeJOLIr6wNsmGRK6tXXP" }],
+      productId: "paid1"
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.url) window.location.href = data.url;
+    else alert("Failed to start checkout.");
+  })
+  .catch(() => {
+    alert("Checkout failed.");
+  });
+}
+
+// Auth state and Firestore access logic
+onAuthStateChanged(auth, async (user) => {
+  openAuthBtn.classList.remove("hidden");
+  if (user) {
+    loggedInSpan.classList.remove("hidden");
+    openAuthBtn.textContent = "Logout";
+    openAuthBtn.onclick = async () => {
+      authModal.classList.add("hidden");
+      await signOut(auth);
+      showStatus("Logged out!");
+      location.reload();
+    };
+    listenForAccess(user.uid);
+  } else {
+    loggedInSpan.classList.add("hidden");
+    openAuthBtn.textContent = "Login / Register";
+    openAuthBtn.onclick = () => {
+      authModal.classList.remove("hidden");
+    };
+    if (unsubscribeAccess) unsubscribeAccess();
+    renderFreeContent();
+  }
+});
+
+function listenForAccess(uid) {
+  if (unsubscribeAccess) unsubscribeAccess();
+  const ref = doc(db, COURSE_COLLECTION, uid);
+  unsubscribeAccess = onSnapshot(ref, (snap) => {
+    if (snap.exists() && snap.data().purchases?.paid1) {
+      showPaidVideoAndContent();
+    } else {
+      renderFreeContent();
+    }
+  });
+}
+
+// Render free content on first load (even before auth)
+renderFreeContent();
+
+</script>
+</body>
+</html>
