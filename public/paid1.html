@@ -106,10 +106,9 @@
   <br><br>
 </main>
 
-<!-- FOOTER (never hidden by JS) -->
+<!-- FOOTER -->
 <footer style="background:#23272a; color:#fff; padding:38px 0 18px 0;">
   <div style="max-width:950px; margin:0 auto;">
-    <!-- Table-like 3-column grid with responsive stacking -->
     <div style="
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -138,12 +137,10 @@ AI tools, and valuable resources.</div>
       <div>
         <div style="font-weight:600; font-size:1.09rem; margin-bottom:7px;">Follow Us</div>
         <div style="margin-bottom:10px;">
-          <!-- YouTube - added to the left of all icon links -->
           <a href="https://www.youtube.com/channel/UClGGQ59Z_VawCYuElS1dJ2A" target="_blank" title="YouTube" style="margin:0 7px; display:inline-block;">
-            <!-- YouTube SVG -->
             <svg width="26" height="26" viewBox="0 0 576 512"><path fill="#555" d="M549.655 124.083c-6.281-23.725-24.926-42.369-48.648-48.649C458.281 64 288 64 288 64s-170.281 0-212.998 11.434c-23.722 6.28-42.367 24.924-48.648 48.649C16 166.8 16 256 16 256s0 89.201 10.354 131.918c6.281 23.726 24.926 42.369 48.648 48.649C117.719 448 288 448 288 448s170.281 0 212.998-11.433c23.722-6.28 42.367-24.923 48.648-48.649C560 345.2 560 256 560 256s0-89.2-10.345-131.917zM232 336V176l142.857 80L232 336z"/></svg>
           </a>
-                   <a href="https://www.instagram.com/richdatatech?igsh=MWl0eHdoZGdoeWVxeA==" target="_blank" title="Instagram" style="margin:0 7px; display:inline-block;">
+          <a href="https://www.instagram.com/richdatatech?igsh=MWl0eHdoZGdoeWVxeA==" target="_blank" title="Instagram" style="margin:0 7px; display:inline-block;">
             <svg width="26" height="26" viewBox="0 0 448 512"><path fill="#555" d="M224 202.66A53.34 53.34 0 1 0 277.34 256 53.38 53.38 0 0 0 224 202.66zm124.71-41a54 54 0 0 0-30.37-30.37C286.82 118.09 256 112 224 112s-62.82 6.09-94.34 19.29a54 54 0 0 0-30.37 30.37C118.09 161.18 112 192 112 224s6.09 62.82 19.29 94.34a54 54 0 0 0 30.37 30.37C161.18 393.91 192 400 224 400s62.82-6.09 94.34-19.29a54 54 0 0 0 30.37-30.37C393.91 286.82 400 256 400 224s-6.09-62.82-19.29-94.34z"/></svg>
           </a>
           <a href="https://www.facebook.com/profile.php?id=61581771099083" target="_blank" title="Facebook" style="margin:0 7px; display:inline-block;">
@@ -167,7 +164,7 @@ AI tools, and valuable resources.</div>
   </script>
 </footer>
 
-<!-- AUTH MODAL (use your existing modal code) -->
+<!-- AUTH MODAL (unchanged) -->
 <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
   <div class="bg-white rounded-lg shadow-lg p-6 w-80 relative">
     <button id="close-auth" class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
@@ -187,7 +184,7 @@ AI tools, and valuable resources.</div>
   </div>
 </div>
 
-<!-- FIREBASE + LOGIC -->
+<!-- FIREBASE LOGIC -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
@@ -199,20 +196,6 @@ import {
 import {
   getFirestore, doc, getDoc, onSnapshot, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-// ======= EASY-TO-EDIT LESSON VARIABLES =======
-const vid = "databricks1"; // just the base filename, e.g. "databricks1"
-const productNumber = 1;   // e.g. 1 for "paid1"
-const progressCurrent = 2; // set to your current lesson number, e.g. 2 for "2 / 10"
-const progressTotal = 10;  // total number of lessons
-const lessonTitle = "Lesson 1: Databricks Introduction";
-const lessonFocus = [
-  "Overview of Databricks platform",
-  "Workspace navigation",
-  "Basic cluster setup",
-  "First notebook run"
-];
-// ==============================================
 
 // Firebase Config (unchanged)
 const firebaseConfig = {
@@ -399,12 +382,24 @@ function renderFreeContent() {
   }, 0);
 }
 
-// Paid lesson content, using top-of-file variables
+
 async function showPaidVideoAndContent() {
   const user = auth.currentUser;
   if (!user) return;
+  // Dedicated page for Lesson 1 only
+  const lesson = {
+    file: "databricks1.mp4",
+    title: "Lesson 1: Databricks Introduction",
+    focus: [
+      "Overview of Databricks platform",
+      "Workspace navigation",
+      "Basic cluster setup",
+      "First notebook run"
+    ]
+  };
 
   const idToken = await user.getIdToken();
+  // Secure API call with lesson and product
   const res = await fetch("https://richdatatech.vercel.app/api/secure-video", {
     method: "POST",
     headers: {
@@ -413,8 +408,8 @@ async function showPaidVideoAndContent() {
     },
     body: JSON.stringify({
       uid: user.uid,
-      productId: "paid" + productNumber,
-      file: vid + ".mp4"
+      productId: "paid1",
+      file: lesson.file
     })
   });
   if (!res.ok) {
@@ -422,8 +417,6 @@ async function showPaidVideoAndContent() {
     return;
   }
   const data = await res.json();
-  // Calculate percent for progress bar
-  const percent = Math.round((progressCurrent / progressTotal) * 100);
   document.getElementById("course-content").innerHTML = `
     <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
       <h1 class="text-3xl font-bold text-blue-700 text-center mb-4">🎓 Paid Databricks Course</h1>
@@ -435,15 +428,15 @@ async function showPaidVideoAndContent() {
         <div class="w-full my-3">
           <div class="flex items-center justify-between mb-1">
             <span class="text-xs text-blue-700 font-semibold">Progress</span>
-            <span id="progress-label" class="text-xs text-blue-700 font-semibold">${progressCurrent} / ${progressTotal} lessons (${percent}%)</span>
+            <span id="progress-label" class="text-xs text-blue-700 font-semibold">1 / 1 lesson (100%)</span>
           </div>
           <div class="relative h-2 rounded-full bg-blue-100 overflow-hidden">
-            <div id="progress-bar" class="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500" style="width: ${percent}%;"></div>
+            <div id="progress-bar" class="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500" style="width: 100%;"></div>
           </div>
         </div>
         <div class="flex items-center justify-between mt-4">
           <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
-          <h2 class="text-xl font-semibold text-gray-800">${lessonTitle}</h2>
+          <h2 class="text-xl font-semibold text-gray-800">${lesson.title}</h2>
         </div>
       </div>
       <div class="grid md:grid-cols-2 gap-8 w-full">
@@ -456,7 +449,7 @@ async function showPaidVideoAndContent() {
         <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
           <h3 class="text-lg font-semibold mb-4 text-black">📘 Lesson Focus</h3>
           <ul class="list-disc pl-5 space-y-2 text-black text-base">
-            ${lessonFocus.map(item => `<li>${item}</li>`).join("")}
+            ${lesson.focus.map(item => `<li>${item}</li>`).join("")}
           </ul>
         </div>
       </div>
@@ -477,7 +470,7 @@ function handleStripeCheckout() {
     body: JSON.stringify({
       uid: user.uid,
       items: [{ price: "price_1RqaLeJOLIr6wNsmGRK6tXXP" }],
-      productId: "paid" + productNumber
+      productId: "paid1"
     })
   })
   .then(res => res.json())
@@ -516,13 +509,21 @@ onAuthStateChanged(auth, async (user) => {
 
 function listenForAccess(uid) {
   if (unsubscribeAccess) unsubscribeAccess();
+
   const ref = doc(db, COURSE_COLLECTION, uid);
+  // Show a loading state
+  document.getElementById("course-content").innerHTML = `
+    <div class="text-blue-700 text-center text-xl py-8">Checking your course access...</div>
+  `;
   unsubscribeAccess = onSnapshot(ref, (snap) => {
-    if (snap.exists() && snap.data().purchases?.["paid" + productNumber]) {
+    const data = snap.exists() ? snap.data() : {};
+    if (data.purchases && data.purchases.paid1) {
       showPaidVideoAndContent();
     } else {
       renderFreeContent();
     }
+  }, (error) => {
+    renderFreeContent();
   });
 }
 
