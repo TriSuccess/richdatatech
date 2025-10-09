@@ -370,61 +370,94 @@ function renderFreeContent() {
 async function showPaidVideoAndContent() {
   const user = auth.currentUser;
   if (!user) return;
-  const idToken = await user.getIdToken();
-  const res = await fetch("https://richdatatech.vercel.app/api/secure-video", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + idToken
-    },
-    body: JSON.stringify({
-      uid: user.uid,
-      productId: "paid1",
-      file: "databricks1.mp4"
-    })
-  });
-  if (!res.ok) {
-    document.getElementById("course-content").innerHTML = `<div class="text-red-600">You do not have access.</div>`;
-    return;
-  }
-  const data = await res.json();
-  document.getElementById("course-content").innerHTML = `
-    <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
-      <h4 class="text-4xl font-bold text-blue-700 text-center mb-4">🎓 Paid Power BI Lesson 1</h4>
-      <div class="mx-auto max-w-3xl w-full mb-8">
-        <video id="secure-video" class="w-full rounded shadow-md block mx-auto" controls autoplay playsinline>
-          <source src="${data.url}" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
-        <div class="flex items-center justify-between mt-4">
-          <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
-          <h2 class="text-xl font-semibold text-gray-800">Lesson 1</h2>
-          <a href="powerbi1.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
+
+  try {
+    const idToken = await user.getIdToken();
+
+    // Use the exact backend URL deployed on Vercel
+    const apiUrl = "https://richdatatech.vercel.app/api/secure-video";
+
+    const res = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // Important: Authorization must be sent cleanly
+        Authorization: `Bearer ${idToken}`,
+      },
+      // Only include fields the backend expects
+      body: JSON.stringify({
+        file: "databricks1.mp4",
+      }),
+      // Allow cookies or credentials for Safari if needed
+      mode: "cors",
+      credentials: "omit", // ensures no CORS credential error from iOS
+    });
+
+    if (!res.ok) {
+      console.error("❌ Secure video fetch failed:", res.status, await res.text());
+      document.getElementById("course-content").innerHTML = `
+        <div class="text-red-600">You do not have access.</div>
+      `;
+      return;
+    }
+
+    const data = await res.json();
+    const videoUrl = data.url;
+
+    // Render secure video player and content
+    document.getElementById("course-content").innerHTML = `
+      <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
+        <h4 class="text-4xl font-bold text-blue-700 text-center mb-4">🎓 Paid Power BI Lesson 1</h4>
+        <div class="mx-auto max-w-3xl w-full mb-8">
+          <video
+            id="secure-video"
+            class="w-full rounded shadow-md block mx-auto"
+            controls
+            autoplay
+            playsinline
+            preload="auto"
+            disablePictureInPicture
+          >
+            <source src="${videoUrl}" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+          <div class="flex items-center justify-between mt-4">
+            <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
+            <h2 class="text-xl font-semibold text-gray-800">Lesson 1</h2>
+            <a href="powerbi1.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-8 w-full">
+          <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
+            <p class="text-base leading-relaxed text-black">
+              This is a <span class="font-semibold text-green-700">members-only</span> lesson in the Power BI beginner course.
+              You have full access to the lesson video and content!
+            </p>
+          </div>
+          <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
+            <h3 class="text-lg font-semibold mb-4 text-black">📘 Lesson Focus</h3>
+            <ul class="list-disc pl-5 space-y-2 text-black text-base">
+              <li>Loading Excel and CSV data into Power BI</li>
+              <li>Basic Power Query cleanup</li>
+              <li>Simple visuals and charts</li>
+              <li>Saving your first report</li>
+            </ul>
+          </div>
         </div>
       </div>
-      <div class="grid md:grid-cols-2 gap-8 w-full">
-        <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
-          <p class="text-base leading-relaxed text-black">
-            This is a <span class="font-semibold text-green-700">members-only</span> lesson in the Power BI beginner course.
-            You have full access to the lesson video and content!
-          </p>
-        </div>
-        <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
-          <h3 class="text-lg font-semibold mb-4 text-black">📘 Lesson Focus</h3>
-          <ul class="list-disc pl-5 space-y-2 text-black text-base">
-            <li>Loading Excel and CSV data into Power BI</li>
-            <li>Basic Power Query cleanup</li>
-            <li>Simple visuals and charts</li>
-            <li>Saving your first report</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  `;
-  // Disable right-click on video
-  const video = document.getElementById("secure-video");
-  if (video) {
-    video.addEventListener('contextmenu', e => e.preventDefault());
+    `;
+
+    // Disable right-click and long-press saving on video
+    const video = document.getElementById("secure-video");
+    if (video) {
+      video.addEventListener("contextmenu", (e) => e.preventDefault());
+      video.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+    }
+  } catch (err) {
+    console.error("❌ Error showing paid video:", err);
+    document.getElementById("course-content").innerHTML = `
+      <div class="text-red-600">An unexpected error occurred. Please try again.</div>
+    `;
   }
 }
 
