@@ -5,7 +5,8 @@ import { getFirestore } from "firebase-admin/firestore";
 
 // --- CORS helper ---
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", // For production, set this to your frontend domain!
+  // For production, set this to your frontend domain for security!
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
@@ -32,7 +33,6 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    // --- CORS: Always add headers to every response ---
     // Parse auth header
     const authHeader = req.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -42,8 +42,7 @@ export async function POST(req: NextRequest) {
       });
     }
     const idToken = authHeader.split("Bearer ")[1];
-    // Validate Firebase token
-    const decoded = await getAuth().verifyIdToken(idToken);
+    await getAuth().verifyIdToken(idToken);
 
     // Parse request body
     const { uid, productId, file } = await req.json();
