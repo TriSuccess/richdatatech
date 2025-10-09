@@ -1,7 +1,8 @@
 export const config = { runtime: "edge" };
 
+// Replace with your actual frontend domain for production!
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", // For production, use your frontend domain
+  "Access-Control-Allow-Origin": "https://course2-f1bdb.web.app",
   "Access-Control-Allow-Methods": "GET,OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, Range",
 };
@@ -19,7 +20,7 @@ export async function GET(req: Request) {
     return new Response("Invalid file", { status: 403, headers: corsHeaders });
   }
 
-  // --- MANUALLY ENTER YOUR FOLDER USERNAME AND PASSWORD BELOW ---
+  // ==== ENTER YOUR FOLDER USERNAME AND PASSWORD HERE ====
   const username = "Razor7";
   const password = "S1M3o;OY}ixq";
   const basic = "Basic " + Buffer.from(`${username}:${password}`).toString("base64");
