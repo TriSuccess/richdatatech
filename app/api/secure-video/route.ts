@@ -15,8 +15,8 @@ const db = admin.firestore();
 
 // --------- 2. BASIC AUTH CONFIG FOR VIDEO FOLDER ---------
 const VIDEO_DOMAIN = "https://www.richdatatech.com/videos";
-const VIDEO_USER = process.env.VIDEO_USER!; // set in Vercel env
-const VIDEO_PASS = process.env.VIDEO_PASS!; // set in Vercel env
+const VIDEO_USER = process.env.VIDEO_USER!; // Set in Vercel env
+const VIDEO_PASS = process.env.VIDEO_PASS!; // Set in Vercel env
 
 // --------- 3. HANDLER ---------
 export async function POST(req: NextRequest) {
@@ -68,12 +68,7 @@ export async function POST(req: NextRequest) {
       status: 200,
       headers,
     });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message || "Server error" }, { status: 500 });
+  } catch (e) {
+    return NextResponse.json({ error: (e instanceof Error ? e.message : "Server error") }, { status: 500 });
   }
 }
-
-// --------- 4. Optional: GET for Pre-signed URLs (if you want to support GET requests too) ---------
-// export async function GET(req: NextRequest) {
-//   /* ...similar logic, but with query params... */
-// }
