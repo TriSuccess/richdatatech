@@ -10,7 +10,7 @@ const corsHeaders = {
 };
 
 // Set this to your production domain, or configure via env variable!
-const FALLBACK_DOMAIN = process.env.PUBLIC_URL || "https://yourdomain.com";
+const FALLBACK_DOMAIN = process.env.PUBLIC_URL || "https://course2-f1bdb.web.app/paid1.html";
 
 function isValidOrigin(origin: string | null): origin is string {
   return !!origin && /^https?:\/\//.test(origin);
