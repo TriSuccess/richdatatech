@@ -5,6 +5,22 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "**/*.m3u8",
+        "headers": [
+          { "key": "Access-Control-Allow-Origin", "value": "*" },
+          { "key": "Content-Type", "value": "application/vnd.apple.mpegurl" }
+        ]
+      },
+      {
+        "source": "**/*.ts",
+        "headers": [
+          { "key": "Access-Control-Allow-Origin", "value": "*" },
+          { "key": "Content-Type", "value": "video/mp2t" }
+        ]
+      }
     ]
   }
 }

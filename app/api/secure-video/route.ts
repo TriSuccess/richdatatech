@@ -67,11 +67,11 @@ export async function GET(req: NextRequest) {
   const corsHeaders = getCorsHeaders(origin);
 
   try {
-    const url = new URL(req.url);
-    const courseId = url.searchParams.get("courseId") || "";
-    const lessonId = url.searchParams.get("lessonId") || "";
-    const ext = url.searchParams.get("ext") || ".m3u8"; // default to m3u8
-    const token = url.searchParams.get("token");
+    const { searchParams } = req.nextUrl;
+    const courseId = searchParams.get("courseId") || "";
+    const lessonId = searchParams.get("lessonId") || "";
+    const ext = searchParams.get("ext") || ".m3u8";
+    const token = searchParams.get("token");
 
     if (!courseId || !lessonId || !token) {
       return new Response("Missing parameters", {

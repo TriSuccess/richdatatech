@@ -74,7 +74,7 @@
     #auth-modal { animation: fadeIn 0.25s ease-in-out; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
 
 <body class="bg-gray-100 flex flex-col min-h-screen">
@@ -119,6 +119,7 @@
       justify-items: center;
       text-align: center;
     " class="footer-table">
+      <!-- ...footer as before... -->
       <div>
         <div style="font-weight:600; font-size:1.09rem; margin-bottom:5px;">RichDataTech</div>
         <div style="font-size:0.97rem; color:#d1d5db;">Advance your future with
@@ -163,16 +164,51 @@ AI tools, and valuable resources.</div>
   </script>
 </footer>
 
-<!-- AUTH MODAL and other modal HTML unchanged ... -->
+<!-- AUTH MODAL -->
+<div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-lg shadow-lg p-6 w-80 relative">
+    <button id="close-auth" class="absolute top-2 right-2 text-gray-500 hover:text-black text-xl">&times;</button>
+    <h2 id="auth-title" class="text-lg font-semibold mb-4 text-center">Login</h2>
+    <input id="email-input" type="email" placeholder="Email" class="border w-full px-3 py-2 mb-2 rounded" />
+    <input id="password-input" type="password" placeholder="Password" class="border w-full px-3 py-2 mb-2 rounded" />
+    <button id="action-btn" class="bg-blue-500 hover:bg-blue-600 text-white w-full py-2 rounded mb-2">Login</button>
+    <a href="#" id="forgot-pass" class="text-xs text-blue-600 hover:underline block text-center mb-2">Forgot password?</a>
+    <p id="toggle-link" class="text-xs text-center text-gray-600">
+      Don’t have an account? <a href="#" class="text-blue-600 hover:underline">Register here</a>
+    </p>
+    <div class="mt-4 border-t pt-3">
+      <button id="google-login" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded mb-2">Continue with Google</button>
+      <button id="github-login" class="w-full bg-gray-800 hover:bg-black text-white py-2 rounded">Continue with GitHub</button>
+    </div>
+    <p id="auth-message" class="text-center text-xs mt-3 text-green-600"></p>
+  </div>
+</div>
+
+<!-- HLS.js for adaptive video streaming -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <script type="module">
-const courseId = "snowflake";
-const lessonId = 1; // or 2, etc.
+/* ----------------------------- 
+   SECTION: COURSE/LESSON CONFIG
+   Change these values to select video!
+------------------------------ */
+const courseId = "snowflake";  // your course
+const lessonId = 1;            // your lesson number
+const ext = ".m3u8";
+const hlsPlaylist = `${courseId}${lessonId}.m3u8`;
 const totalLessons = 7;
 
+
+// For checkout, you may also want to change productId/stripePriceId (if needed)
 const productId = `paid${lessonId}`;
 const stripePriceId = "price_1RqaLeJOLIr6wNsmGRK6tXXP"; // change if needed per lesson
 
+
+
+
+
+
+// Firebase Config (unchanged)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, signOut,
@@ -373,8 +409,8 @@ async function showPaidVideoAndContent() {
   if (!user) return;
 
   const idToken = await user.getIdToken();
-  // Backend handles folder name and security
-  const videoSrc = `https://richdatatech.vercel.app/api/secure-video?courseId=${encodeURIComponent(courseId)}&lessonId=${encodeURIComponent(lessonId)}&ext=.m3u8&token=${idToken}`;
+  const videoSrc = `https://richdatatech.vercel.app/api/secure-video?courseId=${courseId}&lessonId=${lessonId}&ext=${ext}&token=${idToken}`;
+
 
   document.getElementById("course-content").innerHTML = `
     <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
@@ -423,16 +459,16 @@ async function showPaidVideoAndContent() {
   `;
 
   // HLS.js player setup for universal browser support
-  const video = document.getElementById("secure-video");
-  if (window.Hls && window.Hls.isSupported()) {
-    const hls = new window.Hls();
-    hls.loadSource(videoSrc);
-    hls.attachMedia(video);
-  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    video.src = videoSrc;
-  } else {
-    video.outerHTML = '<div class="text-red-600 font-bold">Your browser does not support secure video streaming.   Please use a modern browser.</div>';
-  }
+ const video = document.getElementById("secure-video");
+ if (window.Hls && window.Hls.isSupported()) {
+   const hls = new window.Hls();
+   hls.loadSource(videoSrc);
+   hls.attachMedia(video);
+ } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+   video.src = videoSrc;
+ } else {
+   video.outerHTML = '<div class="text-red-600 font-bold">Your browser does not support secure video streaming.   Please use a modern browser.</div>';
+ }
 
   // Disable right-click
   video.addEventListener("contextmenu", e => e.preventDefault());
@@ -508,6 +544,7 @@ function listenForAccess(uid) {
 
 // Render free content on first load (even before auth)
 renderFreeContent();
+
 </script>
 </body>
 </html>
