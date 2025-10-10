@@ -309,20 +309,25 @@ async function handleOAuthLogin(provider) {
   } catch (err) { showMsg(err.message, "red"); }
 }
 
-// Only needed for registration completeness, does not affect video access
+// This function creates purchases: {paid1: false, ..., paid10: false} on registration
 async function ensureUserRecord(user) {
   const userRef = doc(db, "course2", user.uid);
   const snap = await getDoc(userRef);
   if (!snap.exists()) {
+    const purchases = {};
+    for (let i = 1; i <= 10; i++) {
+      purchases[`paid${i}`] = false;
+    }
     await setDoc(userRef, {
       email: user.email,
       createdAt: new Date(),
-      provider: user.providerData[0].providerId
+      provider: user.providerData[0].providerId,
+      purchases: purchases
     });
   }
 }
 
-// Main dynamic content rendering
+// Free preview rendering
 function renderFreeContent() {
   document.getElementById("course-content").innerHTML = `
     <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
@@ -365,8 +370,11 @@ async function showPaidVideoAndContent() {
   const user = auth.currentUser;
   if (!user) return;
 
-  // For demo, just use a free video. Replace with your actual video logic as needed.
-  const videoSrc = "https://www.w3schools.com/html/mov_bbb.mp4";
+  // 1. Get the Firebase ID token for this user
+  const idToken = await user.getIdToken();
+
+  // 2. Stream the protected video from your Vercel secure-video2 route
+  const videoSrc = `https://richdatatech.vercel.app/api/secure-video2?file=${encodeURIComponent(videoFileBase)}&token=${idToken}`;
 
   document.getElementById("course-content").innerHTML = `
     <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
@@ -374,7 +382,7 @@ async function showPaidVideoAndContent() {
         🎓 Paid ${courseId.charAt(0).toUpperCase() + courseId.slice(1)} Lesson ${lessonId}
       </h4>
       <div class="mx-auto max-w-3xl w-full mb-8">
-        <video id="secure-video" class="w-full rounded shadow-md block mx-auto" controls autoplay playsinline>
+        <video id="secure-video2" class="w-full rounded shadow-md block mx-auto" controls autoplay playsinline>
           <source src="${videoSrc}" type="video/mp4">
           Your browser does not support the video tag.
         </video>
@@ -384,7 +392,7 @@ async function showPaidVideoAndContent() {
             <span id="progress-label" class="text-gray-800"></span>
             <span>
               <span class="text-gray-800">Progress:</span>
-              <span id="progress-percent" class="font-medium text-blue-600"></span>
+              <span id="progress-percent" class="font-medium text-black-600"></span>
             </span>
           </div>
           <div class="w-full bg-gray-200 rounded-full h-3">
@@ -417,7 +425,7 @@ async function showPaidVideoAndContent() {
     </div>
   `;
 
-  // Progress Bar Logic (runs after the HTML above is set)
+  // Progress Bar Logic
   const percent = Math.round((lessonId / totalLessons) * 100);
   const label = `Lesson ${lessonId} / ${totalLessons}`;
   if (document.getElementById("progress-label")) {
@@ -427,7 +435,7 @@ async function showPaidVideoAndContent() {
   }
 
   // Disable right-click
-  const video = document.getElementById("secure-video");
+  const video = document.getElementById("secure-video2");
   if (video) {
     video.addEventListener("contextmenu", e => e.preventDefault());
   }
@@ -456,9 +464,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// Render free content on first load (even before auth)
 renderFreeContent();
-
 </script>
 </body>
 </html>

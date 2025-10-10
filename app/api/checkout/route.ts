@@ -9,6 +9,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
+// Set this to your production domain, or configure via env variable!
+const FALLBACK_DOMAIN = process.env.PUBLIC_URL || "https://yourdomain.com";
+
+function isValidOrigin(origin: string | null): origin is string {
+  return !!origin && /^https?:\/\//.test(origin);
+}
+
 export async function OPTIONS() {
   return new Response(null, { status: 204, headers: corsHeaders });
 }
@@ -27,8 +34,10 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Use the origin header if valid, otherwise fallback
+    const rawOrigin = req.headers.get("origin");
+    const origin = isValidOrigin(rawOrigin) ? rawOrigin : FALLBACK_DOMAIN;
 
-    const origin = req.headers.get("origin") ?? "";
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: items.map((item) => ({
