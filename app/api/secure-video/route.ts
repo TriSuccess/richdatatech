@@ -61,13 +61,72 @@ function getContentType(file: string) {
   return "application/octet-stream";
 }
 
-// GET handler: secure proxy for HLS/MP4
+// GET handler: secure proxy for HLS/MP4 and .ts segments
 export async function GET(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
   const corsHeaders = getCorsHeaders(origin);
 
   try {
-    const { searchParams } = req.nextUrl;
+    const { searchParams, pathname } = req.nextUrl;
+
+    // === CATCH-ALL FOR TS SEGMENTS ===
+    // If the request path looks like /api/somefile.ts, proxy the segment directly
+    if (pathname.endsWith(".ts")) {
+      // Example: /api/snowflake1_0000.ts
+      // Remove leading /api/ if present, get only the filename
+      const tsFileName = pathname.split("/").pop();
+      if (!tsFileName) {
+        console.log("TS segment request, but filename not found.");
+        return new Response("Not Found", { status: 404, headers: corsHeaders });
+      }
+
+      // Auth check (optional: you could require a token here for extra security)
+      // You could add token validation here if desired
+
+      const FOLDER = "pbic7i";
+      const file = `${FOLDER}/${tsFileName}`;
+      const videoUrl = `https://www.richdatatech.com/videos/${file}`;
+
+      // cPanel Basic Auth
+      const username = process.env.CPANEL_USERNAME!;
+      const password = process.env.CPANEL_PASSWORD!;
+      const basic = Buffer.from(`${username}:${password}`).toString("base64");
+
+      console.log("Proxying TS segment:", videoUrl);
+
+      const fetchHeaders: Record<string, string> = {
+        Authorization: `Basic ${basic}`,
+      };
+      const range = req.headers.get("range");
+      if (range) fetchHeaders.Range = range;
+
+      const tsRes = await fetch(videoUrl, {
+        headers: fetchHeaders,
+      });
+
+      console.log(`Upstream TS response: ${tsRes.status} ${tsRes.statusText}`);
+      if (!tsRes.ok || !tsRes.body) {
+        const errorBody = await tsRes.text().catch(() => "[unavailable]");
+        console.log("Upstream TS error body:", errorBody);
+        return new Response("Segment not found", { status: 404, headers: corsHeaders });
+      }
+
+      const headers = new Headers(corsHeaders);
+      headers.set("Content-Type", getContentType(tsFileName));
+      if (tsRes.headers.get("content-length"))
+        headers.set("Content-Length", tsRes.headers.get("content-length")!);
+      if (tsRes.headers.get("content-range"))
+        headers.set("Content-Range", tsRes.headers.get("content-range")!);
+      headers.set("Accept-Ranges", "bytes");
+      headers.set("Cache-Control", "no-store");
+
+      return new Response(tsRes.body, {
+        status: tsRes.status,
+        headers,
+      });
+    }
+
+    // ==== REGULAR LOGIC FOR PLAYLIST/MP4 ====
     const courseId = searchParams.get("courseId") || "";
     const lessonId = searchParams.get("lessonId") || "";
     const ext = searchParams.get("ext") || ".m3u8";
