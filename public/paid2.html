@@ -7,9 +7,76 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body, * { font-family: 'Proxima Nova', sans-serif; }
-    /* ...header and footer styles as before... */
+    header {
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 1.25rem 1rem;
+    }
+    header .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+    nav a { text-decoration: none; }
+    nav a:hover { color: #0573ff; font-weight: bold; }
+    nav.main-nav {
+      display: flex;
+      gap: 1.25rem;
+      font-size: 1rem;
+      position: absolute;
+      left: 50%;
+      top: 5%;
+      transform: translateX(-50%);
+      margin-top: 34px;
+    }
+    #logged-in-span {
+      margin-right: 10px;
+      font-size: 0.7rem;
+      font-weight: normal;
+      color: #065f46;
+      opacity: 1;
+      transition: opacity 0.2s;
+      margin-top: 0.1rem;
+    }
+    #status-span {
+      margin-right: 10px;
+      font-size: 0.8rem;
+      color: #0573ff;
+      opacity: 1;
+      transition: opacity 0.2s;
+      margin-top: 0.1rem;
+    }
+    @media (max-width: 639px) {
+      nav.main-nav {
+        position: static;
+        flex-direction: row;
+        justify-content: space-around;
+        width: 100%;
+        margin-top: 0.25rem;
+        gap: 2px;
+        font-size: 0.9rem;
+        transform: none;
+      }
+      header { padding-bottom: 0.15rem; }
+    }
+    @media (max-width: 700px) {
+      .footer-table {
+        grid-template-columns: 1fr !important;
+        gap: 24px !important;
+        text-align: center !important;
+      }
+      .footer-table > div {
+        margin-bottom: 18px;
+      }
+    }
+    .footer-table a:hover svg path { fill: #999 !important; }
+    #auth-modal { animation: fadeIn 0.25s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
+
 <body class="bg-gray-100 flex flex-col min-h-screen">
 
 <!-- HEADER -->
@@ -41,9 +108,53 @@
   <br><br>
 </main>
 
-<!-- FOOTER (keep as before) -->
+<!-- FOOTER -->
 <footer style="background:#23272a; color:#fff; padding:38px 0 18px 0;">
-  <!-- ...footer content as before... -->
+  <div style="max-width:950px; margin:0 auto;">
+    <div style="
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 32px;
+      align-items: flex-start;
+      justify-items: center;
+      text-align: center;
+    " class="footer-table">
+      <div>
+        <div style="font-weight:600; font-size:1.09rem; margin-bottom:5px;">RichDataTech</div>
+        <div style="font-size:0.97rem; color:#d1d5db;">Advance your future with
+premium courses,
+AI tools, and valuable resources.</div>
+      </div>
+      <div>
+        <div style="font-weight:600; font-size:1.09rem; margin-bottom:7px;">Quick Links</div>
+        <ul style="list-style:none; padding:0; margin:0; font-size:0.97rem;">
+          <li style="margin-bottom:4px;"><a href="powerbi.html" style="color:#fff; text-decoration:none;">Power BI</a></li>
+          <li style="margin-bottom:4px;"><a href="aitools.html" style="color:#fff; text-decoration:none;">AI Tools</a></li>
+          <li style="margin-bottom:4px;"><a href="courses.html" style="color:#fff; text-decoration:none;">All Courses</a></li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-weight:600; font-size:1.09rem; margin-bottom:7px;">Follow Us</div>
+        <div style="margin-bottom:10px;">
+          <a href="https://www.youtube.com/@richdatatech" target="_blank" title="YouTube" style="margin:0 7px; display:inline-block;">
+           <svg width="26" height="26" viewBox="0 0 576 512"><path fill="#555" d="M549.655 124.083c-6.281-23.725-24.96-42.28-48.655-48.648C465.69 64 288 64 288 64s-177.69 0-213 11.435c-23.695 6.368-42.374 24.923-48.655 48.648C16 159.405 16 256 16 256s0 96.595 10.345 131.917c6.281 23.725 24.96 42.28 48.655 48.648C110.31 448 288 448 288 448s177.69 0 213-11.435c23.695-6.368 42.374-24.923 48.655-48.648C560 352.595 560 256 560 256s0-96.595-10.345-131.917zM232 336V176l142.857 80L232 336z"/></svg>
+         </a>
+          <a href="https://www.instagram.com/richdatatech?igsh=MWl0eHdoZGdoeWVxeA==" target="_blank" title="Instagram" style="margin:0 7px; display:inline-block;">
+            <svg width="26" height="26" viewBox="0 0 448 512"><path fill="#555" d="M224 202.66A53.34 53.34 0 1 0 277.34 256 53.38 53.38 0 0 0 224 202.66zm124.71-41a54 54 0 0 0-30.37-30.37C286.82 118.09 256 112 224 112s-62.82 6.09-94.34 19.29a54 54 0 0 0-30.37 30.37C118.09 161.18 112 192 112 224s6.09 62.82 19.29 94.34a54 54 0 0 0 30.37 30.37C161.18 393.91 192 400 224 400s62.82-6.09 94.34-19.29a54 54 0 0 0 30.37-30.37C393.91 286.82 400 256 400 224s-6.09-62.82-19.29-94.34z"/></svg>
+          </a>
+          <a href="https://www.facebook.com/profile.php?id=61581771099083" target="_blank" title="Facebook" style="margin:0 7px; display:inline-block;">
+            <svg width="26" height="26" viewBox="0 0 320 512"><path fill="#555" d="M279.14 288l14.22-92.66h-88.91V136.89c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S264.43 0 225.36 0c-73.22 0-121.26 44.38-121.26 124.72V195.3H22.89V288h81.21v224h100.2V288z"/></svg>
+          </a>
+          <a href="mailto:rich@richdatatech.com" title="Email" style="margin:0 7px; display:inline-block;">
+            <svg width="26" height="26" viewBox="0 0 512 512"><path fill="#555" d="M502.3 190.8L327.4 338.3c-13.7 11.6-33.1 11.6-46.8 0L9.7 190.8C3.9 186.1 0 178.9 0 170.9V144c0-35.3 28.7-64 64-64h384c35.3 0 64 28.7 64 64v26.9c0 8-3.9 15.2-9.7 20zM0 400V212.2l218.1 184.5c19.5 16.5 48.4 16.5 67.9 0L512 212.2V400c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64z"/></svg>
+          </a>
+        </div>
+        <div style="font-size:0.99rem; margin-top:5px;">
+          <span>Email:</span> <a href="mailto:rich@richdatatech.com" style="color:#fff; text-decoration:underline;">rich@richdatatech.com</a>
+        </div>
+      </div>
+    </div>
+  </div>
   <div style="text-align:center; margin-top:18px; font-size:0.9rem; color:#b3c2e0; border-top:1px solid #2a4365; padding-top:10px;">
     © <span id="year"></span> RichDataTech. All rights reserved.
   </div>
@@ -52,28 +163,16 @@
   </script>
 </footer>
 
-<!-- AUTH MODAL (same as before) -->
-<div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-  <!-- ...modal content as before... -->
-</div>
-
-<!-- HLS.js for adaptive video streaming -->
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<!-- AUTH MODAL and other modal HTML unchanged ... -->
 
 <script type="module">
-/* ----------------------------- 
-   SECTION: COURSE/LESSON CONFIG
-   Change these values to select video!
------------------------------- */
 const courseId = "snowflake";
-const lessonId = 2; // e.g. 2 for snowflake2, 3 for databricks3, etc.
+const lessonId = 1; // or 2, etc.
 const totalLessons = 7;
-const hlsPlaylist = `pbic7i/${courseId}${lessonId}.m3u8`;
-// For checkout
+
 const productId = `paid${lessonId}`;
 const stripePriceId = "price_1RqaLeJOLIr6wNsmGRK6tXXP"; // change if needed per lesson
 
-// Firebase Config (unchanged)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, signOut,
@@ -274,7 +373,8 @@ async function showPaidVideoAndContent() {
   if (!user) return;
 
   const idToken = await user.getIdToken();
-  const videoSrc = `https://richdatatech.vercel.app/api/secure-video?file=${encodeURIComponent(hlsPlaylist)}&token=${idToken}`;
+  // Backend handles folder name and security
+  const videoSrc = `https://richdatatech.vercel.app/api/secure-video?courseId=${encodeURIComponent(courseId)}&lessonId=${encodeURIComponent(lessonId)}&ext=.m3u8&token=${idToken}`;
 
   document.getElementById("course-content").innerHTML = `
     <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
@@ -324,7 +424,6 @@ async function showPaidVideoAndContent() {
 
   // HLS.js player setup for universal browser support
   const video = document.getElementById("secure-video");
-  if (!video) return;
   if (window.Hls && window.Hls.isSupported()) {
     const hls = new window.Hls();
     hls.loadSource(videoSrc);
@@ -332,7 +431,7 @@ async function showPaidVideoAndContent() {
   } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
     video.src = videoSrc;
   } else {
-    video.outerHTML = '<div class="text-red-600 font-bold">Your browser does not support secure video streaming. Please use a modern browser.</div>';
+    video.outerHTML = '<div class="text-red-600 font-bold">Your browser does not support secure video streaming.   Please use a modern browser.</div>';
   }
 
   // Disable right-click
@@ -409,7 +508,6 @@ function listenForAccess(uid) {
 
 // Render free content on first load (even before auth)
 renderFreeContent();
-
 </script>
 </body>
 </html>

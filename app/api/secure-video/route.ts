@@ -35,16 +35,22 @@ function getCorsHeaders(origin?: string) {
   } as Record<string, string>;
 }
 
+// Allowed course IDs
+const allowedCourses = ["powerbi", "python", "databricks", "snowflake"];
+
 // Preflight
 export async function OPTIONS(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
   return new Response(null, { status: 204, headers: getCorsHeaders(origin) });
 }
 
-// Whitelist flat filenames for .m3u8 and .ts
-function isAllowedFile(file: string) {
-  // Match pbic7i/snowflake1.m3u8, pbic7i/snowflake1_0000.ts, pbic7i/python2.m3u8, etc.
-  return /^pbic7i\/(powerbi|python|databricks|snowflake)\d+(\.m3u8|_\d{4}\.ts|\.mp4)$/.test(file);
+// Validate lesson id and course id
+function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext: string) {
+  if (!allowedCourses.includes(courseId)) return false;
+  const lessonNum = Number(lessonId);
+  if (!Number.isInteger(lessonNum) || lessonNum < 1 || lessonNum > 20) return false; // adjust max lessons
+  if (![".m3u8", ".mp4"].includes(ext)) return false;
+  return true;
 }
 
 // Content-Type for streaming
@@ -55,19 +61,29 @@ function getContentType(file: string) {
   return "application/octet-stream";
 }
 
-// GET handler: proxy and secure HLS/MP4
+// GET handler: secure proxy for HLS/MP4
 export async function GET(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
   const corsHeaders = getCorsHeaders(origin);
 
   try {
     const url = new URL(req.url);
-    const file = url.searchParams.get("file");
+    const courseId = url.searchParams.get("courseId") || "";
+    const lessonId = url.searchParams.get("lessonId") || "";
+    const ext = url.searchParams.get("ext") || ".m3u8"; // default to m3u8
     const token = url.searchParams.get("token");
 
-    if (!file || !token) {
-      return new Response("Missing file or token", {
+    if (!courseId || !lessonId || !token) {
+      return new Response("Missing parameters", {
         status: 400,
+        headers: corsHeaders,
+      });
+    }
+
+    // Validate course and lesson
+    if (!isValidCourseAndLesson(courseId, lessonId, ext)) {
+      return new Response("Invalid course or lesson", {
+        status: 403,
         headers: corsHeaders,
       });
     }
@@ -75,10 +91,9 @@ export async function GET(req: NextRequest) {
     // Verify Firebase ID token
     await getAuth().verifyIdToken(token);
 
-    // Whitelist file names
-    if (!isAllowedFile(file)) {
-      return new Response("Invalid file", { status: 403, headers: corsHeaders });
-    }
+    // Only the backend constructs the path!
+    const FOLDER = "pbic7i";
+    const file = `${FOLDER}/${courseId}${lessonId}${ext}`;
 
     // cPanel Basic Auth
     const username = process.env.CPANEL_USERNAME!;
