@@ -1,40 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Course Progress Demo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="utf-8" />
+  <title>HLS Direct with Basic Auth (Test)</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    body { display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; background:#111; }
+    video { width:90%; max-width:900px; border-radius:8px; box-shadow:0 8px 30px rgba(0,0,0,.6); }
+    .note { color:#eee; font-family:system-ui; font-size:13px; margin-top:8px; text-align:center }
+  </style>
 </head>
-<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen">
+<body>
+<video id="video" controls style="width: 80%;"></video>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script>
+if (Hls.isSupported()) {
+  var video = document.getElementById('video');
+  var hls = new Hls({
+    xhrSetup: function(xhr, url) {
+      xhr.setRequestHeader('Authorization', 'Basic ' + btoa('Razor7:S1M3o;OY}ixq'));
+    }
+  });
+  hls.loadSource('https://www.richdatatech.com/videos/pbic7i/snowflake1.m3u8');
+  hls.attachMedia(video);
+} else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+  // For Safari
+  video.src = 'https://www.richdatatech.com/videos/pbic7i/snowflake1.m3u8';
+}
+</script>
 
-  <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl mt-12">
-    <h1 class="text-2xl font-bold text-blue-700 mb-6 text-center">Lesson 2: Power BI Introduction</h1>
-    <video class="w-full rounded shadow mb-1" controls>
-      <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
-    <!-- Progress Bar Start -->
-    <div class="w-full my-3">
-      <div class="flex items-center justify-between mb-1">
-        <span class="text-xs text-blue-700 font-semibold">Progress</span>
-        <span id="progress-label" class="text-xs text-blue-700 font-semibold">2 / 10 lessons (20%)</span>
-      </div>
-      <div class="relative h-2 rounded-full bg-blue-100 overflow-hidden">
-        <div id="progress-bar" class="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500" style="width: 20%;"></div>
-      </div>
-    </div>
-    <!-- Progress Bar End -->
-    <div class="mt-8 flex justify-between">
-      <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-1 rounded text-sm">Back</button>
-      <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded text-sm">Next</button>
-    </div>
-  </div>
 
-  <script>
-    // Set progress bar statically at 20%
-    document.getElementById("progress-bar").style.width = "20%";
-    document.getElementById("progress-label").textContent = "2 / 10 lessons (20%)";
-  </script>
+
 </body>
 </html>
