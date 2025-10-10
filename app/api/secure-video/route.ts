@@ -80,14 +80,10 @@ export async function GET(req: NextRequest) {
         return new Response("Not Found", { status: 404, headers: corsHeaders });
       }
 
-      // Auth check (optional: you could require a token here for extra security)
-      // You could add token validation here if desired
-
+      // Proxy from cPanel
       const FOLDER = "pbic7i";
       const file = `${FOLDER}/${tsFileName}`;
       const videoUrl = `https://www.richdatatech.com/videos/${file}`;
-
-      // cPanel Basic Auth
       const username = process.env.CPANEL_USERNAME!;
       const password = process.env.CPANEL_PASSWORD!;
       const basic = Buffer.from(`${username}:${password}`).toString("base64");
