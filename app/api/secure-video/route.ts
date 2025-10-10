@@ -73,7 +73,11 @@ export async function GET(req: NextRequest) {
     const ext = searchParams.get("ext") || ".m3u8";
     const token = searchParams.get("token");
 
+    // Logging incoming parameters
+    console.log("Request parameters:", { courseId, lessonId, ext, token: token ? "[present]" : "[missing]" });
+
     if (!courseId || !lessonId || !token) {
+      console.log("Missing parameters", { courseId, lessonId, token });
       return new Response("Missing parameters", {
         status: 400,
         headers: corsHeaders,
@@ -82,6 +86,7 @@ export async function GET(req: NextRequest) {
 
     // Validate course and lesson
     if (!isValidCourseAndLesson(courseId, lessonId, ext)) {
+      console.log("Invalid course or lesson", { courseId, lessonId, ext });
       return new Response("Invalid course or lesson", {
         status: 403,
         headers: corsHeaders,
@@ -89,7 +94,12 @@ export async function GET(req: NextRequest) {
     }
 
     // Verify Firebase ID token
-    await getAuth().verifyIdToken(token);
+    try {
+      await getAuth().verifyIdToken(token);
+    } catch (err) {
+      console.log("Token verification failed", err);
+      return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+    }
 
     // Only the backend constructs the path!
     const FOLDER = "pbic7i";
@@ -103,15 +113,28 @@ export async function GET(req: NextRequest) {
     // Build the video or HLS file URL
     const videoUrl = `https://www.richdatatech.com/videos/${file}`;
 
+    // Log fetch attempt
+    console.log("Proxying request to upstream:", videoUrl, "with username:", username);
+
     // Proxy the video/HLS file (with Range, for streaming support)
+    const fetchHeaders: Record<string, string> = {
+      Authorization: `Basic ${basic}`,
+    };
+    const range = req.headers.get("range");
+    if (range) fetchHeaders.Range = range;
+
+    // Log headers sent to upstream
+    console.log("Upstream fetch headers:", fetchHeaders);
+
     const videoRes = await fetch(videoUrl, {
-      headers: {
-        Authorization: `Basic ${basic}`,
-        Range: req.headers.get("range") || "",
-      },
+      headers: fetchHeaders,
     });
 
+    // Log the response from upstream
+    console.log(`Upstream response: ${videoRes.status} ${videoRes.statusText}`);
     if (!videoRes.ok || !videoRes.body) {
+      const errorBody = await videoRes.text().catch(() => "[unavailable]");
+      console.log("Upstream error body:", errorBody);
       return new Response("Video not found", { status: 404, headers: corsHeaders });
     }
 
@@ -124,6 +147,9 @@ export async function GET(req: NextRequest) {
       headers.set("Content-Range", videoRes.headers.get("content-range")!);
     headers.set("Accept-Ranges", "bytes");
     headers.set("Cache-Control", "no-store");
+
+    // Log successful proxy
+    console.log("Proxying upstream response with status:", videoRes.status);
 
     return new Response(videoRes.body, {
       status: videoRes.status,
