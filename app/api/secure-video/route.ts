@@ -41,12 +41,10 @@ export async function OPTIONS(req: NextRequest) {
   return new Response(null, { status: 204, headers: getCorsHeaders(origin) });
 }
 
-// Allowed files (MP4, HLS playlists, HLS segments)
+// Whitelist flat filenames for .m3u8 and .ts
 function isAllowedFile(file: string) {
-  // Allow e.g. snowflake1/index.m3u8, snowflake1/0001.ts, snowflake1.mp4, etc.
-  const hlsPattern = /^(powerbi|python|databricks|snowflake)\d+(\/(index\.m3u8|\d+\.ts))?$/;
-  const mp4Pattern = /^(powerbi|python|databricks|snowflake)\d+\.mp4$/;
-  return hlsPattern.test(file) || mp4Pattern.test(file);
+  // Match pbic7i/snowflake1.m3u8, pbic7i/snowflake1_0000.ts, pbic7i/python2.m3u8, etc.
+  return /^pbic7i\/(powerbi|python|databricks|snowflake)\d+(\.m3u8|_\d{4}\.ts|\.mp4)$/.test(file);
 }
 
 // Content-Type for streaming
@@ -88,7 +86,7 @@ export async function GET(req: NextRequest) {
     const basic = Buffer.from(`${username}:${password}`).toString("base64");
 
     // Build the video or HLS file URL
-    const videoUrl = `https://www.richdatatech.com/videos/pbic7i/${file}`;
+    const videoUrl = `https://www.richdatatech.com/videos/${file}`;
 
     // Proxy the video/HLS file (with Range, for streaming support)
     const videoRes = await fetch(videoUrl, {
