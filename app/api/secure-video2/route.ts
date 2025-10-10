@@ -75,9 +75,12 @@ export async function GET(req: NextRequest) {
       return new Response("Invalid file", { status: 403, headers: corsHeaders });
     }
 
-    // 🔹 Basic Auth for cPanel
-    const username = "Razor7"; // ⚠️ Move to env for production
-    const password = "S1M3o;OY}ixq"; // ⚠️ Move to env for production
+    // 🔹 Basic Auth for cPanel - now using Vercel env variables
+    const username = process.env.CPANEL_USERNAME!;
+    const password = process.env.CPANEL_PASSWORD!;
+    if (!username || !password) {
+      return new Response("Server misconfiguration", { status: 500, headers: corsHeaders });
+    }
     const basic = Buffer.from(`${username}:${password}`).toString("base64");
 
     const videoUrl = `https://www.richdatatech.com/videos/pbic7i/${encodeURIComponent(file)}`;
