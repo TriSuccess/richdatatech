@@ -295,14 +295,27 @@ async function handleOAuthLogin(provider) {
 }
 
 function renderFreeContent() {
+  // You can independently set the demo/free video here
+ const courseId2 = "snowflake";
+ const lessonId2 = 1;
+ const ext2 = ".m3u8";
+ const freeVideoSrc = `https://richdatatech.vercel.app/api/secure-video/playlist?courseId=${courseId2}&lessonId= ${lessonId2}&ext=${ext2}`;
+
+
   document.getElementById("course-content").innerHTML = `
     <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
       <h4 class="text-4xl font-bold text-blue-700 text-center mb-4">🔓 Free Power BI Lesson 1 Preview</h4>
       <div class="mx-auto max-w-3xl w-full mb-8">
-        <video id="free-video" class="w-full rounded shadow-md block mx-auto" controls playsinline>
-          <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
+        <video
+          id="free-video"
+          class="video-js vjs-default-skin w-full rounded shadow-md block mx-auto border-4 border-blue-400 hover:border-blue-600 transition-all duration-300"
+          controls
+          preload="auto"
+          playsinline
+          autoplay
+          muted
+          style="background: #111; max-height: 24rem;"
+        ></video>
         <div class="flex items-center justify-between mt-4">
           <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
           <h2 class="text-xl font-semibold text-gray-800">Lesson 1 Preview</h2>
@@ -330,7 +343,31 @@ function renderFreeContent() {
       </div>
     </div>
   `;
+
+  // Initialize Video.js and HLS.js after DOM update
+  const freePlayer = videojs("free-video", {
+    fluid: true,
+    autoplay: true,
+    controls: true,
+    preload: "auto",
+    muted: false
+  });
+
+  const videoEl = freePlayer.el().querySelector("video");
+
+  // Use HLS.js for non-Safari browsers, else native
+  if (window.Hls && !videojs.browser.IS_SAFARI) {
+    const hls = new Hls();
+    hls.loadSource(freeVideoSrc);
+    hls.attachMedia(videoEl);
+  } else {
+    freePlayer.src({ src: freeVideoSrc, type: "application/x-mpegURL" });
+  }
+
+  // Disable right-click on the video
+  videoEl.addEventListener("contextmenu", e => e.preventDefault());
 }
+
 
 async function renderPaidContent() {
   const user = auth.currentUser;
@@ -342,13 +379,15 @@ async function renderPaidContent() {
         🎓 Paid ${courseId.charAt(0).toUpperCase() + courseId.slice(1)} Lesson ${lessonId}
       </h4>
       <div class="mx-auto max-w-3xl w-full mb-8">
-        <video
-          id="secure-video2"
-          class="video-js vjs-default-skin w-full rounded shadow-md block mx-auto"
-          controls
-          preload="auto"
-          playsinline
-        ></video>
+      <video
+      id="secure-video2"
+      class="video-js vjs-default-skin w-full rounded shadow-md block mx-auto"
+      controls
+      preload="auto"
+      playsinline
+      autoplay
+      unmuted
+      ></video>
         <!-- Progress Bar -->
         <div id="lesson-progress" class="w-full max-w-3xl mx-auto mt-2 mb-6">
           <div class="flex items-center justify-between mb-1 text-sm">
@@ -391,7 +430,9 @@ async function renderPaidContent() {
     </div>
   `;
   // HLS + Video.js player setup
- const videoSrc = `https://richdatatech.vercel.app/api/secure-video2?file=snowflake1.m3u8&token=${idToken}`;
+const videoSrc = `https://richdatatech.vercel.app/api/secure-video/playlist?courseId=snowflake&lessonId=1&ext=.m3u8&token=${idToken}`;
+
+
   const player = videojs('secure-video2', {
     fluid: true,
     autoplay: true,

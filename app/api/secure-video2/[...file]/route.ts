@@ -4,7 +4,6 @@ import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import type { NextRequest } from "next/server";
 
-// Firebase Admin init
 if (!getApps().length) {
   initializeApp({
     credential: cert({
@@ -15,13 +14,11 @@ if (!getApps().length) {
   });
 }
 
-// Allowed CORS origins
 const allowedOrigins = [
   "https://course2-f1bdb.web.app",
   "https://www.course2-f1bdb.web.app",
   "http://localhost:3000",
 ];
-
 function getCorsHeaders(origin?: string) {
   const safeOrigin = allowedOrigins.includes(origin ?? "") ? origin : allowedOrigins[0];
   return {
@@ -31,19 +28,41 @@ function getCorsHeaders(origin?: string) {
   } as Record<string, string>;
 }
 
-// Whitelisted files (no payment needed, just login)
-const allowedFiles = [
-  ...Array.from({ length: 8 }, (_, i) => `powerbi${i + 1}.mp4`),
-  ...Array.from({ length: 8 }, (_, i) => `python${i + 1}.mp4`),
-  ...Array.from({ length: 10 }, (_, i) => `databricks${i + 1}.mp4`),
-  ...Array.from({ length: 10 }, (_, i) => `snowflake${i + 1}.mp4`),
-  ...Array.from({ length: 8 }, (_, i) => `powerbi${i + 1}.m3u8`),
-  ...Array.from({ length: 8 }, (_, i) => `python${i + 1}.m3u8`),
-  ...Array.from({ length: 10 }, (_, i) => `databricks${i + 1}.m3u8`),
-  ...Array.from({ length: 10 }, (_, i) => `snowflake${i + 1}.m3u8`),
-];
+// Allowed courses
+const allowedCourses = ["powerbi", "python", "databricks", "snowflake"];
 
-// Utility for content type
+// Which lesson is public/free
+const PUBLIC_COURSE = "snowflake";
+const PUBLIC_LESSON = 1;
+const PUBLIC_EXTS = [".m3u8", ".ts"]; // allow both playlist and segments
+
+function isPublic(courseId: string, lessonId: string | number, ext: string, pathname: string) {
+  // Also allow .ts segments for snowflake1
+  if (
+    courseId === PUBLIC_COURSE &&
+    String(lessonId) === String(PUBLIC_LESSON) &&
+    (PUBLIC_EXTS.includes(ext) || pathname.endsWith(".ts"))
+  ) {
+    return true;
+  }
+  // Also allow any snowflake1-xxxxx.ts segment
+  if (
+    pathname.endsWith(".ts") &&
+    pathname.includes(`${PUBLIC_COURSE}${PUBLIC_LESSON}-`)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext: string) {
+  if (!allowedCourses.includes(courseId)) return false;
+  const lessonNum = Number(lessonId);
+  if (!Number.isInteger(lessonNum) || lessonNum < 1 || lessonNum > 20) return false;
+  if (![".m3u8", ".mp4"].includes(ext)) return false;
+  return true;
+}
+
 function getContentType(file: string) {
   if (file.endsWith(".mp4")) return "video/mp4";
   if (file.endsWith(".m3u8")) return "application/x-mpegURL";
@@ -51,21 +70,76 @@ function getContentType(file: string) {
   return "application/octet-stream";
 }
 
-// OPTIONS preflight
 export async function OPTIONS(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
   return new Response(null, { status: 204, headers: getCorsHeaders(origin) });
 }
 
-// GET handler
 export async function GET(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
   const corsHeaders = getCorsHeaders(origin);
 
   try {
-    const url = new URL(req.url);
-    const file = url.searchParams.get("file");
-    let token = url.searchParams.get("token");
+    const { pathname, searchParams } = req.nextUrl;
+
+    // --- TS Segment Proxy ---
+    if (pathname.endsWith(".ts")) {
+      const tsFileName = pathname.split("/").pop();
+      if (!tsFileName) {
+        return new Response("Not Found", { status: 404, headers: corsHeaders });
+      }
+      // Find course/lesson/ext for public check
+      let isPublicTs = false;
+      if (tsFileName.startsWith("snowflake1-")) isPublicTs = true;
+
+      // No token required for public ts segments
+      if (!isPublicTs) {
+        // Require token for all other .ts segments
+        let token = searchParams.get("token");
+        if (!token) {
+          const authHeader = req.headers.get("authorization");
+          if (authHeader && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+          }
+        }
+        if (!token) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+        try {
+          await getAuth().verifyIdToken(token);
+        } catch {
+          return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+        }
+      }
+
+      const FOLDER = "pbic7i";
+      const videoUrl = `https://www.richdatatech.com/videos/${FOLDER}/${tsFileName}`;
+      const username = process.env.CPANEL_USERNAME!;
+      const password = process.env.CPANEL_PASSWORD!;
+      const basic = Buffer.from(`${username}:${password}`).toString("base64");
+
+      const fetchHeaders: Record<string, string> = { Authorization: `Basic ${basic}` };
+      const range = req.headers.get("range");
+      if (range) fetchHeaders.Range = range;
+
+      const tsRes = await fetch(videoUrl, { headers: fetchHeaders });
+      if (!tsRes.ok || !tsRes.body) {
+        return new Response("Segment not found", { status: 404, headers: corsHeaders });
+      }
+
+      const headers = new Headers(corsHeaders);
+      headers.set("Content-Type", getContentType(tsFileName));
+      if (tsRes.headers.get("content-length")) headers.set("Content-Length", tsRes.headers.get("content-length")!);
+      if (tsRes.headers.get("content-range")) headers.set("Content-Range", tsRes.headers.get("content-range")!);
+      headers.set("Accept-Ranges", "bytes");
+      headers.set("Cache-Control", "no-store");
+
+      return new Response(tsRes.body, { status: tsRes.status, headers });
+    }
+
+    // --- Playlist / MP4 Proxy ---
+    const courseId = searchParams.get("courseId") || "";
+    const lessonId = searchParams.get("lessonId") || "";
+    const ext = searchParams.get("ext") || ".m3u8";
+    let token = searchParams.get("token");
 
     // Try to get token from Authorization header if not present in query
     if (!token) {
@@ -75,62 +149,32 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    if (!file || !token) {
-      return new Response("Missing file or token", { status: 400, headers: corsHeaders });
-    }
-
-    // Only require login, not payment: just verify token validity
-    try {
-      await getAuth().verifyIdToken(token);
-    } catch (err) {
-      return new Response("Unauthorized", { status: 401, headers: corsHeaders });
-    }
-
-    // Whitelist check (same as your previous logic)
-    if (
-      !allowedFiles.includes(file) &&
-      !file.endsWith(".ts") // allow all .ts segments (for HLS)
-    ) {
-      return new Response("Invalid file", { status: 403, headers: corsHeaders });
-    }
-
-    // TS segment proxy (for HLS streaming)
-    if (file.endsWith(".ts")) {
-      const FOLDER = "pbic7i";
-      const tsFileName = file;
-      const videoUrl = `https://www.richdatatech.com/videos/${FOLDER}/${tsFileName}`;
-      const username = process.env.CPANEL_USERNAME!;
-      const password = process.env.CPANEL_PASSWORD!;
-      if (!username || !password) {
-        return new Response("Server misconfiguration", { status: 500, headers: corsHeaders });
+    // Public playlist: allow snowflake1.m3u8 with NO token
+    if (isPublic(courseId, lessonId, ext, pathname)) {
+      // allowed without token
+    } else {
+      // Require token for all other videos
+      if (!token) {
+        return new Response("Unauthorized", { status: 401, headers: corsHeaders });
       }
-      const basic = Buffer.from(`${username}:${password}`).toString("base64");
-      const fetchHeaders: Record<string, string> = { Authorization: `Basic ${basic}` };
-      const range = req.headers.get("range");
-      if (range) fetchHeaders.Range = range;
-
-      const tsRes = await fetch(videoUrl, { headers: fetchHeaders });
-      if (!tsRes.ok || !tsRes.body) {
-        return new Response("Segment not found", { status: 404, headers: corsHeaders });
+      try {
+        await getAuth().verifyIdToken(token);
+      } catch {
+        return new Response("Unauthorized", { status: 401, headers: corsHeaders });
       }
-      const headers = new Headers(corsHeaders);
-      headers.set("Content-Type", getContentType(tsFileName));
-      if (tsRes.headers.get("content-length")) headers.set("Content-Length", tsRes.headers.get("content-length")!);
-      if (tsRes.headers.get("content-range")) headers.set("Content-Range", tsRes.headers.get("content-range")!);
-      headers.set("Accept-Ranges", "bytes");
-      headers.set("Cache-Control", "no-store");
-      return new Response(tsRes.body, { status: tsRes.status, headers });
     }
 
-    // Main video/playlist proxy (mp4 or m3u8)
+    if (!isValidCourseAndLesson(courseId, lessonId, ext)) {
+      return new Response("Invalid course or lesson", { status: 403, headers: corsHeaders });
+    }
+
     const FOLDER = "pbic7i";
-    const videoUrl = `https://www.richdatatech.com/videos/${FOLDER}/${encodeURIComponent(file)}`;
+    const file = `${FOLDER}/${courseId}${lessonId}${ext}`;
+    const videoUrl = `https://www.richdatatech.com/videos/${file}`;
     const username = process.env.CPANEL_USERNAME!;
     const password = process.env.CPANEL_PASSWORD!;
-    if (!username || !password) {
-      return new Response("Server misconfiguration", { status: 500, headers: corsHeaders });
-    }
     const basic = Buffer.from(`${username}:${password}`).toString("base64");
+
     const fetchHeaders: Record<string, string> = { Authorization: `Basic ${basic}` };
     const range = req.headers.get("range");
     if (range) fetchHeaders.Range = range;
@@ -139,6 +183,7 @@ export async function GET(req: NextRequest) {
     if (!videoRes.ok || !videoRes.body) {
       return new Response("Video not found", { status: 404, headers: corsHeaders });
     }
+
     const headers = new Headers(corsHeaders);
     headers.set("Content-Type", getContentType(file));
     if (videoRes.headers.get("content-length")) headers.set("Content-Length", videoRes.headers.get("content-length")!);
@@ -148,7 +193,7 @@ export async function GET(req: NextRequest) {
 
     return new Response(videoRes.body, { status: videoRes.status, headers });
   } catch (err: unknown) {
-    console.error("secure-video2 proxy error:", err);
-    return new Response("Server error", { status: 500, headers: corsHeaders });
+    console.error("secure-video proxy error:", err);
+    return new Response("Server error", { status: 500, headers: getCorsHeaders(req.headers.get("origin") || "") });
   }
 }
