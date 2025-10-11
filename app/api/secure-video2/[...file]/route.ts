@@ -29,26 +29,28 @@ function getCorsHeaders(origin?: string) {
   } as Record<string, string>;
 }
 
-// Allowed courses
-const allowedCourses = ["powerbi", "python", "databricks", "snowflake"];
+const allowedCourses = ["powerbi", "python", "databricks", "snowflake", "demo"];
 
-// Free/public video config
-const PUBLIC_COURSE = "snowflake";
-const PUBLIC_LESSON = 1;
+// Utility: is string like "1"..."20"
+function isPublicDemoLesson(lesson: string | number): boolean {
+  const n = Number(lesson);
+  return Number.isInteger(n) && n >= 1 && n <= 20;
+}
 
-function isPublic(courseId: string, lessonId: string | number, ext: string, pathname: string, tsFileName?: string) {
-  // Allow /playlist?courseId=snowflake&lessonId=1&ext=.m3u8 (playlist)
-  if (
-    courseId === PUBLIC_COURSE &&
-    String(lessonId) === String(PUBLIC_LESSON) &&
-    ext === ".m3u8"
-  ) {
-    return true;
-  }
-  // Allow any .ts segment file that matches snowflake1_*.ts
-  if (pathname.endsWith(".ts") && tsFileName && tsFileName.startsWith("snowflake1_") && tsFileName.endsWith(".ts")) {
-    return true;
-  }
+// Whitelist: demo HLS playlists (demo1.m3u8 ... demo20.m3u8)
+function isPublicPlaylist(courseId: string, lessonId: string | number, ext: string) {
+  if (courseId === "demo" && isPublicDemoLesson(lessonId) && ext === ".m3u8") return true;
+  if (courseId === "snowflake" && String(lessonId) === "1" && ext === ".m3u8") return true; // keep your old public snowflake1
+  return false;
+}
+
+// Whitelist: demo segments (demo1_*.ts ... demo20_*.ts)
+function isPublicSegment(tsFileName: string) {
+  // demo1_0000.ts ... demo20_9999.ts
+  const demoMatch = tsFileName.match(/^demo([1-9]|1\d|20)_.+\.ts$/);
+  if (demoMatch) return true;
+  // snowflake1_*.ts for legacy free
+  if (tsFileName.startsWith("snowflake1_") && tsFileName.endsWith(".ts")) return true;
   return false;
 }
 
@@ -85,11 +87,10 @@ export async function GET(req: NextRequest) {
       if (!tsFileName) {
         return new Response("Not Found", { status: 404, headers: corsHeaders });
       }
-      // Allow public for snowflake1_*.ts, otherwise require token
-      const isPublicTs = isPublic("", "", ".ts", pathname, tsFileName);
+      const isFreeSegment = isPublicSegment(tsFileName);
 
-      if (!isPublicTs) {
-        // Require token for all other .ts segments
+      if (!isFreeSegment) {
+        // Require token for non-public segments
         let token = searchParams.get("token");
         if (!token) {
           const authHeader = req.headers.get("authorization");
@@ -136,7 +137,6 @@ export async function GET(req: NextRequest) {
     const ext = searchParams.get("ext") || ".m3u8";
     let token = searchParams.get("token");
 
-    // Try to get token from Authorization header if not present in query
     if (!token) {
       const authHeader = req.headers.get("authorization");
       if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -144,10 +144,8 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Public playlist: allow snowflake1.m3u8 with NO token
-    if (isPublic(courseId, lessonId, ext, pathname)) {
-      // allowed without token
-    } else {
+    // Allow free video playlist without token
+    if (!isPublicPlaylist(courseId, lessonId, ext)) {
       // Require token for all other videos
       if (!token) {
         return new Response("Unauthorized", { status: 401, headers: corsHeaders });
