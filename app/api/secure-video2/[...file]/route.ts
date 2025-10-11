@@ -19,6 +19,7 @@ const allowedOrigins = [
   "https://www.course2-f1bdb.web.app",
   "http://localhost:3000",
 ];
+
 function getCorsHeaders(origin?: string) {
   const safeOrigin = allowedOrigins.includes(origin ?? "") ? origin : allowedOrigins[0];
   return {
@@ -31,10 +32,9 @@ function getCorsHeaders(origin?: string) {
 // Allowed courses
 const allowedCourses = ["powerbi", "python", "databricks", "snowflake"];
 
-// Which lesson is public/free
+// Free/public video config
 const PUBLIC_COURSE = "snowflake";
 const PUBLIC_LESSON = 1;
-const PUBLIC_EXTS = [".m3u8", ".ts"]; // allow both playlist and segments
 
 function isPublic(courseId: string, lessonId: string | number, ext: string, pathname: string, tsFileName?: string) {
   // Allow /playlist?courseId=snowflake&lessonId=1&ext=.m3u8 (playlist)
@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
         return new Response("Not Found", { status: 404, headers: corsHeaders });
       }
       // Allow public for snowflake1_*.ts, otherwise require token
-      let isPublicTs = isPublic("", "", ".ts", pathname, tsFileName);
+      const isPublicTs = isPublic("", "", ".ts", pathname, tsFileName);
 
       if (!isPublicTs) {
         // Require token for all other .ts segments
@@ -187,8 +187,8 @@ export async function GET(req: NextRequest) {
     headers.set("Cache-Control", "no-store");
 
     return new Response(videoRes.body, { status: videoRes.status, headers });
-  } catch (err: unknown) {
-    console.error("secure-video2 proxy error:", err);
+  } catch {
+    console.error("secure-video2 proxy error");
     return new Response("Server error", { status: 500, headers: getCorsHeaders(req.headers.get("origin") || "") });
   }
 }
