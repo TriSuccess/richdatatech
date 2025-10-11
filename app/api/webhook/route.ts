@@ -3,32 +3,28 @@ import Stripe from 'stripe';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 
-// ✅ Make sure this is at the very top of the file
 export const runtime = 'nodejs';
 
-// Initialize Firebase only once using the full service account JSON
+// Initialize Firebase once
 if (!getApps().length) {
-  const serviceAccountJSON = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-  if (!serviceAccountJSON) {
-    throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY is not set in environment variables!');
-  }
-
+  const serviceAccountJSON = process.env.FIREBASE_SERVICE_ACCOUNT_KEY!;
   const serviceAccount = JSON.parse(serviceAccountJSON);
-
-  // ✅ Replace escaped newlines
   if (serviceAccount.private_key?.includes('\\n')) {
     serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
   }
+  initializeApp({ credential: cert(serviceAccount) });
+}
 
-  // ✅ Add this debug log right here:
-  console.log(
-    'Runtime:',
-    process.env.VERCEL_ENV,
-    '| Key snippet:',
-    serviceAccount.private_key.slice(0, 30)
-  );
+const db = getFirestore();
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-  initializeApp({
-    credential: cert(serviceAccount),
-  });
+export async function POST(req: NextRequest) {
+  try {
+    const sig = req.headers.get('stripe-signature');
+    // ... rest of your webhook logic
+    return NextResponse.json({ received: true });
+  } catch (err) {
+    console.error('Webhook error:', err);
+    return NextResponse.json({ error: 'Webhook failed' }, { status: 500 });
+  }
 }
