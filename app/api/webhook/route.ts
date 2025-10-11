@@ -6,6 +6,11 @@ import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import type { ServiceAccount } from "firebase-admin";
 
+// ... (Firebase initialization code as discussed above)
+
+const db = getFirestore();
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
+
 // --- CONSTANTS ---
 const FALLBACK_DOMAIN =
   process.env.PUBLIC_URL || "https://your-vercel-app-domain.vercel.app";
