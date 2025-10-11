@@ -74,7 +74,7 @@
     #auth-modal { animation: fadeIn 0.25s ease-in-out; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
 <link href="https://vjs.zencdn.net/8.23.4/video-js.css" rel="stylesheet" />
 <script src="https://vjs.zencdn.net/8.23.4/video.min.js"></script>
 </head>
@@ -406,21 +406,29 @@ function renderFreeContent() {
   }, 0);
 }
 
+
 async function showPaidVideoAndContent() {
   const user = auth.currentUser;
   if (!user) return;
 
   const idToken = await user.getIdToken();
-  const videoSrc = `https://richdatatech.vercel.app/api/secure-video?courseId=${courseId}&lessonId=${lessonId}&ext=${ext}&token=${idToken}`;
 
-
+  // Inject the HTML for the video and progress bar
   document.getElementById("course-content").innerHTML = `
     <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
       <h4 class="text-4xl font-bold text-blue-700 text-center mb-4">
         🎓 Paid ${courseId.charAt(0).toUpperCase() + courseId.slice(1)} Lesson ${lessonId}
       </h4>
+
       <div class="mx-auto max-w-3xl w-full mb-8">
-        <video id="secure-video" class="w-full rounded shadow-md block mx-auto" controls autoplay playsinline></video>
+        <video
+          id="secure-video"
+          class="video-js vjs-default-skin w-full rounded shadow-md block mx-auto"
+          controls
+          preload="auto"
+          playsinline
+        ></video>
+
         <!-- Progress Bar -->
         <div id="lesson-progress" class="w-full max-w-3xl mx-auto mt-2 mb-6">
           <div class="flex items-center justify-between mb-1 text-sm">
@@ -434,16 +442,21 @@ async function showPaidVideoAndContent() {
             <div id="progress-bar" class="bg-blue-600 h-3 rounded-full" style="width:0%"></div>
           </div>
         </div>
+
         <div class="flex items-center justify-between mt-4">
-          <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
+          <a href="../courses.html"
+             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
           <h2 class="text-xl font-semibold text-gray-800">Lesson ${lessonId}</h2>
-          <a href="powerbi1.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
+          <a href="powerbi1.html"
+             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
         </div>
       </div>
+
       <div class="grid md:grid-cols-2 gap-8 w-full">
         <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
           <p class="text-base leading-relaxed text-black">
-            This is a <span class="font-semibold text-green-700">members-only</span> lesson in the ${courseId.charAt(0).toUpperCase() + courseId.slice(1)} course.
+            This is a <span class="font-semibold text-green-700">members-only</span> lesson in the
+            ${courseId.charAt(0).toUpperCase() + courseId.slice(1)} course.
             You have full access to the lesson video and content!
           </p>
         </div>
@@ -460,30 +473,41 @@ async function showPaidVideoAndContent() {
     </div>
   `;
 
-  // HLS.js player setup for universal browser support
- const video = document.getElementById("secure-video");
- if (window.Hls && window.Hls.isSupported()) {
-   const hls = new window.Hls();
-   hls.loadSource(videoSrc);
-   hls.attachMedia(video);
- } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-   video.src = videoSrc;
- } else {
-   video.outerHTML = '<div class="text-red-600 font-bold">Your browser does not support secure video streaming.   Please use a modern browser.</div>';
- }
+  // HLS + Video.js player setup
+const videoSrc = `https://richdatatech.vercel.app/api/secure-video/${courseId}${lessonId}.m3u8?token=${idToken}`;
 
-  // Disable right-click
-  video.addEventListener("contextmenu", e => e.preventDefault());
 
-  // Progress Bar Logic
+
+  const player = videojs('secure-video', {
+    fluid: true,
+    autoplay: true,
+    controls: true,
+    preload: 'auto'
+  });
+
+  // Use the real <video> element for HLS.js to avoid tech warning
+  const videoEl = player.el().querySelector('video');
+
+  // If HLS.js is supported, use it for non-Safari browsers
+  if (window.Hls && !videojs.browser.IS_SAFARI) {
+    const hls = new Hls();
+    hls.loadSource(videoSrc);
+    hls.attachMedia(videoEl); // ✅ safer attach method, no warning
+  } else {
+    player.src({ src: videoSrc, type: 'application/x-mpegURL' });
+  }
+
+  // Disable right-click on the video
+  videoEl.addEventListener("contextmenu", e => e.preventDefault());
+
+  // Progress bar logic
   const percent = Math.round((lessonId / totalLessons) * 100);
   const label = `Lesson ${lessonId} / ${totalLessons}`;
-  if (document.getElementById("progress-label")) {
-    document.getElementById("progress-label").textContent = label;
-    document.getElementById("progress-percent").textContent = `${percent}%`;
-    document.getElementById("progress-bar").style.width = percent + "%";
-  }
+  document.getElementById("progress-label").textContent = label;
+  document.getElementById("progress-percent").textContent = `${percent}%`;
+  document.getElementById("progress-bar").style.width = percent + "%";
 }
+
 
 // Stripe checkout logic
 function handleStripeCheckout() {
