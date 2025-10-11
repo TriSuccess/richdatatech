@@ -1,11 +1,13 @@
 // Force Node.js runtime for streaming & Firebase Admin
 export const runtime = "nodejs";
 
+import { NextRequest, NextResponse } from "next/server";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import type { NextRequest } from "next/server";
 
-// ---- Firebase Admin init ----
+export const runtime = "nodejs";
+
+// Firebase Admin init
 if (!getApps().length) {
   initializeApp({
     credential: cert({
@@ -16,7 +18,7 @@ if (!getApps().length) {
   });
 }
 
-// ---- Allowed Origins ----
+// Allowed origins
 const allowedOrigins = [
   "https://course2-f1bdb.web.app",
   "https://www.course2-f1bdb.web.app",
@@ -31,10 +33,24 @@ function getCorsHeaders(origin?: string) {
     "Access-Control-Allow-Origin": safeOrigin,
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  } as Record<string, string>;
+  };
 }
 
-// ---- Utility helpers ----
+const allowedCourses = ["powerbi", "python", "databricks", "snowflake"];
+
+export async function OPTIONS(req: NextRequest) {
+  const origin = req.headers.get("origin") || "";
+  return new Response(null, { status: 204, headers: getCorsHeaders(origin) });
+}
+
+function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext: string) {
+  if (!allowedCourses.includes(courseId)) return false;
+  const lessonNum = Number(lessonId);
+  if (!Number.isInteger(lessonNum) || lessonNum < 1 || lessonNum > 20) return false;
+  if (![".m3u8", ".mp4"].includes(ext)) return false;
+  return true;
+}
+
 function getContentType(file: string) {
   if (file.endsWith(".mp4")) return "video/mp4";
   if (file.endsWith(".m3u8")) return "application/x-mpegURL";
@@ -42,28 +58,22 @@ function getContentType(file: string) {
   return "application/octet-stream";
 }
 
-const allowedCourses = ["powerbi", "python", "databricks", "snowflake"];
-
-// ---- OPTIONS (CORS preflight) ----
-export async function OPTIONS(req: NextRequest) {
-  const origin = req.headers.get("origin") || "";
-  return new Response(null, { status: 204, headers: getCorsHeaders(origin) });
-}
-
-// ---- GET: handle .m3u8, .ts, or ?courseId= ----
-export async function GET(req: NextRequest, { params }: { params: { file?: string[] } }) {
+export async function GET(req: NextRequest, context: { params: { file?: string[] } }) {
   const origin = req.headers.get("origin") || "";
   const corsHeaders = getCorsHeaders(origin);
 
   try {
-    const { searchParams } = req.nextUrl;
-    const fileParts = params.file || [];
+    const { params } = context;
+    const filePath = params.file?.join("/"); // e.g., snowflake1_0000.ts
 
-    // ====== Case 1: /api/secure-video/<filename>.m3u8 or .ts ======
-    if (fileParts.length > 0) {
-      const fileName = fileParts.join("/");
+    const searchParams = req.nextUrl.searchParams;
+
+    // Handle TS segments
+    if (filePath && filePath.endsWith(".ts")) {
+      const tsFileName = filePath.split("/").pop()!;
       const FOLDER = "pbic7i";
-      const videoUrl = `https://www.richdatatech.com/videos/${FOLDER}/${fileName}`;
+      const file = `${FOLDER}/${tsFileName}`;
+      const videoUrl = `https://www.richdatatech.com/videos/${file}`;
       const username = process.env.CPANEL_USERNAME!;
       const password = process.env.CPANEL_PASSWORD!;
       const basic = Buffer.from(`${username}:${password}`).toString("base64");
@@ -72,24 +82,19 @@ export async function GET(req: NextRequest, { params }: { params: { file?: strin
       const range = req.headers.get("range");
       if (range) fetchHeaders.Range = range;
 
-      const upstream = await fetch(videoUrl, { headers: fetchHeaders });
-      if (!upstream.ok || !upstream.body) {
-        return new Response("Not found", { status: 404, headers: corsHeaders });
-      }
+      const tsRes = await fetch(videoUrl, { headers: fetchHeaders });
+      if (!tsRes.ok || !tsRes.body)
+        return new Response("Segment not found", { status: 404, headers: corsHeaders });
 
       const headers = new Headers(corsHeaders);
-      headers.set("Content-Type", getContentType(fileName));
-      if (upstream.headers.get("content-length"))
-        headers.set("Content-Length", upstream.headers.get("content-length")!);
-      if (upstream.headers.get("content-range"))
-        headers.set("Content-Range", upstream.headers.get("content-range")!);
+      headers.set("Content-Type", getContentType(tsFileName));
       headers.set("Accept-Ranges", "bytes");
       headers.set("Cache-Control", "no-store");
 
-      return new Response(upstream.body, { status: upstream.status, headers });
+      return new Response(tsRes.body, { status: tsRes.status, headers });
     }
 
-    // ====== Case 2: /api/secure-video?courseId=... ======
+    // Main video/playlist request
     const courseId = searchParams.get("courseId") || "";
     const lessonId = searchParams.get("lessonId") || "";
     const ext = searchParams.get("ext") || ".m3u8";
@@ -98,19 +103,14 @@ export async function GET(req: NextRequest, { params }: { params: { file?: strin
     if (!courseId || !lessonId || !token)
       return new Response("Missing parameters", { status: 400, headers: corsHeaders });
 
-    if (!allowedCourses.includes(courseId))
-      return new Response("Invalid course", { status: 403, headers: corsHeaders });
+    if (!isValidCourseAndLesson(courseId, lessonId, ext))
+      return new Response("Invalid course or lesson", { status: 403, headers: corsHeaders });
 
-    try {
-      await getAuth().verifyIdToken(token);
-    } catch {
-      return new Response("Unauthorized", { status: 401, headers: corsHeaders });
-    }
+    await getAuth().verifyIdToken(token);
 
     const FOLDER = "pbic7i";
     const file = `${FOLDER}/${courseId}${lessonId}${ext}`;
     const videoUrl = `https://www.richdatatech.com/videos/${file}`;
-
     const username = process.env.CPANEL_USERNAME!;
     const password = process.env.CPANEL_PASSWORD!;
     const basic = Buffer.from(`${username}:${password}`).toString("base64");
@@ -125,16 +125,12 @@ export async function GET(req: NextRequest, { params }: { params: { file?: strin
 
     const headers = new Headers(corsHeaders);
     headers.set("Content-Type", getContentType(file));
-    if (upstream.headers.get("content-length"))
-      headers.set("Content-Length", upstream.headers.get("content-length")!);
-    if (upstream.headers.get("content-range"))
-      headers.set("Content-Range", upstream.headers.get("content-range")!);
     headers.set("Accept-Ranges", "bytes");
     headers.set("Cache-Control", "no-store");
 
     return new Response(upstream.body, { status: upstream.status, headers });
   } catch (err) {
-    console.error("secure-video proxy error:", err);
+    console.error("secure-video error:", err);
     return new Response("Server error", { status: 500, headers: corsHeaders });
   }
 }
