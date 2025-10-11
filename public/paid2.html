@@ -621,7 +621,7 @@ onAuthStateChanged(auth, async (user) => {
       authModal.classList.remove("hidden");
     };
     if (unsubscribeAccess) unsubscribeAccess();
-    renderFreeContent();
+    renderDemoContent();
   }
 });
 
@@ -632,13 +632,13 @@ function listenForAccess(uid) {
     if (snap.exists() && snap.data().purchases?.[productId]) {
       showPaidVideoAndContent();
     } else {
-      renderFreeContent();
+      renderDemoContent();
     }
   });
 }
 
 // Render free content on first load (even before auth)
-renderFreeContent();
+renderDemoContent();
 
 </script>
 </body>

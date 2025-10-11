@@ -474,9 +474,7 @@ async function showPaidVideoAndContent() {
   `;
 
   // HLS + Video.js player setup
-
-const videoSrc = `https://richdatatech.vercel.app/api/secure-video/playlist?courseId=snowflake&lessonId=1&ext=.m3u8&token=${idToken}`;
-
+  const videoSrc = `https://richdatatech.vercel.app/api/secure-video/playlist?courseId=${courseId}&lessonId=${lessonId}&ext=.m3u8&token=${idToken}`;
 
   const player = videojs('secure-video', {
     fluid: true,
@@ -490,9 +488,13 @@ const videoSrc = `https://richdatatech.vercel.app/api/secure-video/playlist?cour
 
   // If HLS.js is supported, use it for non-Safari browsers
   if (window.Hls && !videojs.browser.IS_SAFARI) {
-    const hls = new Hls();
+    const hls = new Hls({
+      xhrSetup: function(xhr, url) {
+        xhr.setRequestHeader('Authorization', 'Bearer ' + idToken);
+      }
+    });
     hls.loadSource(videoSrc);
-    hls.attachMedia(videoEl); // ✅ safer attach method, no warning
+    hls.attachMedia(videoEl);
   } else {
     player.src({ src: videoSrc, type: 'application/x-mpegURL' });
   }
@@ -507,7 +509,6 @@ const videoSrc = `https://richdatatech.vercel.app/api/secure-video/playlist?cour
   document.getElementById("progress-percent").textContent = `${percent}%`;
   document.getElementById("progress-bar").style.width = percent + "%";
 }
-
 
 // Stripe checkout logic
 function handleStripeCheckout() {

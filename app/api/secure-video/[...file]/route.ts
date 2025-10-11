@@ -60,6 +60,24 @@ function getContentType(file: string) {
   return "application/octet-stream";
 }
 
+// Playlist rewriting for paid content (for Safari support)
+async function rewritePlaylistWithToken(playlistRes: Response, token: string) {
+  const playlistText = await playlistRes.text();
+  // Append the token to every .ts URI (handles both relative and absolute URLs)
+  const tokenParam = `token=${token}`;
+  // Only append if not already present
+  const rewritten = playlistText.replace(
+    /([a-zA-Z0-9_-]+\.ts)(\?(?!token=)[^ \n\r]*)?/g,
+    (match, p1, p2) => {
+      // If already has token param, skip
+      if (p2 && p2.includes("token=")) return match;
+      if (p2) return `${p1}${p2}&${tokenParam}`;
+      return `${p1}?${tokenParam}`;
+    }
+  );
+  return rewritten;
+}
+
 // OPTIONS preflight
 export async function OPTIONS(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
@@ -187,6 +205,46 @@ export async function GET(req: NextRequest) {
       headers.set("Cache-Control", "no-store");
 
       return new Response(videoRes.body, { status: videoRes.status, headers });
+    }
+
+    // --- PAID PLAYLIST: .m3u8, REWRITE FOR SAFARI (append token to .ts) ---
+    if (ext === ".m3u8" && !isWhitelistedDemoPlaylist(courseId, lessonId, ext)) {
+      // Must have valid course, lesson, and token
+      if (!courseId || !lessonId || !token) {
+        return new Response("Missing parameters", { status: 400, headers: corsHeaders });
+      }
+      if (!isValidCourseAndLesson(courseId, lessonId, ext)) {
+        return new Response("Invalid course or lesson", { status: 403, headers: corsHeaders });
+      }
+      try {
+        await getAuth().verifyIdToken(token);
+      } catch {
+        return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+      }
+
+      const FOLDER = "pbic7i";
+      const file = `${FOLDER}/${courseId}${lessonId}${ext}`;
+      const videoUrl = `https://www.richdatatech.com/videos/${file}`;
+      const username = process.env.CPANEL_USERNAME!;
+      const password = process.env.CPANEL_PASSWORD!;
+      const basic = Buffer.from(`${username}:${password}`).toString("base64");
+
+      const fetchHeaders: Record<string, string> = { Authorization: `Basic ${basic}` };
+      const range = req.headers.get("range");
+      if (range) fetchHeaders.Range = range;
+
+      const videoRes = await fetch(videoUrl, { headers: fetchHeaders });
+      if (!videoRes.ok || !videoRes.body) {
+        return new Response("Video not found", { status: 404, headers: corsHeaders });
+      }
+
+      // For Safari, or to future-proof: always rewrite playlist to add token to .ts URIs
+      const rewrittenPlaylist = await rewritePlaylistWithToken(videoRes, token);
+
+      const headers = new Headers(corsHeaders);
+      headers.set("Content-Type", "application/x-mpegURL");
+      headers.set("Cache-Control", "no-store");
+      return new Response(rewrittenPlaylist, { status: 200, headers });
     }
 
     // --- ALL OTHERS REQUIRE TOKEN ---
