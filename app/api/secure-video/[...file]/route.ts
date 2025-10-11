@@ -1,4 +1,3 @@
-// app/api/secure-video/[...file]/route.ts
 export const runtime = "nodejs";
 
 import { initializeApp, cert, getApps } from "firebase-admin/app";
@@ -57,8 +56,6 @@ export async function OPTIONS(req: NextRequest) {
 }
 
 // GET handler
-// ...rest of your imports and code...
-
 export async function GET(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
   const corsHeaders = getCorsHeaders(origin);
@@ -68,7 +65,34 @@ export async function GET(req: NextRequest) {
 
     // --- TS Segment Proxy ---
     if (pathname.endsWith(".ts")) {
-      // ...unchanged...
+      const tsFileName = pathname.split("/").pop();
+      if (!tsFileName) {
+        return new Response("Not Found", { status: 404, headers: corsHeaders });
+      }
+
+      const FOLDER = "pbic7i"; // cPanel folder
+      const videoUrl = `https://www.richdatatech.com/videos/${FOLDER}/${tsFileName}`;
+      const username = process.env.CPANEL_USERNAME!;
+      const password = process.env.CPANEL_PASSWORD!;
+      const basic = Buffer.from(`${username}:${password}`).toString("base64");
+
+      const fetchHeaders: Record<string, string> = { Authorization: `Basic ${basic}` };
+      const range = req.headers.get("range");
+      if (range) fetchHeaders.Range = range;
+
+      const tsRes = await fetch(videoUrl, { headers: fetchHeaders });
+      if (!tsRes.ok || !tsRes.body) {
+        return new Response("Segment not found", { status: 404, headers: corsHeaders });
+      }
+
+      const headers = new Headers(corsHeaders);
+      headers.set("Content-Type", getContentType(tsFileName));
+      if (tsRes.headers.get("content-length")) headers.set("Content-Length", tsRes.headers.get("content-length")!);
+      if (tsRes.headers.get("content-range")) headers.set("Content-Range", tsRes.headers.get("content-range")!);
+      headers.set("Accept-Ranges", "bytes");
+      headers.set("Cache-Control", "no-store");
+
+      return new Response(tsRes.body, { status: tsRes.status, headers });
     }
 
     // --- Playlist / MP4 Proxy ---
@@ -77,7 +101,7 @@ export async function GET(req: NextRequest) {
     const ext = searchParams.get("ext") || ".m3u8";
     let token = searchParams.get("token");
 
-    // --- NEW: Try to get token from Authorization header if not present in query ---
+    // Try to get token from Authorization header if not present in query
     if (!token) {
       const authHeader = req.headers.get("authorization");
       if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -99,9 +123,32 @@ export async function GET(req: NextRequest) {
       return new Response("Unauthorized", { status: 401, headers: corsHeaders });
     }
 
-    // ...the rest of your proxy logic unchanged...
+    const FOLDER = "pbic7i";
+    const file = `${FOLDER}/${courseId}${lessonId}${ext}`;
+    const videoUrl = `https://www.richdatatech.com/videos/${file}`;
+    const username = process.env.CPANEL_USERNAME!;
+    const password = process.env.CPANEL_PASSWORD!;
+    const basic = Buffer.from(`${username}:${password}`).toString("base64");
+
+    const fetchHeaders: Record<string, string> = { Authorization: `Basic ${basic}` };
+    const range = req.headers.get("range");
+    if (range) fetchHeaders.Range = range;
+
+    const videoRes = await fetch(videoUrl, { headers: fetchHeaders });
+    if (!videoRes.ok || !videoRes.body) {
+      return new Response("Video not found", { status: 404, headers: corsHeaders });
+    }
+
+    const headers = new Headers(corsHeaders);
+    headers.set("Content-Type", getContentType(file));
+    if (videoRes.headers.get("content-length")) headers.set("Content-Length", videoRes.headers.get("content-length")!);
+    if (videoRes.headers.get("content-range")) headers.set("Content-Range", videoRes.headers.get("content-range")!);
+    headers.set("Accept-Ranges", "bytes");
+    headers.set("Cache-Control", "no-store");
+
+    return new Response(videoRes.body, { status: videoRes.status, headers });
   } catch (err: unknown) {
     console.error("secure-video proxy error:", err);
-    return new Response("Server error", { status: 500, headers: corsHeaders });
+    return new Response("Server error", { status: 500, headers: getCorsHeaders(req.headers.get("origin") || "") });
   }
 }
