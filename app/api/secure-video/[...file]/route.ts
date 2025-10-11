@@ -1,5 +1,4 @@
-// Force Node.js runtime for streaming & Firebase Admin
-export const runtime = "nodejs";
+
 
 import { NextRequest, NextResponse } from "next/server";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
