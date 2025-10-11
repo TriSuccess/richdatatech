@@ -10,6 +10,12 @@ if (!getApps().length) {
     throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY is not set in environment variables!');
   }
   const serviceAccount = JSON.parse(serviceAccountJSON);
+  if (serviceAccount.private_key?.includes('\\n')) {
+    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+  }
+
+
+
   initializeApp({
     credential: cert(serviceAccount),
   });
