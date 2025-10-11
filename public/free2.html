@@ -391,7 +391,7 @@ async function renderPaidContent() {
     </div>
   `;
   // HLS + Video.js player setup
-  const videoSrc = `https://richdatatech.vercel.app/api/secure-video2/playlist?courseId=snowflake&lessonId=1&ext=.m3u8&token=${idToken}`;
+ const videoSrc = `https://richdatatech.vercel.app/api/secure-video2?file=snowflake1.m3u8&token=${idToken}`;
   const player = videojs('secure-video2', {
     fluid: true,
     autoplay: true,
