@@ -2,71 +2,12 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { initializeApp, cert, getApps } from "firebase-admin/app";
+import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
-import type { ServiceAccount } from "firebase-admin";
 
-// --- CONSTANTS ---
-const FALLBACK_DOMAIN =
-  process.env.PUBLIC_URL || "https://your-vercel-app-domain.vercel.app";
-
-// --- FIREBASE INIT ---
+// --- FIREBASE INIT (uses GOOGLE_APPLICATION_CREDENTIALS file) ---
 if (!getApps().length) {
-  const serviceAccountJSON = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-  if (!serviceAccountJSON) {
-    throw new Error(
-      "FIREBASE_SERVICE_ACCOUNT_KEY is not set in environment variables!"
-    );
-  }
-
-  let parsed: Record<string, unknown>;
-  try {
-    parsed = JSON.parse(serviceAccountJSON);
-  } catch (err) {
-    console.error("❌ Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY JSON:", err);
-    throw err;
-  }
-
-  // 🧩 Handle both snake_case and camelCase keys safely
-  const privateKeyRaw =
-    typeof parsed.private_key === "string"
-      ? parsed.private_key
-      : typeof parsed.privateKey === "string"
-      ? parsed.privateKey
-      : null;
-
-  if (!privateKeyRaw) {
-    throw new Error("❌ Firebase service account is missing a private key.");
-  }
-
-  // ✅ Normalize PEM format
-  const normalizedKey = privateKeyRaw
-    .replace(/\\n/g, "\n")
-    .replace(/\r\n/g, "\n")
-    .replace(/\n{2,}/g, "\n")
-    .trim();
-
-  if (!normalizedKey.startsWith("-----BEGIN PRIVATE KEY-----")) {
-    console.error("❌ Invalid private key format detected.");
-    throw new Error("Firebase private key is not in valid PEM format.");
-  }
-
-  const serviceAccount: ServiceAccount = {
-    projectId: parsed.project_id as string,
-    clientEmail: parsed.client_email as string,
-    privateKey: normalizedKey,
-  };
-
-  console.log(
-    "🔥 Firebase initialized — runtime:",
-    process.env.VERCEL_ENV,
-    "| domain:",
-    FALLBACK_DOMAIN
-  );
-
-  initializeApp({
-    credential: cert(serviceAccount),
-  });
+  initializeApp(); // Will automatically use GOOGLE_APPLICATION_CREDENTIALS if set
 }
 
 // --- SERVICES ---
