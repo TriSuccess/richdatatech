@@ -31,8 +31,19 @@ function getCorsHeaders(origin?: string) {
   } as Record<string, string>;
 }
 
-// Allowed courses
+// Allowed paid courses (demo is handled separately)
 const allowedCourses = ["powerbi", "python", "databricks", "snowflake"];
+
+// --- PUBLIC DEMO WHITELIST ---
+function isWhitelistedDemoPlaylist(courseId: string, lessonId: string | number, ext: string) {
+  if (courseId !== "demo") return false;
+  const lessonNum = Number(lessonId);
+  return Number.isInteger(lessonNum) && lessonNum >= 1 && lessonNum <= 20 && ext === ".m3u8";
+}
+function isWhitelistedDemoSegment(tsFileName: string) {
+  // demo1_0000.ts ... demo20_9999.ts
+  return /^demo([1-9]|1\d|20)_.+\.ts$/.test(tsFileName);
+}
 
 function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext: string) {
   if (!allowedCourses.includes(courseId)) return false;
@@ -70,7 +81,50 @@ export async function GET(req: NextRequest) {
         return new Response("Not Found", { status: 404, headers: corsHeaders });
       }
 
-      const FOLDER = "pbic7i"; // cPanel folder
+      // PUBLIC: demo1_*.ts ... demo20_*.ts
+      if (isWhitelistedDemoSegment(tsFileName)) {
+        // Serve segment without token
+        const FOLDER = "pbic7i"; // cPanel folder
+        const videoUrl = `https://www.richdatatech.com/videos/${FOLDER}/${tsFileName}`;
+        const username = process.env.CPANEL_USERNAME!;
+        const password = process.env.CPANEL_PASSWORD!;
+        const basic = Buffer.from(`${username}:${password}`).toString("base64");
+
+        const fetchHeaders: Record<string, string> = { Authorization: `Basic ${basic}` };
+        const range = req.headers.get("range");
+        if (range) fetchHeaders.Range = range;
+
+        const tsRes = await fetch(videoUrl, { headers: fetchHeaders });
+        if (!tsRes.ok || !tsRes.body) {
+          return new Response("Segment not found", { status: 404, headers: corsHeaders });
+        }
+
+        const headers = new Headers(corsHeaders);
+        headers.set("Content-Type", getContentType(tsFileName));
+        if (tsRes.headers.get("content-length")) headers.set("Content-Length", tsRes.headers.get("content-length")!);
+        if (tsRes.headers.get("content-range")) headers.set("Content-Range", tsRes.headers.get("content-range")!);
+        headers.set("Accept-Ranges", "bytes");
+        headers.set("Cache-Control", "no-store");
+
+        return new Response(tsRes.body, { status: tsRes.status, headers });
+      }
+
+      // ALL OTHER SEGMENTS REQUIRE TOKEN
+      let token = searchParams.get("token");
+      if (!token) {
+        const authHeader = req.headers.get("authorization");
+        if (authHeader && authHeader.startsWith("Bearer ")) {
+          token = authHeader.substring(7);
+        }
+      }
+      if (!token) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+      try {
+        await getAuth().verifyIdToken(token);
+      } catch {
+        return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+      }
+
+      const FOLDER = "pbic7i";
       const videoUrl = `https://www.richdatatech.com/videos/${FOLDER}/${tsFileName}`;
       const username = process.env.CPANEL_USERNAME!;
       const password = process.env.CPANEL_PASSWORD!;
@@ -109,6 +163,36 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // PUBLIC: demo1..demo20.m3u8 (playlist) does NOT need token
+    if (isWhitelistedDemoPlaylist(courseId, lessonId, ext)) {
+      // Serve public demo playlist
+      const FOLDER = "pbic7i";
+      const file = `${FOLDER}/${courseId}${lessonId}${ext}`;
+      const videoUrl = `https://www.richdatatech.com/videos/${file}`;
+      const username = process.env.CPANEL_USERNAME!;
+      const password = process.env.CPANEL_PASSWORD!;
+      const basic = Buffer.from(`${username}:${password}`).toString("base64");
+
+      const fetchHeaders: Record<string, string> = { Authorization: `Basic ${basic}` };
+      const range = req.headers.get("range");
+      if (range) fetchHeaders.Range = range;
+
+      const videoRes = await fetch(videoUrl, { headers: fetchHeaders });
+      if (!videoRes.ok || !videoRes.body) {
+        return new Response("Video not found", { status: 404, headers: corsHeaders });
+      }
+
+      const headers = new Headers(corsHeaders);
+      headers.set("Content-Type", getContentType(file));
+      if (videoRes.headers.get("content-length")) headers.set("Content-Length", videoRes.headers.get("content-length")!);
+      if (videoRes.headers.get("content-range")) headers.set("Content-Range", videoRes.headers.get("content-range")!);
+      headers.set("Accept-Ranges", "bytes");
+      headers.set("Cache-Control", "no-store");
+
+      return new Response(videoRes.body, { status: videoRes.status, headers });
+    }
+
+    // ALL OTHERS REQUIRE TOKEN
     if (!courseId || !lessonId || !token) {
       return new Response("Missing parameters", { status: 400, headers: corsHeaders });
     }
