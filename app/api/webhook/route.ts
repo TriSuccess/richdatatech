@@ -9,17 +9,19 @@ if (!getApps().length) {
   if (!serviceAccountJSON) {
     throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY is not set in environment variables!');
   }
+
   const serviceAccount = JSON.parse(serviceAccountJSON);
+
+  // ✅ This line is critical
   if (serviceAccount.private_key?.includes('\\n')) {
     serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
   }
-
-
 
   initializeApp({
     credential: cert(serviceAccount),
   });
 }
+
 
 const db = getFirestore();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
