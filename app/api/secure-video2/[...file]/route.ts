@@ -36,20 +36,17 @@ const PUBLIC_COURSE = "snowflake";
 const PUBLIC_LESSON = 1;
 const PUBLIC_EXTS = [".m3u8", ".ts"]; // allow both playlist and segments
 
-function isPublic(courseId: string, lessonId: string | number, ext: string, pathname: string) {
-  // Also allow .ts segments for snowflake1
+function isPublic(courseId: string, lessonId: string | number, ext: string, pathname: string, tsFileName?: string) {
+  // Allow /playlist?courseId=snowflake&lessonId=1&ext=.m3u8 (playlist)
   if (
     courseId === PUBLIC_COURSE &&
     String(lessonId) === String(PUBLIC_LESSON) &&
-    (PUBLIC_EXTS.includes(ext) || pathname.endsWith(".ts"))
+    ext === ".m3u8"
   ) {
     return true;
   }
-  // Also allow any snowflake1-xxxxx.ts segment
-  if (
-    pathname.endsWith(".ts") &&
-    pathname.includes(`${PUBLIC_COURSE}${PUBLIC_LESSON}-`)
-  ) {
+  // Allow any .ts segment file that matches snowflake1_*.ts
+  if (pathname.endsWith(".ts") && tsFileName && tsFileName.startsWith("snowflake1_") && tsFileName.endsWith(".ts")) {
     return true;
   }
   return false;
@@ -88,11 +85,9 @@ export async function GET(req: NextRequest) {
       if (!tsFileName) {
         return new Response("Not Found", { status: 404, headers: corsHeaders });
       }
-      // Find course/lesson/ext for public check
-      let isPublicTs = false;
-      if (tsFileName.startsWith("snowflake1-")) isPublicTs = true;
+      // Allow public for snowflake1_*.ts, otherwise require token
+      let isPublicTs = isPublic("", "", ".ts", pathname, tsFileName);
 
-      // No token required for public ts segments
       if (!isPublicTs) {
         // Require token for all other .ts segments
         let token = searchParams.get("token");
@@ -193,7 +188,7 @@ export async function GET(req: NextRequest) {
 
     return new Response(videoRes.body, { status: videoRes.status, headers });
   } catch (err: unknown) {
-    console.error("secure-video proxy error:", err);
+    console.error("secure-video2 proxy error:", err);
     return new Response("Server error", { status: 500, headers: getCorsHeaders(req.headers.get("origin") || "") });
   }
 }
