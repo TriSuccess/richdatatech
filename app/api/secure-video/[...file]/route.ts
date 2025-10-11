@@ -3,7 +3,7 @@ export const runtime = "nodejs";
 
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 // Firebase Admin init
 if (!getApps().length) {
@@ -35,11 +35,10 @@ function getCorsHeaders(origin?: string) {
 // Allowed courses
 const allowedCourses = ["powerbi", "python", "databricks", "snowflake"];
 
-// Helpers
 function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext: string) {
   if (!allowedCourses.includes(courseId)) return false;
-  const num = Number(lessonId);
-  if (!Number.isInteger(num) || num < 1 || num > 20) return false;
+  const lessonNum = Number(lessonId);
+  if (!Number.isInteger(lessonNum) || lessonNum < 1 || lessonNum > 20) return false;
   if (![".m3u8", ".mp4"].includes(ext)) return false;
   return true;
 }
@@ -51,7 +50,7 @@ function getContentType(file: string) {
   return "application/octet-stream";
 }
 
-// Preflight handler
+// OPTIONS preflight
 export async function OPTIONS(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
   return new Response(null, { status: 204, headers: getCorsHeaders(origin) });
@@ -63,22 +62,21 @@ export async function GET(req: NextRequest) {
   const corsHeaders = getCorsHeaders(origin);
 
   try {
-    const url = new URL(req.url);
-    const searchParams = url.searchParams;
-    const pathname = url.pathname;
+    const { pathname, searchParams } = req.nextUrl;
 
-    // === CATCH-ALL .TS SEGMENTS ===
+    // --- TS Segment Proxy ---
     if (pathname.endsWith(".ts")) {
-      const pathParts = pathname.split("/").slice(4); // skip /api/secure-video/
-      const tsFileName = pathParts.join("/");
+      const tsFileName = pathname.split("/").pop();
       if (!tsFileName) return new Response("Not Found", { status: 404, headers: corsHeaders });
 
-      const FOLDER = "pbic7i";
+      const FOLDER = "pbic7i"; // cPanel folder
       const videoUrl = `https://www.richdatatech.com/videos/${FOLDER}/${tsFileName}`;
-      const basic = Buffer.from(`${process.env.CPANEL_USERNAME}:${process.env.CPANEL_PASSWORD}`).toString("base64");
+      const username = process.env.CPANEL_USERNAME!;
+      const password = process.env.CPANEL_PASSWORD!;
+      const basic = Buffer.from(`${username}:${password}`).toString("base64");
 
-      const range = req.headers.get("range");
       const fetchHeaders: Record<string, string> = { Authorization: `Basic ${basic}` };
+      const range = req.headers.get("range");
       if (range) fetchHeaders.Range = range;
 
       const tsRes = await fetch(videoUrl, { headers: fetchHeaders });
@@ -94,7 +92,7 @@ export async function GET(req: NextRequest) {
       return new Response(tsRes.body, { status: tsRes.status, headers });
     }
 
-    // === REGULAR VIDEO/PLAYLIST REQUEST ===
+    // --- Playlist / MP4 Proxy ---
     const courseId = searchParams.get("courseId") || "";
     const lessonId = searchParams.get("lessonId") || "";
     const ext = searchParams.get("ext") || ".m3u8";
@@ -108,7 +106,6 @@ export async function GET(req: NextRequest) {
       return new Response("Invalid course or lesson", { status: 403, headers: corsHeaders });
     }
 
-    // Verify Firebase token
     try {
       await getAuth().verifyIdToken(token);
     } catch (err) {
@@ -118,10 +115,12 @@ export async function GET(req: NextRequest) {
     const FOLDER = "pbic7i";
     const file = `${FOLDER}/${courseId}${lessonId}${ext}`;
     const videoUrl = `https://www.richdatatech.com/videos/${file}`;
-    const basic = Buffer.from(`${process.env.CPANEL_USERNAME}:${process.env.CPANEL_PASSWORD}`).toString("base64");
+    const username = process.env.CPANEL_USERNAME!;
+    const password = process.env.CPANEL_PASSWORD!;
+    const basic = Buffer.from(`${username}:${password}`).toString("base64");
 
-    const range = req.headers.get("range");
     const fetchHeaders: Record<string, string> = { Authorization: `Basic ${basic}` };
+    const range = req.headers.get("range");
     if (range) fetchHeaders.Range = range;
 
     const videoRes = await fetch(videoUrl, { headers: fetchHeaders });
@@ -135,8 +134,8 @@ export async function GET(req: NextRequest) {
     headers.set("Cache-Control", "no-store");
 
     return new Response(videoRes.body, { status: videoRes.status, headers });
-  } catch (err) {
-    console.error("secure-video error:", err);
+  } catch (err: unknown) {
+    console.error("secure-video proxy error:", err);
     return new Response("Server error", { status: 500, headers: corsHeaders });
   }
 }
