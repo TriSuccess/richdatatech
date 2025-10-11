@@ -2,7 +2,7 @@ export const runtime = "nodejs";
 
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 // Firebase Admin init
 if (!getApps().length) {
@@ -31,7 +31,7 @@ function getCorsHeaders(origin?: string) {
   } as Record<string, string>;
 }
 
-// Allowed paid courses (demo is handled separately)
+// Only paid courses go here (do NOT include demo)
 const allowedCourses = ["powerbi", "python", "databricks", "snowflake"];
 
 // --- PUBLIC DEMO WHITELIST ---
@@ -83,7 +83,6 @@ export async function GET(req: NextRequest) {
 
       // PUBLIC: demo1_*.ts ... demo20_*.ts
       if (isWhitelistedDemoSegment(tsFileName)) {
-        // Serve segment without token
         const FOLDER = "pbic7i"; // cPanel folder
         const videoUrl = `https://www.richdatatech.com/videos/${FOLDER}/${tsFileName}`;
         const username = process.env.CPANEL_USERNAME!;
@@ -108,8 +107,7 @@ export async function GET(req: NextRequest) {
 
         return new Response(tsRes.body, { status: tsRes.status, headers });
       }
-
-      // ALL OTHER SEGMENTS REQUIRE TOKEN
+      // --- ALL OTHER SEGMENTS REQUIRE TOKEN ---
       let token = searchParams.get("token");
       if (!token) {
         const authHeader = req.headers.get("authorization");
@@ -165,7 +163,6 @@ export async function GET(req: NextRequest) {
 
     // PUBLIC: demo1..demo20.m3u8 (playlist) does NOT need token
     if (isWhitelistedDemoPlaylist(courseId, lessonId, ext)) {
-      // Serve public demo playlist
       const FOLDER = "pbic7i";
       const file = `${FOLDER}/${courseId}${lessonId}${ext}`;
       const videoUrl = `https://www.richdatatech.com/videos/${file}`;
@@ -192,7 +189,7 @@ export async function GET(req: NextRequest) {
       return new Response(videoRes.body, { status: videoRes.status, headers });
     }
 
-    // ALL OTHERS REQUIRE TOKEN
+    // --- ALL OTHERS REQUIRE TOKEN ---
     if (!courseId || !lessonId || !token) {
       return new Response("Missing parameters", { status: 400, headers: corsHeaders });
     }
