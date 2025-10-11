@@ -474,7 +474,8 @@ async function showPaidVideoAndContent() {
   `;
 
   // HLS + Video.js player setup
-const videoSrc = `https://richdatatech.vercel.app/api/secure-video/${courseId}${lessonId}.m3u8?token=${idToken}`;
+
+const videoSrc = `https://richdatatech.vercel.app/api/secure-video?courseId=snowflake&lessonId=1&ext=.m3u8&token=${idToken}`;
 
 
 
