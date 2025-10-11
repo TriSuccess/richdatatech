@@ -358,45 +358,31 @@ async function ensureUserRecord(user) {
   }
 }
 
+// Main dynamic content rendering
 function renderFreeContent() {
-  // Set your free course/lesson/etc variables
-  const freeCourseId = "demo";           // e.g. "demo" or another free course
-  const freeLessonId = 1;                // 1-20 for demo1..demo20
-  const freeExt = ".m3u8";
-  const freeTotalLessons = 20;           // update as needed for your demo course
-
-  // Construct the HLS playlist URL for free video (no token!)
-  const freeVideoSrc = `https://richdatatech.vercel.app/api/secure-video2/playlist?courseId=${freeCourseId}&lessonId=${freeLessonId}&ext=${freeExt}`;
-
-  // Inject HTML for free video and content
   document.getElementById("course-content").innerHTML = `
     <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
-      <h4 class="text-4xl font-bold text-blue-700 text-center mb-4">🔓 Free ${freeCourseId.charAt(0).toUpperCase() + freeCourseId.slice(1)} Lesson ${freeLessonId} Preview</h4>
+      <h4 class="text-4xl font-bold text-blue-700 text-center mb-4">🔓 Free Power BI Lesson 1 Preview</h4>
       <div class="mx-auto max-w-3xl w-full mb-8">
-        <video
-          id="free-video"
-          class="video-js vjs-default-skin w-full rounded shadow-md block mx-auto"
-          controls
-          preload="auto"
-          playsinline
-          autoplay
-          muted
-        ></video>
+        <video id="free-video" class="w-full rounded shadow-md block mx-auto" controls playsinline>
+          <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
         <div class="flex items-center justify-between mt-4">
           <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
-          <h2 class="text-xl font-semibold text-gray-800">Lesson ${freeLessonId} Preview</h2>
-          <a href="${freeCourseId}${freeLessonId + 1}.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
+          <h2 class="text-xl font-semibold text-gray-800">Lesson 1 Preview</h2>
+          <a href="powerbi1.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
         </div>
       </div>
       <div class="grid md:grid-cols-2 gap-8 w-full">
         <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
           <p class="text-base leading-relaxed text-black">
-            This is a <span class="font-semibold text-blue-700">free preview</span> of our ${freeCourseId.charAt(0).toUpperCase() + freeCourseId.slice(1)} course!
+            This is a <span class="font-semibold text-blue-700">free preview</span> of our Power BI beginner course!
             Enjoy the introductory tips and see what you’ll unlock as a member.
           </p>
           <ul class="list-disc pl-5 space-y-2 text-black text-base mt-4">
-            <li>How to import data</li>
-            <li>Basic steps</li>
+            <li>How to import data into Power BI</li>
+            <li>Basic Power Query steps</li>
             <li>Building your first visual</li>
           </ul>
         </div>
@@ -411,70 +397,15 @@ function renderFreeContent() {
           <p class="text-xs text-gray-500 mt-3 text-center">One-time payment, instant access.</p>
         </div>
       </div>
-      <div id="lesson-progress" class="w-full max-w-3xl mx-auto mt-2 mb-6">
-        <div class="flex items-center justify-between mb-1 text-sm">
-          <span id="progress-label" class="text-gray-800"></span>
-          <span>
-            <span class="text-gray-800">Progress:</span>
-            <span id="progress-percent" class="font-medium text-black-600"></span>
-          </span>
-        </div>
-        <div class="w-full bg-gray-200 rounded-full h-3">
-          <div id="progress-bar" class="bg-blue-600 h-3 rounded-full" style="width:0%"></div>
-        </div>
-      </div>
     </div>
   `;
-
-  // SPA-safe Video.js initialization
-  if (window.videojs && window.videojs.getPlayer) {
-    try {
-      const existing = window.videojs.getPlayer("free-video");
-      if (existing) {
-        existing.dispose();
-      }
-    } catch (e) {}
-  } else if (window.videojs && window.videojs.players && window.videojs.players["free-video"]) {
-    try {
-      window.videojs.players["free-video"].dispose();
-    } catch (e) {}
-  }
-
-  // Initialize Video.js player
-  const freePlayer = videojs("free-video", {
-    fluid: true,
-    autoplay: true,
-    controls: true,
-    preload: "auto",
-    muted: true
-  });
-
-  const videoEl = freePlayer.el().querySelector("video");
-
-  if (window.Hls && !videojs.browser.IS_SAFARI) {
-    const hls = new Hls();
-    hls.loadSource(freeVideoSrc);
-    hls.attachMedia(videoEl);
-  } else {
-    freePlayer.src({ src: freeVideoSrc, type: "application/x-mpegURL" });
-  }
-
-  // Disable right-click on the video
-  videoEl.addEventListener("contextmenu", e => e.preventDefault());
-
-  // Attach Buy Now button logic
+  // Attach event after rendering
   setTimeout(() => {
     const buyBtn = document.getElementById("buy-now-btn");
     if (buyBtn) buyBtn.onclick = handleStripeCheckout;
   }, 0);
-
-  // Progress bar logic for free section
-  const percent = Math.round((freeLessonId / freeTotalLessons) * 100);
-  const label = `Lesson ${freeLessonId} / ${freeTotalLessons}`;
-  document.getElementById("progress-label").textContent = label;
-  document.getElementById("progress-percent").textContent = `${percent}%`;
-  document.getElementById("progress-bar").style.width = percent + "%";
 }
+
 
 async function showPaidVideoAndContent() {
   const user = auth.currentUser;
