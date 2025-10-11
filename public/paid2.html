@@ -358,12 +358,11 @@ async function ensureUserRecord(user) {
   }
 }
 
-// Main dynamic content rendering
 function renderDemoContent() {
   // Demo variables
   const demoCourseId = "demo";
   const demoLessonId = 1; // You can make this dynamic
-  const demoTotalLessons = 20; // Set the number of demo lessons
+  const demoTotalLessons = 20;
   const demoExt = ".m3u8";
   const demoVideoSrc = `https://richdatatech.vercel.app/api/secure-video/playlist?courseId=${demoCourseId}&lessonId=${demoLessonId}&ext=${demoExt}`;
 
@@ -431,9 +430,7 @@ function renderDemoContent() {
   if (window.videojs && window.videojs.getPlayer) {
     try {
       const existing = window.videojs.getPlayer("demo-video");
-      if (existing) {
-        existing.dispose();
-      }
+      if (existing) existing.dispose();
     } catch (e) {}
   } else if (window.videojs && window.videojs.players && window.videojs.players["demo-video"]) {
     try {
@@ -442,19 +439,19 @@ function renderDemoContent() {
   }
 
   // Initialize Video.js player
-  const demoPlayer = videojs("demo-video", {
+  const demoPlayer = window.videojs("demo-video", {
     fluid: true,
     autoplay: true,
     controls: true,
     preload: "auto",
-    muted: true
+    muted: true,
   });
 
   const videoEl = demoPlayer.el().querySelector("video");
 
   // Use HLS.js for non-Safari browsers, else use native HLS
-  if (window.Hls && !videojs.browser.IS_SAFARI) {
-    const hls = new Hls();
+  if (window.Hls && !window.videojs.browser.IS_SAFARI) {
+    const hls = new window.Hls();
     hls.loadSource(demoVideoSrc);
     hls.attachMedia(videoEl);
   } else {
@@ -462,7 +459,7 @@ function renderDemoContent() {
   }
 
   // Disable right-click on the video
-  videoEl.addEventListener("contextmenu", e => e.preventDefault());
+  videoEl.addEventListener("contextmenu", (e) => e.preventDefault());
 
   // Buy button logic
   setTimeout(() => {
