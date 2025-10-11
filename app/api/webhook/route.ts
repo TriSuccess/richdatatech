@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
-import type { ServiceAccount } from "firebase-admin"; // ✅ proper typing
+import type { ServiceAccount } from "firebase-admin";
 
 // --- CONSTANTS ---
 const FALLBACK_DOMAIN =
@@ -19,27 +19,42 @@ if (!getApps().length) {
     );
   }
 
-  let serviceAccount: ServiceAccount;
+  let parsed: Record<string, unknown>;
   try {
-    serviceAccount = JSON.parse(serviceAccountJSON);
+    parsed = JSON.parse(serviceAccountJSON);
   } catch (err) {
     console.error("❌ Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY JSON:", err);
     throw err;
   }
 
-  // ✅ Ensure private_key is valid PEM format (handles both \\n and real newlines)
-  if (typeof serviceAccount.private_key === "string") {
-    serviceAccount.private_key = serviceAccount.private_key
-      .replace(/\\n/g, "\n")
-      .replace(/\r\n/g, "\n")
-      .trim();
+  // 🧩 Handle both snake_case and camelCase keys safely
+  const privateKey =
+    typeof parsed.private_key === "string"
+      ? parsed.private_key
+      : typeof parsed.privateKey === "string"
+      ? parsed.privateKey
+      : null;
+
+  if (!privateKey) {
+    throw new Error("❌ Firebase service account is missing a private key.");
   }
 
-  // ✅ Sanity check for malformed key
-  if (!serviceAccount.private_key.startsWith("-----BEGIN PRIVATE KEY-----")) {
+  // ✅ Normalize PEM format
+  const normalizedKey = privateKey
+    .replace(/\\n/g, "\n")
+    .replace(/\r\n/g, "\n")
+    .trim();
+
+  if (!normalizedKey.startsWith("-----BEGIN PRIVATE KEY-----")) {
     console.error("❌ Invalid private key format detected.");
     throw new Error("Firebase private key is not in valid PEM format.");
   }
+
+  const serviceAccount: ServiceAccount = {
+    projectId: parsed.project_id as string,
+    clientEmail: parsed.client_email as string,
+    privateKey: normalizedKey,
+  };
 
   console.log(
     "🔥 Firebase initialized — runtime:",
