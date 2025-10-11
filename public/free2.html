@@ -295,16 +295,10 @@ async function handleOAuthLogin(provider) {
 }
 
 function renderFreeContent() {
-  // You can independently set the demo/free video here
- const courseId2 = "snowflake";
- const lessonId2 = 1;
- const ext2 = ".m3u8";
-const freeVideoSrc = `https://richdatatech.vercel.app/api/secure-video2/playlist?courseId=${courseId2}&lessonId=${lessonId2}&ext=${ext2}`;
-
-
+  // Inject your HTML for the video and content as usual
   document.getElementById("course-content").innerHTML = `
     <div class="flex flex-col items-center justify-center max-w-5xl w-full space-y-2 mx-auto">
-      <h4 class="text-4xl font-bold text-blue-700 text-center mb-4">🔓 Free Power BI Lesson 1 Preview</h4>
+      <h4 class="text-4xl font-bold text-blue-700 text-center mb-4">🔓 Free Demo Video Preview</h4>
       <div class="mx-auto max-w-3xl w-full mb-8">
         <video
           id="free-video"
@@ -313,24 +307,24 @@ const freeVideoSrc = `https://richdatatech.vercel.app/api/secure-video2/playlist
           preload="auto"
           playsinline
           autoplay
-          muted
+          unmuted
           style="background: #111; max-height: 24rem;"
         ></video>
         <div class="flex items-center justify-between mt-4">
           <a href="../courses.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">← Back</a>
-          <h2 class="text-xl font-semibold text-gray-800">Lesson 1 Preview</h2>
+          <h2 class="text-xl font-semibold text-gray-800">Demo Lesson Preview</h2>
           <a href="powerbi1.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Next →</a>
         </div>
       </div>
       <div class="grid md:grid-cols-2 gap-8 w-full">
         <div class="bg-white border border-gray-500 rounded-lg p-6 shadow-sm">
           <p class="text-base leading-relaxed text-black">
-            This is a <span class="font-semibold text-blue-700">free preview</span> of our Power BI beginner course!
+            This is a <span class="font-semibold text-blue-700">free demo preview</span>!
             Enjoy the introductory tips and see what you’ll unlock as a member.
           </p>
           <ul class="list-disc pl-5 space-y-2 text-black text-base mt-4">
-            <li>How to import data into Power BI</li>
-            <li>Basic Power Query steps</li>
+            <li>How to import data</li>
+            <li>Basic steps</li>
             <li>Building your first visual</li>
           </ul>
         </div>
@@ -344,27 +338,48 @@ const freeVideoSrc = `https://richdatatech.vercel.app/api/secure-video2/playlist
     </div>
   `;
 
-  // Initialize Video.js and HLS.js after DOM update
-  const freePlayer = videojs("free-video", {
+  // Choose the demo video you want to show (change lessonId as needed)
+  const courseId2 = "snowflake";
+  const lessonId2 = 1; // set to any 1..20 for demo1..demo20
+  const ext2 = ".m3u8";
+  const freeVideoSrc = `https://richdatatech.vercel.app/api/secure-video2/playlist?courseId=${courseId2}&lessonId=${lessonId2}&ext=${ext2}`;
+
+  // --- Robust SPA-safe Video.js initialization ---
+  // Dispose prior player if it exists
+  if (window.videojs && window.videojs.getPlayer) {
+    try {
+      const existing = window.videojs.getPlayer("free-video");
+      if (existing) {
+        existing.dispose();
+      }
+    } catch (e) {}
+  } else if (window.videojs && window.videojs.players && window.videojs.players["free-video"]) {
+    try {
+      window.videojs.players["free-video"].dispose();
+    } catch (e) {}
+  }
+
+  // Now safely initialize the player
+  const freePlayer = window.videojs("free-video", {
     fluid: true,
     autoplay: true,
     controls: true,
     preload: "auto",
-    muted: false
+    muted: true
   });
 
   const videoEl = freePlayer.el().querySelector("video");
 
   // Use HLS.js for non-Safari browsers, else native
-  if (window.Hls && !videojs.browser.IS_SAFARI) {
-    const hls = new Hls();
+  if (window.Hls && !window.videojs.browser.IS_SAFARI) {
+    const hls = new window.Hls();
     hls.loadSource(freeVideoSrc);
     hls.attachMedia(videoEl);
   } else {
     freePlayer.src({ src: freeVideoSrc, type: "application/x-mpegURL" });
   }
 
-  // Disable right-click on the video
+  // Optional: Disable right-click
   videoEl.addEventListener("contextmenu", e => e.preventDefault());
 }
 
@@ -381,12 +396,12 @@ async function renderPaidContent() {
       <div class="mx-auto max-w-3xl w-full mb-8">
       <video
       id="secure-video2"
-      class="video-js vjs-default-skin w-full rounded shadow-md block mx-auto"
+    class="video-js vjs-default-skin w-full rounded shadow-md block mx-auto border-4 border-blue-400 hover:border-    blue-600 transition-all duration-300"
       controls
       preload="auto"
       playsinline
       autoplay
-      unmuted
+      muted
       ></video>
         <!-- Progress Bar -->
         <div id="lesson-progress" class="w-full max-w-3xl mx-auto mt-2 mb-6">
