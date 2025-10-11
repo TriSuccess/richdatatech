@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Paid Course – RichDataTech</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body, * { font-family: 'Proxima Nova', sans-serif; }
     header {
@@ -361,10 +360,10 @@ async function ensureUserRecord(user) {
 function renderDemoContent() {
   // Demo variables
   const demoCourseId = "demo";
-  const demoLessonId = 1; // You can make this dynamic
+  const demoLessonId = 2; // You can make this dynamic
   const demoTotalLessons = 20;
   const demoExt = ".m3u8";
-  const demoVideoSrc = `https://richdatatech.vercel.app/api/secure-video/playlist?courseId=${demoCourseId}&lessonId=${demoLessonId}&ext=${demoExt}`;
+  const demoVideoSrc = `https://richdatatech.vercel.app/api/secure-video2/playlist?courseId=${demoCourseId}&lessonId=${demoLessonId}&ext=${demoExt}`;
 
   // Inject HTML for the demo video and course info
   document.getElementById("course-content").innerHTML = `
