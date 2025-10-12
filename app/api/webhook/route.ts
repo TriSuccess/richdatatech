@@ -2,12 +2,22 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { initializeApp, getApps } from "firebase-admin/app";
+import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 
-// --- FIREBASE INIT (uses GOOGLE_APPLICATION_CREDENTIALS file) ---
+// --- DECODE AND PARSE SERVICE ACCOUNT KEY FROM ENV ---
+function getServiceAccount() {
+  const base64 = process.env.GOOGLE_SERVICE_ACCOUNT_B64;
+  if (!base64) throw new Error("Missing GOOGLE_SERVICE_ACCOUNT_B64 env variable");
+  const jsonString = Buffer.from(base64, "base64").toString("utf-8");
+  return JSON.parse(jsonString);
+}
+
+// --- FIREBASE ADMIN INIT ---
 if (!getApps().length) {
-  initializeApp(); // Will automatically use GOOGLE_APPLICATION_CREDENTIALS if set
+  initializeApp({
+    credential: cert(getServiceAccount())
+  });
 }
 
 // --- SERVICES ---
