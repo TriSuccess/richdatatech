@@ -5,45 +5,50 @@ import Stripe from "stripe";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 
+// --- Body parsing config for Stripe webhook signature ---
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 // --- Robust Service Account Loader ---
 function getServiceAccount() {
   const base64 = process.env.GOOGLE_SERVICE_ACCOUNT_B64;
   if (!base64) {
+    console.error("Missing GOOGLE_SERVICE_ACCOUNT_B64 env variable at runtime!");
     throw new Error("Missing GOOGLE_SERVICE_ACCOUNT_B64 env variable");
   }
-  let jsonString = Buffer.from(base64, "base64").toString("utf-8");
-  // Try direct parse; if it fails, fix \n issues and retry
-  try {
-    return JSON.parse(jsonString);
-  } catch (err) {
-    jsonString = jsonString.replace(/\\n/g, '\n');
-    return JSON.parse(jsonString);
+  const jsonString = Buffer.from(base64, "base64").toString("utf-8");
+  const serviceAccount = JSON.parse(jsonString);
+  if (serviceAccount.private_key) {
+    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
   }
+  return serviceAccount;
 }
 
 // --- Robust Firebase Admin Initialization ---
-function robustFirebaseInit() {
-  if (!getApps().length) {
-    try {
-      const serviceAccount = getServiceAccount();
-      initializeApp({
-        credential: cert(serviceAccount),
-      });
-      console.log("✅ Firebase Admin initialized.");
-    } catch (err) {
-      console.error("❌ Failed to initialize Firebase Admin:", err);
-      throw err;
-    }
+let app;
+if (!getApps().length) {
+  try {
+    const serviceAccount = getServiceAccount();
+    app = initializeApp({
+      credential: cert(serviceAccount),
+    });
+    console.log("✅ Firebase Admin initialized.");
+  } catch (err) {
+    console.error("❌ Failed to initialize Firebase Admin:", err);
+    throw err;
   }
+} else {
+  app = getApps()[0];
 }
-robustFirebaseInit();
 
-const db = getFirestore();
+const db = getFirestore(app);
 const stripeSecret = process.env.STRIPE_SECRET_KEY;
 if (!stripeSecret) throw new Error("Missing STRIPE_SECRET_KEY env variable");
 const stripe = new Stripe(stripeSecret);
 
-// --- Robust Webhook Handler ---
 export async function POST(req: NextRequest) {
   let sig: string | null = null;
   let endpointSecret: string | undefined = undefined;
@@ -70,7 +75,6 @@ export async function POST(req: NextRequest) {
       const message = err instanceof Error ? err.message : "Unknown error";
       console.error(`⚠️ Webhook signature verification failed: ${message}`);
       if (err instanceof Error && err.stack) console.error("Stack:", err.stack);
-      // Do not expose raw payload or stack in response
       return NextResponse.json({ error: "Webhook signature verification failed." }, { status: 400 });
     }
 
@@ -90,7 +94,6 @@ export async function POST(req: NextRequest) {
             );
           console.log(`✅ Firestore updated successfully for user: ${userId}`);
         } catch (firestoreErr) {
-          // Log with stack if available, but don't leak sensitive info
           if (firestoreErr instanceof Error && firestoreErr.stack) {
             console.error(
               `❌ Firestore update failed for user ${userId}:`,
@@ -100,7 +103,6 @@ export async function POST(req: NextRequest) {
           } else {
             console.error(`❌ Firestore update failed for user ${userId}:`, firestoreErr);
           }
-          // Optionally, notify your error tracking system here
         }
       } else {
         console.warn("⚠️ No user ID found in Stripe session metadata");
@@ -111,9 +113,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (err) {
-    // Catch any unexpected errors
     console.error("❌ Unexpected error in Stripe Webhook handler:", err);
-    // Optionally, notify your error tracking system here
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }
