@@ -12,12 +12,10 @@ function getServiceAccount() {
     throw new Error("Missing GOOGLE_SERVICE_ACCOUNT_B64 env variable");
   }
   let jsonString = Buffer.from(base64, "base64").toString("utf-8");
-  // Fix for any escaped newlines (if present)
+  // Try direct parse; if it fails, fix \n issues and retry
   try {
-    // Try parsing directly first
     return JSON.parse(jsonString);
   } catch (err) {
-    // Fallback: replace any literal \\n with \n and try again
     jsonString = jsonString.replace(/\\n/g, '\n');
     return JSON.parse(jsonString);
   }
@@ -43,7 +41,7 @@ robustFirebaseInit();
 const db = getFirestore();
 const stripeSecret = process.env.STRIPE_SECRET_KEY;
 if (!stripeSecret) throw new Error("Missing STRIPE_SECRET_KEY env variable");
-const stripe = new Stripe(stripeSecret, { apiVersion: "2022-11-15" });
+const stripe = new Stripe(stripeSecret);
 
 // --- Robust Webhook Handler ---
 export async function POST(req: NextRequest) {
