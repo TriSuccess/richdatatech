@@ -31,24 +31,22 @@ function getCorsHeaders(origin?: string) {
   } as Record<string, string>;
 }
 
-// Only paid courses go here (do NOT include demo)
-const allowedCourses = ["powerbi", "python", "databricks", "snowflake"];
-
-// --- PUBLIC DEMO WHITELIST ---
-function isWhitelistedDemoPlaylist(courseId: string, lessonId: string | number, ext: string) {
-  if (courseId !== "demo") return false;
-  const lessonNum = Number(lessonId);
-  return Number.isInteger(lessonNum) && lessonNum >= 1 && lessonNum <= 20 && ext === ".m3u8";
+// --- PUBLIC PLAYLIST/SEGMENT LOGIC ---
+// Any course, lesson 1, .m3u8 is public
+function isWhitelistedPublicPlaylist(courseId: string, lessonId: string | number, ext: string) {
+  return String(lessonId) === "1" && ext === ".m3u8";
 }
-function isWhitelistedDemoSegment(tsFileName: string) {
-  // demo1_0000.ts ... demo20_9999.ts
-  return /^demo([1-9]|1\d|20)_.+\.ts$/.test(tsFileName);
+// Any course, lesson 1 segment is public (e.g. python1_0000.ts)
+function isWhitelistedPublicSegment(tsFileName: string) {
+  // Match: {course}1_*.ts
+  return /^([a-zA-Z0-9_-]+)1_.+\.ts$/.test(tsFileName);
 }
 
+// Accept any course, lesson 1–100, .m3u8/.mp4
 function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext: string) {
-  if (!allowedCourses.includes(courseId)) return false;
+  if (!courseId || typeof courseId !== "string") return false;
   const lessonNum = Number(lessonId);
-  if (!Number.isInteger(lessonNum) || lessonNum < 1 || lessonNum > 20) return false;
+  if (!Number.isInteger(lessonNum) || lessonNum < 1 || lessonNum > 100) return false;
   if (![".m3u8", ".mp4"].includes(ext)) return false;
   return true;
 }
@@ -63,13 +61,11 @@ function getContentType(file: string) {
 // Playlist rewriting for paid content (for Safari support)
 async function rewritePlaylistWithToken(playlistRes: Response, token: string) {
   const playlistText = await playlistRes.text();
-  // Append the token to every .ts URI (handles both relative and absolute URLs)
   const tokenParam = `token=${token}`;
   // Only append if not already present
   const rewritten = playlistText.replace(
     /([a-zA-Z0-9_-]+\.ts)(\?(?!token=)[^ \n\r]*)?/g,
     (match, p1, p2) => {
-      // If already has token param, skip
       if (p2 && p2.includes("token=")) return match;
       if (p2) return `${p1}${p2}&${tokenParam}`;
       return `${p1}?${tokenParam}`;
@@ -99,8 +95,8 @@ export async function GET(req: NextRequest) {
         return new Response("Not Found", { status: 404, headers: corsHeaders });
       }
 
-      // PUBLIC: demo1_*.ts ... demo20_*.ts
-      if (isWhitelistedDemoSegment(tsFileName)) {
+      // PUBLIC: {course}1_*.ts
+      if (isWhitelistedPublicSegment(tsFileName)) {
         const FOLDER = "pbic7i"; // cPanel folder
         const videoUrl = `https://www.richdatatech.com/videos/${FOLDER}/${tsFileName}`;
         const username = process.env.CPANEL_USERNAME!;
@@ -179,8 +175,8 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // PUBLIC: demo1..demo20.m3u8 (playlist) does NOT need token
-    if (isWhitelistedDemoPlaylist(courseId, lessonId, ext)) {
+    // PUBLIC: {course}1.m3u8 playlist does NOT need token
+    if (isWhitelistedPublicPlaylist(courseId, lessonId, ext)) {
       const FOLDER = "pbic7i";
       const file = `${FOLDER}/${courseId}${lessonId}${ext}`;
       const videoUrl = `https://www.richdatatech.com/videos/${file}`;
@@ -208,7 +204,7 @@ export async function GET(req: NextRequest) {
     }
 
     // --- PAID PLAYLIST: .m3u8, REWRITE FOR SAFARI (append token to .ts) ---
-    if (ext === ".m3u8" && !isWhitelistedDemoPlaylist(courseId, lessonId, ext)) {
+    if (ext === ".m3u8" && !isWhitelistedPublicPlaylist(courseId, lessonId, ext)) {
       // Must have valid course, lesson, and token
       if (!courseId || !lessonId || !token) {
         return new Response("Missing parameters", { status: 400, headers: corsHeaders });
@@ -238,7 +234,7 @@ export async function GET(req: NextRequest) {
         return new Response("Video not found", { status: 404, headers: corsHeaders });
       }
 
-      // For Safari, or to future-proof: always rewrite playlist to add token to .ts URIs
+      // For Safari, always rewrite playlist to add token to .ts URIs
       const rewrittenPlaylist = await rewritePlaylistWithToken(videoRes, token);
 
       const headers = new Headers(corsHeaders);
