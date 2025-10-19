@@ -4,6 +4,7 @@ import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import type { NextRequest } from "next/server";
 
+// --- Firebase Admin Init ---
 if (!getApps().length) {
   initializeApp({
     credential: cert({
@@ -29,7 +30,7 @@ function getCorsHeaders(origin?: string) {
   } as Record<string, string>;
 }
 
-// Lesson 1 is public (playlist and segments)
+// --- PUBLIC/PROTECTED LOGIC ---
 function isPublicPlaylist(courseId: string, lessonId: string | number, ext: string) {
   return String(lessonId) === "1" && ext === ".m3u8";
 }
@@ -37,7 +38,6 @@ function isPublicSegment(tsFileName: string) {
   // Match {course}1_*.ts
   return /^([a-zA-Z0-9_-]+)1_.+\.ts$/.test(tsFileName);
 }
-// Accept any course, lesson 1–100, .m3u8/.mp4
 function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext: string) {
   if (!courseId || typeof courseId !== "string") return false;
   const lessonNum = Number(lessonId);
@@ -46,6 +46,7 @@ function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext
   return true;
 }
 
+// --- Content-Type ---
 function getContentType(file: string) {
   if (file.endsWith(".mp4")) return "video/mp4";
   if (file.endsWith(".m3u8")) return "application/x-mpegURL";
@@ -53,11 +54,27 @@ function getContentType(file: string) {
   return "application/octet-stream";
 }
 
+// --- Playlist Rewrite: append token to all .ts lines ---
+async function rewritePlaylistWithToken(playlistRes: Response, token: string) {
+  const playlistText = await playlistRes.text();
+  const tokenParam = `token=${token}`;
+  // Append token to every .ts segment URI (if not already present)
+  return playlistText.replace(
+    /([a-zA-Z0-9_-]+\.ts)(\?[^ \n\r]*)?/g,
+    (match, p1, p2) => {
+      if (p2 && p2.includes('token=')) return match;
+      return `${p1}${p2 ? p2 + '&' : '?'}${tokenParam}`;
+    }
+  );
+}
+
+// --- OPTIONS handler ---
 export async function OPTIONS(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
   return new Response(null, { status: 204, headers: getCorsHeaders(origin) });
 }
 
+// --- GET handler ---
 export async function GET(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
   const corsHeaders = getCorsHeaders(origin);
@@ -129,8 +146,9 @@ export async function GET(req: NextRequest) {
     }
 
     // Allow free video playlist without token (lesson 1 only)
-    if (!isPublicPlaylist(courseId, lessonId, ext)) {
-      // Require token for all other videos
+    const isFreePlaylist = isPublicPlaylist(courseId, lessonId, ext);
+
+    if (!isFreePlaylist) {
       if (!token) {
         return new Response("Unauthorized", { status: 401, headers: corsHeaders });
       }
@@ -161,6 +179,16 @@ export async function GET(req: NextRequest) {
       return new Response("Video not found", { status: 404, headers: corsHeaders });
     }
 
+    // --- Playlist rewriting for protected content ---
+    if (ext === ".m3u8" && !isFreePlaylist) {
+      const rewrittenPlaylist = await rewritePlaylistWithToken(videoRes, token!);
+      const headers = new Headers(corsHeaders);
+      headers.set("Content-Type", "application/x-mpegURL");
+      headers.set("Cache-Control", "no-store");
+      return new Response(rewrittenPlaylist, { status: 200, headers });
+    }
+
+    // --- Direct pass-through for public playlist or other files ---
     const headers = new Headers(corsHeaders);
     headers.set("Content-Type", getContentType(file));
     if (videoRes.headers.get("content-length")) headers.set("Content-Length", videoRes.headers.get("content-length")!);
