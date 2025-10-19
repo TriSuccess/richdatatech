@@ -176,86 +176,21 @@ export async function GET(req: NextRequest) {
     }
 
     // PUBLIC: {course}1.m3u8 playlist does NOT need token
-    if (isWhitelistedPublicPlaylist(courseId, lessonId, ext)) {
-      const FOLDER = "pbic7i";
-      const file = `${FOLDER}/${courseId}${lessonId}${ext}`;
-      const videoUrl = `https://www.richdatatech.com/videos/${file}`;
-      const username = process.env.CPANEL_USERNAME!;
-      const password = process.env.CPANEL_PASSWORD!;
-      const basic = Buffer.from(`${username}:${password}`).toString("base64");
+    const isFreePlaylist = isWhitelistedPublicPlaylist(courseId, lessonId, ext);
 
-      const fetchHeaders: Record<string, string> = { Authorization: `Basic ${basic}` };
-      const range = req.headers.get("range");
-      if (range) fetchHeaders.Range = range;
-
-      const videoRes = await fetch(videoUrl, { headers: fetchHeaders });
-      if (!videoRes.ok || !videoRes.body) {
-        return new Response("Video not found", { status: 404, headers: corsHeaders });
-      }
-
-      const headers = new Headers(corsHeaders);
-      headers.set("Content-Type", getContentType(file));
-      if (videoRes.headers.get("content-length")) headers.set("Content-Length", videoRes.headers.get("content-length")!);
-      if (videoRes.headers.get("content-range")) headers.set("Content-Range", videoRes.headers.get("content-range")!);
-      headers.set("Accept-Ranges", "bytes");
-      headers.set("Cache-Control", "no-store");
-
-      return new Response(videoRes.body, { status: videoRes.status, headers });
-    }
-
-    // --- PAID PLAYLIST: .m3u8, REWRITE FOR SAFARI (append token to .ts) ---
-    if (ext === ".m3u8" && !isWhitelistedPublicPlaylist(courseId, lessonId, ext)) {
-      // Must have valid course, lesson, and token
-      if (!courseId || !lessonId || !token) {
-        return new Response("Missing parameters", { status: 400, headers: corsHeaders });
-      }
-      if (!isValidCourseAndLesson(courseId, lessonId, ext)) {
-        return new Response("Invalid course or lesson", { status: 403, headers: corsHeaders });
+    if (!isFreePlaylist) {
+      if (!token) {
+        return new Response("Unauthorized", { status: 401, headers: corsHeaders });
       }
       try {
         await getAuth().verifyIdToken(token);
       } catch {
         return new Response("Unauthorized", { status: 401, headers: corsHeaders });
       }
-
-      const FOLDER = "pbic7i";
-      const file = `${FOLDER}/${courseId}${lessonId}${ext}`;
-      const videoUrl = `https://www.richdatatech.com/videos/${file}`;
-      const username = process.env.CPANEL_USERNAME!;
-      const password = process.env.CPANEL_PASSWORD!;
-      const basic = Buffer.from(`${username}:${password}`).toString("base64");
-
-      const fetchHeaders: Record<string, string> = { Authorization: `Basic ${basic}` };
-      const range = req.headers.get("range");
-      if (range) fetchHeaders.Range = range;
-
-      const videoRes = await fetch(videoUrl, { headers: fetchHeaders });
-      if (!videoRes.ok || !videoRes.body) {
-        return new Response("Video not found", { status: 404, headers: corsHeaders });
-      }
-
-      // For Safari, always rewrite playlist to add token to .ts URIs
-      const rewrittenPlaylist = await rewritePlaylistWithToken(videoRes, token);
-
-      const headers = new Headers(corsHeaders);
-      headers.set("Content-Type", "application/x-mpegURL");
-      headers.set("Cache-Control", "no-store");
-      return new Response(rewrittenPlaylist, { status: 200, headers });
-    }
-
-    // --- ALL OTHERS REQUIRE TOKEN ---
-    if (!courseId || !lessonId || !token) {
-      return new Response("Missing parameters", { status: 400, headers: corsHeaders });
     }
 
     if (!isValidCourseAndLesson(courseId, lessonId, ext)) {
       return new Response("Invalid course or lesson", { status: 403, headers: corsHeaders });
-    }
-
-    try {
-      await getAuth().verifyIdToken(token);
-    } catch (err) {
-      return new Response("Unauthorized", { status: 401, headers: corsHeaders });
     }
 
     const FOLDER = "pbic7i";
@@ -274,6 +209,16 @@ export async function GET(req: NextRequest) {
       return new Response("Video not found", { status: 404, headers: corsHeaders });
     }
 
+    // --- Playlist rewriting for protected content ---
+    if (ext === ".m3u8" && !isFreePlaylist) {
+      const rewrittenPlaylist = await rewritePlaylistWithToken(videoRes, token!);
+      const headers = new Headers(corsHeaders);
+      headers.set("Content-Type", "application/x-mpegURL");
+      headers.set("Cache-Control", "no-store");
+      return new Response(rewrittenPlaylist, { status: 200, headers });
+    }
+
+    // --- Direct pass-through for public playlist or other files ---
     const headers = new Headers(corsHeaders);
     headers.set("Content-Type", getContentType(file));
     if (videoRes.headers.get("content-length")) headers.set("Content-Length", videoRes.headers.get("content-length")!);
