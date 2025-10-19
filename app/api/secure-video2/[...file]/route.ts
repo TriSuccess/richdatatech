@@ -19,6 +19,7 @@ const allowedOrigins = [
   "https://course2-f1bdb.web.app",
   "https://www.course2-f1bdb.web.app",
   "http://localhost:3000",
+  "https://www.richdatatech.com",
 ];
 
 function getCorsHeaders(origin?: string) {
