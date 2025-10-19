@@ -29,17 +29,14 @@ function getCorsHeaders(origin?: string) {
   } as Record<string, string>;
 }
 
-// Utility: lesson 1 is public, 2–100 require token
+// Lesson 1 is public (playlist and segments)
 function isPublicPlaylist(courseId: string, lessonId: string | number, ext: string) {
   return String(lessonId) === "1" && ext === ".m3u8";
 }
-
-// Utility: only lesson 1 segments are public (e.g. python1_0000.ts)
 function isPublicSegment(tsFileName: string) {
-  const match = tsFileName.match(/^([a-zA-Z0-9]+)1_.+\.ts$/);
-  return !!match;
+  // Match {course}1_*.ts
+  return /^([a-zA-Z0-9_-]+)1_.+\.ts$/.test(tsFileName);
 }
-
 // Accept any course, lesson 1–100, .m3u8/.mp4
 function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext: string) {
   if (!courseId || typeof courseId !== "string") return false;
@@ -172,8 +169,8 @@ export async function GET(req: NextRequest) {
     headers.set("Cache-Control", "no-store");
 
     return new Response(videoRes.body, { status: videoRes.status, headers });
-  } catch {
-    console.error("secure-video proxy error");
-    return new Response("Server error", { status: 500, headers: getCorsHeaders(req.headers.get("origin") || "") });
+  } catch (err) {
+    console.error("secure-video proxy error:", err);
+    return new Response("Server error", { status: 500, headers: getCorsHeaders(origin) });
   }
 }
