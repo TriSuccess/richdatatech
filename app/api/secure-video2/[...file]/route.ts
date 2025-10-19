@@ -31,13 +31,16 @@ function getCorsHeaders(origin?: string) {
 }
 
 // --- PUBLIC/PROTECTED LOGIC ---
+// Only demo1–demo100.m3u8 are public, everything else needs token
 function isPublicPlaylist(courseId: string, lessonId: string | number, ext: string) {
-  return String(lessonId) === "1" && ext === ".m3u8";
+  const n = Number(lessonId);
+  return courseId === "demo" && Number.isInteger(n) && n >= 1 && n <= 100 && ext === ".m3u8";
 }
+// Only demo1_*.ts ... demo100_*.ts are public
 function isPublicSegment(tsFileName: string) {
-  // Match {course}1_*.ts
-  return /^([a-zA-Z0-9_-]+)1_.+\.ts$/.test(tsFileName);
+  return /^demo([1-9]|[1-9][0-9]|100)_.+\.ts$/.test(tsFileName);
 }
+// Accept any course, lesson 1–100, .m3u8/.mp4
 function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext: string) {
   if (!courseId || typeof courseId !== "string") return false;
   const lessonNum = Number(lessonId);
@@ -145,7 +148,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Allow free video playlist without token (lesson 1 only)
+    // Allow free demo playlist without token (demo1–demo100)
     const isFreePlaylist = isPublicPlaylist(courseId, lessonId, ext);
 
     if (!isFreePlaylist) {
