@@ -10,17 +10,43 @@
       {
         "source": "**/*.m3u8",
         "headers": [
-          { "key": "Access-Control-Allow-Origin", "value": "*" },
-          { "key": "Content-Type", "value": "application/vnd.apple.mpegurl" }
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/vnd.apple.mpegurl"
+          }
         ]
       },
       {
         "source": "**/*.ts",
         "headers": [
-          { "key": "Access-Control-Allow-Origin", "value": "*" },
-          { "key": "Content-Type", "value": "video/mp2t" }
+          {
+            "key": "Access-Control-Allow-Origin",
+            "value": "*"
+          },
+          {
+            "key": "Content-Type",
+            "value": "video/mp2t"
+          }
         ]
       }
     ]
-  }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "platform": "gcfv1",   // THIS LINE IS CRITICAL!
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ]
 }

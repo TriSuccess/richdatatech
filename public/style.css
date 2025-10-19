@@ -1,0 +1,499 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: "Proxima Nova", 'Inter', Arial, sans-serif;
+  background: #f4f7fa;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  width: 100%;
+  z-index: 100;
+  top: 0;
+  position: relative;
+  padding: 0;
+}
+
+.header {
+  position: relative;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 1.2rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 150px;
+  flex-wrap: wrap;
+}
+
+.auth-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-left: auto;
+  min-width: 110px;
+  flex-shrink: 0;
+  position: relative;
+  margin-top: 35px;
+  width: 140px;
+  height: 64px;
+}
+
+#open-auth-btn, .auth-buttons button {
+  background: #0A699E;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  padding: 9px 15px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(10,105,158,0.09);
+  transition: background 0.18s, box-shadow 0.18s;
+  text-align: center;
+  display: block;
+  margin: 0 auto;
+  width: 140px;
+  min-width: 90px;
+  max-width: 140px;
+}
+
+#open-auth-btn:hover, .auth-buttons button:hover {
+  background: #0A9FFE;
+  box-shadow: 0 4px 20px rgba(10,105,158,0.11);
+}
+
+#logged-in-span {
+  font-size: 0.9rem;
+  color: #0573ff;
+  font-weight: 500;
+  margin-left: 0;
+  margin-top: 7px;
+  opacity: 1;
+  transition: opacity 0.2s;
+  display: block;
+  text-align: center;
+  width: 100%;
+  min-height: 24px;
+  visibility: visible;
+  background: none;
+  pointer-events: none;
+}
+
+#logged-in-span.hidden {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.logo img {
+  height: 64px;
+  width: auto;
+  display: block;
+  transition: height 0.3s;
+  margin: 0;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.65rem;
+  font-size: 1.06rem;
+  font-weight: 500;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #0A699E;
+  font-size: 18px;
+  padding: 7px 14px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: color 0.2s, font-weight 0.2s, background 0.3s;
+}
+
+.nav-links a:hover {
+  color: #0573ff;
+  background: #f0f4ff;
+  font-weight: bold;
+}
+
+#status-span {
+  font-size: 0.82rem;
+  color: #0573ff;
+  margin-left: 10px;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+:root {
+  --main-padding-top: 32px;
+  --main-padding-left: 24px;
+  --main-padding-right: 24px;
+}
+
+main {
+  padding-top: var(--main-padding-top);
+  padding-left: var(--main-padding-left);
+  padding-right: var(--main-padding-right);
+  flex-grow: 1;
+  background: linear-gradient(to right, #0A699E, #0A699E, #0A699E);
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#course-content {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+#auth-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.47);
+  align-items: center;
+  justify-content: center;
+}
+
+#auth-modal.active {
+  display: flex;
+}
+
+#auth-modal .modal-box {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(10,105,158,0.09);
+  padding: 2rem 1.2rem 1.7rem 1.2rem;
+  width: 360px;
+  max-width: 360px;
+  position: relative;
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+#auth-modal input, #auth-modal button {
+  font-size: 1rem;
+}
+
+#auth-modal input {
+  border: 1px solid #e5e7eb;
+  border-radius: 5px;
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+#auth-modal .close-btn {
+  position: absolute;
+  right: 18px;
+  top: 13px;
+  font-size: 1.45rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.2s;
+}
+
+
+.video-js, .vjs-tech {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 1000px;
+  max-height: 1000px;
+}
+.vjs-fullscreen {
+  position: fixed !important;
+  top: 0 !important; left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 99999 !important;
+  background: #000 !important;
+  display: block !important;
+}
+
+
+.nav-btn {
+  background: #737373;
+  color: #fff;
+  border-radius: 6px;
+  padding: 5px 12px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+  transition: background 0.18s, color 0.18s;
+  display: inline-block;
+}
+
+.nav-btn:hover {
+  background: #fff;  /* or another color you prefer */
+  color: #000;          /* or change text color if you like */
+}
+
+
+/* --- 900px SECTION --- */
+@media (max-width: 900px) and (min-width: 801px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    padding: 30px 6px;
+    border-top: 3px solid #0A699E; /* Example enhancement: highlight section */
+  }
+  .logo {
+    margin-top: 2px;
+    margin-left: 10px;
+    order: 1;
+  }
+  .auth-buttons {
+    order: 2;
+    align-self: flex-end;
+    position: absolute;
+    top: 47px;
+    right: 0;
+    margin-top: 0;
+  }
+  .auth-buttons button, #open-auth-btn {
+    font-size: 13px;
+    padding: 7px 13px;
+    width: 88px;
+    min-width: 70px;
+    max-width: 110px;
+  }
+  .nav-links {
+    order: 3;
+    position: static;
+    transform: none;
+    margin-top: 18px;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 18px;
+  }
+  .nav-links a {
+    font-size: 18px;
+    padding: 6px 10px;
+  }
+}
+
+/* --- 800px SECTION --- */
+@media (max-width: 800px) and (min-width: 601px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    padding: 24px 4px;
+    border-top: 3px solid #0573ff; /* Example enhancement: highlight section */
+  }
+  .logo {
+    margin-top: 2px;
+    margin-left: 10px;
+    order: 1;
+  }
+  .auth-buttons {
+    order: 2;
+    align-self: flex-end;
+    position: absolute;
+    top: 47px;
+    right: 0;
+    margin-top: 0;
+  }
+  .auth-buttons button, #open-auth-btn {
+    font-size: 12px;
+    padding: 6px 11px;
+    width: 75px;
+    min-width: 60px;
+    max-width: 100px;
+  }
+  .nav-links {
+    order: 3;
+    position: static;
+    transform: none;
+    margin-top: 16px;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 13px;
+  }
+  .nav-links a {
+    font-size: 18px;
+    padding: 5px 8px;
+  }
+}
+
+/* --- 600px SECTION --- */
+@media (max-width: 600px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    padding: 16px 2px;
+    border-top: 3px solid #8cd4ff;
+  }
+  .logo {
+    margin-top: 2px;
+    margin-left: 10px;
+    order: 1;
+  }
+  .auth-buttons {
+    order: 2;
+    align-self: flex-end;
+    position: absolute;
+    top: 42px;
+    right: 10px;
+    margin-top: 0;
+    width: auto; /* Only as wide as content */
+    min-width: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Button aligns right, message below aligns right too */
+  }
+  .auth-buttons button, #open-auth-btn {
+    font-size: 11px;
+    padding: 4px 7px;
+    width: 62px;
+    min-width: 50px;
+    max-width: 80px;
+  }
+  #logged-in-span {
+    position: static;   /* Just flow under button */
+    margin: 4px 0 0 0;
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+    text-align: right;  /* Message aligns with button */
+    font-size: 0.90rem;
+    word-break: break-word;
+    box-sizing: border-box;
+    padding-left: 0;
+    background: none;
+    color: #0573ff;
+    border-radius: 0;
+    box-shadow: none;
+    pointer-events: none;
+  }
+  .nav-links {
+    order: 3;
+    position: static;
+    transform: none;
+    margin-top: 12px;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .nav-links a {
+    font-size: 14px;
+    padding: 4px 2px;
+  }
+}
+
+/* Footer Mobile Adjustments (applies to all mobile sizes) */
+@media (max-width: 900px) {
+  footer {
+    padding: 28px 0 14px 0 !important;
+  }
+  .footer-table {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    text-align: center;
+  }
+  footer div[style*="font-size:1.09rem"] {
+    font-size: 0.95rem !important;
+  }
+  footer div[style*="font-size:0.97rem"],
+  footer ul {
+    font-size: 0.85rem !important;
+  }
+  footer svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  footer div[style*="font-size:0.99rem"] {
+    font-size: 0.8rem !important;
+  }
+  footer div[style*="font-size:0.9rem"] {
+    font-size: 0.75rem !important;
+  }
+}
+
+.video-js { border-radius: 13px; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-20px);} to { opacity: 1; transform: none;} } 
+
+.progress-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1000px;
+  margin: 10px auto 18px auto;
+  width: 100%;
+  font-size: 1rem;
+  color: #fff;
+}
+.progress-bar-label {
+  min-width: 90px;
+  text-align: left;
+  font-weight: 500;
+}
+.progress-bar-percentage {
+  min-width: 98px;
+  text-align: right;
+  font-weight: 500;
+}
+.progress-bar-container {
+  flex: 1;
+  margin: 0 16px;
+  height: 15px;
+  background: #e5e7eb; /* light grey for not yet completed */
+  border-radius: 7px;
+  overflow: hidden;
+  position: relative;
+}
+.progress-bar-fill {
+  background: #33495E; /* progress so far */
+  height: 100%;
+  border-radius: 7px;
+  transition: width 0.3s;
+}
+
+.buy-now-btn {
+  background: linear-gradient(90deg, #16a34a 60%, #0A699E 100%);
+  color: #fff;
+  border-radius: 7px;
+  padding: 10px 30px;
+  font-weight: 600;
+  font-size: 1.09rem;
+  margin-bottom: 0.4rem;
+  border: none;
+  cursor: pointer;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  transition: background 0.22s, box-shadow 0.22s;
+  box-shadow: 0 2px 10px rgba(10,105,158,0.10);
+}
+
+.buy-now-btn:hover {
+  background: linear-gradient(90deg, #0A699E 60%, #16a34a 100%);
+  box-shadow: 0 6px 20px rgba(10,105,158,0.18);
+}
+
+

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Responsive Previewer: Draggable Code Pane</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', Arial, sans-serif;
+      background: #f4f7fa;
+    }
+    body {
+      height: 100vh;
+      min-height: 100vh;
+      overflow: hidden;
+      display: block;
+    }
+    .layout {
+      display: flex;
+      flex-direction: row;
+      height: 100vh;         /* Full viewport height */
+      width: 100vw;
+      overflow: hidden;
+    }
+    .sidebar {
+      width: 700px;
+      min-width: 0px;
+      max-width: 100vw;
+      background: #fff;
+      box-shadow: 2px 0 12px rgba(10,105,158,0.08);
+      padding: 32px 26px 18px 26px;
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      left: 0;
+      top: 0;
+      height: 100vh;
+      min-height: 100vh;
+      border-right: 1.5px solid #e5e7eb;
+      z-index: 10;
+      transition: width 0.12s;
+      overflow-y: auto; /* So sidebar scrolls if content is tall */
+    }
+    .drag-handle {
+      position: absolute;
+      top: 0;
+      right: -7px;
+      width: 14px;
+      height: 100%;
+      cursor: ew-resize;
+      z-index: 99;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+    }
+    .drag-handle-bar {
+      width: 4px;
+      height: 50px;
+      background: #0A699E;
+      border-radius: 3px;
+      margin: auto;
+      opacity: 0.2;
+      transition: opacity 0.18s;
+    }
+    .drag-handle:hover .drag-handle-bar { opacity: 0.7; }
+    .sidebar h2 { color: #0A699E; margin-bottom: 20px; }
+    .sidebar label { font-weight: 600; color: #333; }
+    .sidebar input[type="text"], .sidebar select {
+      width: 100%;
+      padding: 8px;
+      font-size: 1rem;
+      border: 1px solid #bbb;
+      border-radius: 6px;
+      margin-bottom: 22px;
+      box-sizing: border-box;
+    }
+    .sidebar textarea {
+      width: 100%;
+      min-height: 300px;
+      font-family: 'Fira Mono', 'Consolas', monospace;
+      font-size: 1rem;
+      border: 1px solid #bbb;
+      border-radius: 6px;
+      margin-bottom: 18px;
+      resize: vertical;
+      background: #fafbfc;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    .sidebar button {
+      padding: 8px 18px;
+      background: #0A699E;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.15s;
+      margin-bottom: 18px;
+    }
+    .sidebar button:hover { background: #0A9FFE; }
+    .note { color: #888; font-size: 0.94rem; margin-top: 10px; }
+    .preview-area {
+      flex-grow: 1;
+      height: 100vh;
+      padding: 30px 0 30px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #f4f7fa;
+      min-width: 0;
+      overflow-y: auto; /* Right pane scrolls */
+      transition: width 0.12s;
+    }
+    .frames {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 36px;
+      margin-bottom: 40px;
+      justify-content: center;
+      width: 100%;
+    }
+    .frame-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #fff;
+      padding: 12px 14px;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(10,105,158,0.09);
+    }
+    .frame-label {
+      font-size: 1.09rem;
+      color: #0573ff;
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-align: center;
+    }
+    iframe {
+      border: 1.5px solid #aaa;
+      border-radius: 7px;
+      min-height: 500px;
+      background: #fff;
+      margin-bottom: 3px;
+      transition: box-shadow 0.2s;
+      box-shadow: 0 2px 14px rgba(10,105,158,0.06);
+    }
+    .normal-frame {
+      margin-top: 12px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(10,105,158,0.07);
+      padding: 18px 0 0 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 1000px;
+      margin: 0 auto;
+      position: relative;
+      background: #fff;
+    }
+    .normal-label {
+      font-size: 1.09rem;
+      color: #0A699E;
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-align: center;
+    }
+    .iframe-wrapper {
+      width: 1000px;
+      height: 800px;
+      overflow: auto;
+      position: relative;
+    }
+    #iframe-normal {
+      width: 1370px;
+      height: 1200px;
+      transform: scale(0.73);
+      transform-origin: top left;
+      border: 1.5px solid #aaa;
+      border-radius: 7px;
+      background: #fff;
+      margin: 0 auto;
+      box-shadow: 0 2px 14px rgba(10,105,158,0.06);
+      display: block;
+      position: static;
+    }
+    @media (max-width: 1100px) {
+      .layout { flex-direction: column; height: auto; }
+      .sidebar { width: 100% !important; min-width: 0; box-shadow: none; border-right: none; position: static; height: auto; }
+      .preview-area { padding: 16px 0; height: auto; }
+      .frames { flex-direction: column; gap: 22px; }
+      .frame-container { width: 100%; }
+      .normal-frame { width: 100%; }
+      .iframe-wrapper { width: 100%; height: 400px; }
+      #iframe-normal { left: 0; margin-left: 0; position: static; transform: scale(0.73); }
+      iframe { width: 100% !important; min-width: 0 !important; }
+      .drag-handle { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="sidebar" id="sidebar">
+      <div class="drag-handle" id="dragHandle" title="Drag to resize sidebar">
+        <div class="drag-handle-bar"></div>
+      </div>
+      <h2>Responsive Previewer &amp; Code Sandbox</h2>
+      <form id="preview-form" autocomplete="off">
+        <label for="preview-type">Preview by:</label>
+        <select id="preview-type">
+          <option value="url">URL</option>
+          <option value="code">Local Code</option>
+        </select>
+        <div id="url-pane">
+          <label for="site-url">Paste your website URL:</label>
+          <input type="text" id="site-url" placeholder="https://your-site.com" value="https://course2-f1bdb.web.app/style-paid.html">
+        </div>
+        <div id="code-pane" style="display:none;">
+          <label for="site-code" style="margin-top: 10px;">Paste HTML/CSS/JS code:</label>
+          <textarea id="site-code" placeholder="Paste HTML code here..."></textarea>
+        </div>
+        <button type="submit">Preview</button>
+      </form>
+      <div class="note">
+        If you select "Local Code", all previews use it.<br>
+        <b>Note:</b> Some sites block embedding in iframes (X-Frame-Options).
+      </div>
+    </div>
+    <div class="preview-area">
+      <div id="frames" class="frames"></div>
+      <div id="normal-frame" class="normal-frame" style="display:none;">
+        <div class="normal-label">Normal Desktop (1370px, Scaled to 1000px)</div>
+        <div class="iframe-wrapper">
+          <iframe id="iframe-normal"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const dragHandle = document.getElementById('dragHandle');
+    let isDragging = false;
+    let startX, startWidth;
+    let sidebarWidth = 700; // Default width
+
+    window.addEventListener('DOMContentLoaded', function() {
+      sidebarWidth = sidebar.offsetWidth || 700;
+      sidebar.style.width = sidebarWidth + 'px';
+    });
+
+    dragHandle.addEventListener('mousedown', function(e) {
+      isDragging = true;
+      startX = e.clientX;
+      startWidth = sidebar.offsetWidth;
+      document.body.style.cursor = 'ew-resize';
+      document.body.style.userSelect = 'none';
+    });
+
+    window.addEventListener('mousemove', function(e) {
+      if (!isDragging) return;
+      let newWidth = startWidth + (e.clientX - startX);
+      newWidth = Math.max(0, Math.min(window.innerWidth, newWidth));
+      sidebarWidth = newWidth;
+      sidebar.style.width = sidebarWidth + 'px';
+    });
+
+    window.addEventListener('mouseup', function(e) {
+      if (isDragging) {
+        isDragging = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    });
+
+    // Pane selection & preview logic
+    const previewType = document.getElementById('preview-type');
+    const urlPane = document.getElementById('url-pane');
+    const codePane = document.getElementById('code-pane');
+    const form = document.getElementById('preview-form');
+    const input = document.getElementById('site-url');
+    const codeArea = document.getElementById('site-code');
+    const frames = document.getElementById('frames');
+    const normalFrame = document.getElementById('normal-frame');
+    const iframeNormal = document.getElementById('iframe-normal');
+
+    previewType.addEventListener('change', function() {
+      if (this.value === 'url') {
+        urlPane.style.display = '';
+        codePane.style.display = 'none';
+        input.required = true;
+        codeArea.required = false;
+      } else {
+        urlPane.style.display = 'none';
+        codePane.style.display = '';
+        input.required = false;
+        codeArea.required = true;
+      }
+    });
+
+    function setPreview(url, code, type) {
+      sidebar.style.width = sidebarWidth + 'px';
+      if (type === 'code' && code && code.trim().length > 0) {
+        const blob = new Blob([code], {type: 'text/html'});
+        const blobUrl = URL.createObjectURL(blob);
+
+        frames.innerHTML = `
+          <div class="frame-container">
+            <div class="frame-label">600px</div>
+            <iframe src="${blobUrl}" style="width:600px; height:1000px;"></iframe>
+          </div>
+          <div class="frame-container">
+            <div class="frame-label">800px</div>
+            <iframe src="${blobUrl}" style="width:800px; height:600px;"></iframe>
+          </div>
+          <div class="frame-container">
+            <div class="frame-label">900px</div>
+            <iframe src="${blobUrl}" style="width:900px; height:600px;"></iframe>
+          </div>
+        `;
+        iframeNormal.src = blobUrl;
+      } else if (type === 'url' && url.trim().length > 0) {
+        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+        frames.innerHTML = `
+          <div class="frame-container">
+            <div class="frame-label">600px</div>
+            <iframe src="${url}" style="width:600px; height:1000px;"></iframe>
+          </div>
+          <div class="frame-container">
+            <div class="frame-label">800px</div>
+            <iframe src="${url}" style="width:800px; height:600px;"></iframe>
+          </div>
+          <div class="frame-container">
+            <div class="frame-label">900px</div>
+            <iframe src="${url}" style="width:900px; height:600px;"></iframe>
+          </div>
+        `;
+        iframeNormal.src = url;
+      }
+      frames.style.display = 'flex';
+      normalFrame.style.display = 'flex';
+    }
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      let type = previewType.value;
+      let url = input.value.trim();
+      let code = codeArea.value;
+      setPreview(url, code, type);
+    });
+
+    let debounceTimer;
+    codeArea.addEventListener('input', function() {
+      if (previewType.value === 'code') {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(function() {
+          setPreview('', codeArea.value, 'code');
+        }, 300);
+      }
+    });
+
+    codeArea.addEventListener('paste', function() {
+      setTimeout(function() {
+        sidebarWidth = 1200;
+        sidebar.style.width = sidebarWidth + 'px';
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

@@ -29,35 +29,22 @@ function getCorsHeaders(origin?: string) {
   } as Record<string, string>;
 }
 
-const allowedCourses = ["powerbi", "python", "databricks", "snowflake", "demo"];
-
-// Utility: is string like "1"..."20"
-function isPublicDemoLesson(lesson: string | number): boolean {
-  const n = Number(lesson);
-  return Number.isInteger(n) && n >= 1 && n <= 20;
-}
-
-// Whitelist: demo HLS playlists (demo1.m3u8 ... demo20.m3u8)
+// Utility: lesson 1 is public, 2–100 require token
 function isPublicPlaylist(courseId: string, lessonId: string | number, ext: string) {
-  if (courseId === "demo" && isPublicDemoLesson(lessonId) && ext === ".m3u8") return true;
-  if (courseId === "snowflake" && String(lessonId) === "1" && ext === ".m3u8") return true; // keep your old public snowflake1
-  return false;
+  return String(lessonId) === "1" && ext === ".m3u8";
 }
 
-// Whitelist: demo segments (demo1_*.ts ... demo20_*.ts)
+// Utility: only lesson 1 segments are public (e.g. python1_0000.ts)
 function isPublicSegment(tsFileName: string) {
-  // demo1_0000.ts ... demo20_9999.ts
-  const demoMatch = tsFileName.match(/^demo([1-9]|1\d|20)_.+\.ts$/);
-  if (demoMatch) return true;
-  // snowflake1_*.ts for legacy free
-  if (tsFileName.startsWith("snowflake1_") && tsFileName.endsWith(".ts")) return true;
-  return false;
+  const match = tsFileName.match(/^([a-zA-Z0-9]+)1_.+\.ts$/);
+  return !!match;
 }
 
+// Accept any course, lesson 1–100, .m3u8/.mp4
 function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext: string) {
-  if (!allowedCourses.includes(courseId)) return false;
+  if (!courseId || typeof courseId !== "string") return false;
   const lessonNum = Number(lessonId);
-  if (!Number.isInteger(lessonNum) || lessonNum < 1 || lessonNum > 20) return false;
+  if (!Number.isInteger(lessonNum) || lessonNum < 1 || lessonNum > 100) return false;
   if (![".m3u8", ".mp4"].includes(ext)) return false;
   return true;
 }
@@ -144,7 +131,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Allow free video playlist without token
+    // Allow free video playlist without token (lesson 1 only)
     if (!isPublicPlaylist(courseId, lessonId, ext)) {
       // Require token for all other videos
       if (!token) {
@@ -186,7 +173,7 @@ export async function GET(req: NextRequest) {
 
     return new Response(videoRes.body, { status: videoRes.status, headers });
   } catch {
-    console.error("secure-video2 proxy error");
+    console.error("secure-video proxy error");
     return new Response("Server error", { status: 500, headers: getCorsHeaders(req.headers.get("origin") || "") });
   }
 }
