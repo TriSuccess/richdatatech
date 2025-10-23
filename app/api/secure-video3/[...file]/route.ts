@@ -199,7 +199,16 @@ export async function GET(req: NextRequest) {
       return new Response("Video not found", { status: 404, headers: corsHeaders });
     }
 
-
+    // If this is a protected m3u8, rewrite TS references to include token so client can proxy them
+    if (ext === ".m3u8" && !isFreePlaylist) {
+      // Ensure token exists
+      if (!token) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+      const rewrittenPlaylist = await rewritePlaylistWithToken(videoRes, token);
+      const headers = new Headers(corsHeaders);
+      headers.set("Content-Type", "application/x-mpegURL");
+      headers.set("Cache-Control", "no-store");
+      return new Response(rewrittenPlaylist, { status: 200, headers });
+    }
 
     // Otherwise pass-through (public playlist or mp4)
     const headers = new Headers(corsHeaders);
