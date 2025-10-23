@@ -19,9 +19,14 @@ const allowedOrigins = [
   "https://course2-f1bdb.web.app",
   "https://www.course2-f1bdb.web.app",
   "http://localhost:3000",
-  "http://localhost:8000",  // ← Add this line
+  "http://localhost:8000", 
   "https://www.richdatatech.com",
+  'http://172.20.10.10:8000', 
+  'https://richdatatech.com',
+  'https://richdatatech.vercel.app',
 ];
+
+
 
 function getCorsHeaders(origin?: string) {
   const safeOrigin = allowedOrigins.includes(origin ?? "") ? origin : allowedOrigins[0];
