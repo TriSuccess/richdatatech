@@ -1,10 +1,10 @@
-export const runtime = "nodejs";
-
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import type { NextRequest } from "next/server";
 
-// --- Firebase Admin Init ---
+export const runtime = "nodejs";
+
+// --- Firebase Admin Init (unchanged) ---
 if (!getApps().length) {
   initializeApp({
     credential: cert({
@@ -15,39 +15,42 @@ if (!getApps().length) {
   });
 }
 
+// Allowed origins - keep the list you trust
 const allowedOrigins = [
   "https://course2-f1bdb.web.app",
   "https://www.course2-f1bdb.web.app",
   "http://localhost:3000",
-  "http://localhost:8000", 
+  "http://localhost:8000",
   "https://www.richdatatech.com",
-  'http://172.20.10.10:8000', 
-  'https://richdatatech.com',
-  'https://richdatatech.vercel.app',
+  "http://172.20.10.10:8000",
+  "https://richdatatech.com",
+  "https://richdatatech.vercel.app",
 ];
 
-
-
 function getCorsHeaders(origin?: string) {
+  // If origin is allowed, echo it; otherwise fall back to first allowed origin (safe fallback for testing)
   const safeOrigin = allowedOrigins.includes(origin ?? "") ? origin : allowedOrigins[0];
   return {
-    "Access-Control-Allow-Origin": safeOrigin,
+    "Access-Control-Allow-Origin": safeOrigin || "*",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    // Allow Authorization because we send Bearer token; allow Range for byte requests; Accept for some clients
+    "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept, Range, X-Requested-With",
+    "Access-Control-Max-Age": "600",
+    // If you will use credentials later, keep this true and ensure you echo origin (not '*')
+    "Access-Control-Allow-Credentials": "true",
+    // Prevent CDN from serving a single-origin response to multiple origins
+    "Vary": "Origin",
   } as Record<string, string>;
 }
 
-// --- PUBLIC/PROTECTED LOGIC ---
-// Only demo1–demo100.m3u8 are public, everything else needs token
+// Helpers (same logic as your original)
 function isPublicPlaylist(courseId: string, lessonId: string | number, ext: string) {
   const n = Number(lessonId);
   return courseId === "demo" && Number.isInteger(n) && n >= 1 && n <= 100 && ext === ".m3u8";
 }
-// Only demo1_*.ts ... demo100_*.ts are public
 function isPublicSegment(tsFileName: string) {
   return /^demo([1-9]|[1-9][0-9]|100)_.+\.ts$/.test(tsFileName);
 }
-// Accept any course, lesson 1–100, .m3u8/.mp4
 function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext: string) {
   if (!courseId || typeof courseId !== "string") return false;
   const lessonNum = Number(lessonId);
@@ -55,36 +58,34 @@ function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext
   if (![".m3u8", ".mp4"].includes(ext)) return false;
   return true;
 }
-
-// --- Content-Type ---
 function getContentType(file: string) {
   if (file.endsWith(".mp4")) return "video/mp4";
   if (file.endsWith(".m3u8")) return "application/x-mpegURL";
   if (file.endsWith(".ts")) return "video/mp2t";
   return "application/octet-stream";
 }
-
-// --- Playlist Rewrite: append token to all .ts lines ---
 async function rewritePlaylistWithToken(playlistRes: Response, token: string) {
   const playlistText = await playlistRes.text();
   const tokenParam = `token=${token}`;
-  // Append token to every .ts segment URI (if not already present)
+  // Append token to every .ts segment URI if not present
   return playlistText.replace(
-    /([a-zA-Z0-9_-]+\.ts)(\?[^ \n\r]*)?/g,
+    /([a-zA-Z0-9_\-\/\.]+\.ts)(\?[^ \n\r]*)?/g,
     (match, p1, p2) => {
       if (p2 && p2.includes('token=')) return match;
+      // Preserve any path segments; we'll rely on client rewriting to point at /api/secure-video3/<seg>
       return `${p1}${p2 ? p2 + '&' : '?'}${tokenParam}`;
     }
   );
 }
 
-// --- OPTIONS handler ---
+// OPTIONS handler - always return CORS headers and 204
 export async function OPTIONS(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
-  return new Response(null, { status: 204, headers: getCorsHeaders(origin) });
+  const headers = getCorsHeaders(origin);
+  return new Response(null, { status: 204, headers });
 }
 
-// --- GET handler ---
+// GET handler - handles both playlist and .ts segment proxied requests
 export async function GET(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
   const corsHeaders = getCorsHeaders(origin);
@@ -92,31 +93,31 @@ export async function GET(req: NextRequest) {
   try {
     const { pathname, searchParams } = req.nextUrl;
 
-    // --- TS Segment Proxy ---
+    // If the request is for a .ts segment (catch-all route puts segment into pathname)
     if (pathname.endsWith(".ts")) {
       const tsFileName = pathname.split("/").pop();
       if (!tsFileName) {
         return new Response("Not Found", { status: 404, headers: corsHeaders });
       }
+
       const isFreeSegment = isPublicSegment(tsFileName);
 
+      // If not public, require token (either query token or Authorization header)
       if (!isFreeSegment) {
-        // Require token for non-public segments
         let token = searchParams.get("token");
         if (!token) {
           const authHeader = req.headers.get("authorization");
-          if (authHeader && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
-          }
+          if (authHeader && authHeader.startsWith("Bearer ")) token = authHeader.substring(7);
         }
         if (!token) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
         try {
           await getAuth().verifyIdToken(token);
-        } catch {
+        } catch (err) {
           return new Response("Unauthorized", { status: 401, headers: corsHeaders });
         }
       }
 
+      // Proxy the .ts file from your protected origin (Basic auth)
       const FOLDER = "pbic7i";
       const videoUrl = `https://www.richdatatech.com/videos/${FOLDER}/${tsFileName}`;
       const username = process.env.CPANEL_USERNAME!;
@@ -142,7 +143,7 @@ export async function GET(req: NextRequest) {
       return new Response(tsRes.body, { status: tsRes.status, headers });
     }
 
-    // --- Playlist / MP4 Proxy ---
+    // Otherwise treat it as a playlist / mp4 proxy
     const courseId = searchParams.get("courseId") || "";
     const lessonId = searchParams.get("lessonId") || "";
     const ext = searchParams.get("ext") || ".m3u8";
@@ -150,12 +151,9 @@ export async function GET(req: NextRequest) {
 
     if (!token) {
       const authHeader = req.headers.get("authorization");
-      if (authHeader && authHeader.startsWith("Bearer ")) {
-        token = authHeader.substring(7);
-      }
+      if (authHeader && authHeader.startsWith("Bearer ")) token = authHeader.substring(7);
     }
 
-    // Allow free demo playlist without token (demo1–demo100)
     const isFreePlaylist = isPublicPlaylist(courseId, lessonId, ext);
 
     if (!isFreePlaylist) {
@@ -164,7 +162,7 @@ export async function GET(req: NextRequest) {
       }
       try {
         await getAuth().verifyIdToken(token);
-      } catch {
+      } catch (err) {
         return new Response("Unauthorized", { status: 401, headers: corsHeaders });
       }
     }
@@ -189,16 +187,18 @@ export async function GET(req: NextRequest) {
       return new Response("Video not found", { status: 404, headers: corsHeaders });
     }
 
-    // --- Playlist rewriting for protected content ---
+    // If this is a protected m3u8, rewrite TS references to include token so client can proxy them
     if (ext === ".m3u8" && !isFreePlaylist) {
-      const rewrittenPlaylist = await rewritePlaylistWithToken(videoRes, token!);
+      // Ensure token exists
+      if (!token) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+      const rewrittenPlaylist = await rewritePlaylistWithToken(videoRes, token);
       const headers = new Headers(corsHeaders);
       headers.set("Content-Type", "application/x-mpegURL");
       headers.set("Cache-Control", "no-store");
       return new Response(rewrittenPlaylist, { status: 200, headers });
     }
 
-    // --- Direct pass-through for public playlist or other files ---
+    // Otherwise pass-through (public playlist or mp4)
     const headers = new Headers(corsHeaders);
     headers.set("Content-Type", getContentType(file));
     if (videoRes.headers.get("content-length")) headers.set("Content-Length", videoRes.headers.get("content-length")!);
@@ -209,6 +209,6 @@ export async function GET(req: NextRequest) {
     return new Response(videoRes.body, { status: videoRes.status, headers });
   } catch (err) {
     console.error("secure-video proxy error:", err);
-    return new Response("Server error", { status: 500, headers: getCorsHeaders(origin) });
+    return new Response("Server error", { status: 500, headers: getCorsHeaders(req.headers.get("origin") || "") });
   }
 }
