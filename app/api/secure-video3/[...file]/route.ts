@@ -28,19 +28,28 @@ const allowedOrigins = [
 ];
 
 function getCorsHeaders(origin?: string) {
-  // If origin is allowed, echo it; otherwise fall back to first allowed origin (safe fallback for testing)
-  const safeOrigin = allowedOrigins.includes(origin ?? "") ? origin : allowedOrigins[0];
-  return {
-    "Access-Control-Allow-Origin": safeOrigin || "*",
+  console.log("🔍 CORS Debug - Received origin:", origin);
+  console.log("🔍 CORS Debug - Allowed origins:", allowedOrigins);
+  
+  // Check if origin is in allowed list
+  const isAllowed = origin && allowedOrigins.includes(origin);
+  console.log("🔍 CORS Debug - Origin allowed:", isAllowed);
+  
+  // Use the requesting origin if allowed, otherwise use a safe fallback
+  const safeOrigin = isAllowed ? origin : allowedOrigins[0];
+  console.log("🔍 CORS Debug - Safe origin:", safeOrigin);
+  
+  const headers = {
+    "Access-Control-Allow-Origin": safeOrigin,
     "Access-Control-Allow-Methods": "GET, OPTIONS",
-    // Allow Authorization because we send Bearer token; allow Range for byte requests; Accept for some clients
     "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept, Range, X-Requested-With",
     "Access-Control-Max-Age": "600",
-    // If you will use credentials later, keep this true and ensure you echo origin (not '*')
     "Access-Control-Allow-Credentials": "true",
-    // Prevent CDN from serving a single-origin response to multiple origins
     "Vary": "Origin",
   } as Record<string, string>;
+  
+  console.log("🔍 CORS Debug - Headers being sent:", headers);
+  return headers;
 }
 
 // Helpers (same logic as your original)
@@ -81,13 +90,16 @@ async function rewritePlaylistWithToken(playlistRes: Response, token: string) {
 // OPTIONS handler - always return CORS headers and 204
 export async function OPTIONS(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
+  console.log("🔍 OPTIONS request from origin:", origin);
   const headers = getCorsHeaders(origin);
+  console.log("🔍 OPTIONS response headers:", headers);
   return new Response(null, { status: 204, headers });
 }
 
 // GET handler - handles both playlist and .ts segment proxied requests
 export async function GET(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
+  console.log("🔍 GET request from origin:", origin);
   const corsHeaders = getCorsHeaders(origin);
 
   try {
