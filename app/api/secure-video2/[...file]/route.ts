@@ -1,3 +1,11 @@
+/* Server: Next.js API route for secure HLS proxy
+   Fixes applied:
+   - Added missing origins (richdatatech.vercel.app / richdatatech.com)
+   - Hardened CORS: if Origin is present but not allowed we return 403 (avoid returning a different origin header that causes browser CORS failures)
+   - Expose Range/Content-Range where appropriate
+   - Minor header improvements (Vary: Origin)
+*/
+
 export const runtime = "nodejs";
 
 import { initializeApp, cert, getApps } from "firebase-admin/app";
@@ -15,20 +23,35 @@ if (!getApps().length) {
   });
 }
 
+// --- WHITELISTED ORIGINS ---
+// Added the vercel host(s) and site domains commonly used by the client.
+// If you serve the client from other domains add them here.
 const allowedOrigins = [
   "https://course2-f1bdb.web.app",
   "https://www.course2-f1bdb.web.app",
   "http://localhost:3000",
   "https://www.richdatatech.com",
+  "https://richdatatech.com",
+  "https://richdatatech.vercel.app",
+  "https://www.richdatatech.vercel.app"
 ];
 
-function getCorsHeaders(origin?: string) {
-  const safeOrigin = allowedOrigins.includes(origin ?? "") ? origin : allowedOrigins[0];
-  return {
-    "Access-Control-Allow-Origin": safeOrigin,
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-  } as Record<string, string>;
+function buildCorsHeaders(origin?: string) {
+  const headers: Record<string, string> = {
+    "Vary": "Origin",
+    "Access-Control-Allow-Methods": "GET, OPTIONS, HEAD",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, Range",
+    // Expose content-range so HLS clients can handle partial content if necessary
+    "Access-Control-Expose-Headers": "Content-Range, Content-Length, Accept-Ranges"
+  };
+  if (origin && allowedOrigins.includes(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+    headers["Access-Control-Allow-Credentials"] = "true";
+  } else if (!origin) {
+    // server-to-server requests (no origin) - default to first allowed origin
+    headers["Access-Control-Allow-Origin"] = allowedOrigins[0];
+  }
+  return headers;
 }
 
 // --- PUBLIC/PROTECTED LOGIC ---
@@ -64,7 +87,7 @@ async function rewritePlaylistWithToken(playlistRes: Response, token: string) {
   const tokenParam = `token=${token}`;
   // Append token to every .ts segment URI (if not already present)
   return playlistText.replace(
-    /([a-zA-Z0-9_-]+\.ts)(\?[^ \n\r]*)?/g,
+    /([a-zA-Z0-9_\\-]+\\.ts)(\\?[^ \\n\\r]*)?/g,
     (match, p1, p2) => {
       if (p2 && p2.includes('token=')) return match;
       return `${p1}${p2 ? p2 + '&' : '?'}${tokenParam}`;
@@ -75,13 +98,22 @@ async function rewritePlaylistWithToken(playlistRes: Response, token: string) {
 // --- OPTIONS handler ---
 export async function OPTIONS(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
-  return new Response(null, { status: 204, headers: getCorsHeaders(origin) });
+  // If origin is present and not allowed, reject preflight
+  if (origin && !allowedOrigins.includes(origin)) {
+    return new Response("Origin not allowed", { status: 403 });
+  }
+  const headers = buildCorsHeaders(origin);
+  return new Response(null, { status: 204, headers });
 }
 
 // --- GET handler ---
 export async function GET(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
-  const corsHeaders = getCorsHeaders(origin);
+  // If Origin header exists and it's not in whitelist, reject early to avoid invalid CORS header echo.
+  if (origin && !allowedOrigins.includes(origin)) {
+    return new Response("Origin not allowed", { status: 403 });
+  }
+  const corsHeaders = buildCorsHeaders(origin);
 
   try {
     const { pathname, searchParams } = req.nextUrl;
@@ -203,6 +235,6 @@ export async function GET(req: NextRequest) {
     return new Response(videoRes.body, { status: videoRes.status, headers });
   } catch (err) {
     console.error("secure-video proxy error:", err);
-    return new Response("Server error", { status: 500, headers: getCorsHeaders(origin) });
+    return new Response("Server error", { status: 500, headers: buildCorsHeaders(origin) });
   }
 }

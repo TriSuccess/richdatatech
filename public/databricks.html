@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paid Course – RichDataTech</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <link href="https://vjs.zencdn.net/8.23.4/video-js.css" rel="stylesheet" />
+  <script src="https://vjs.zencdn.net/8.23.4/video.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="header">
+    <div class="logo">
+      <a href="index.html">
+        <img src="https://www.richdatatech.com/images/richdatatech.png" alt="RichDataTech Logo">
+      </a>
+    </div>
+    <nav class="nav-links">
+      <a href="powerbi.html">Power BI</a>
+      <a href="courses.html">Courses</a>
+      <a href="aipowertips.html">AI Power Tips</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+    <div class="auth-buttons">
+      <button id="open-auth-btn">Login / Register</button>
+      <span id="logged-in-span" class="hidden"></span>
+      <span id="status-span" class="hidden"></span>
+    </div>
+  </div>
+</header>
+<main>
+  <div id="course-content"></div>
+</main>
+<footer style="background:#23272a; color:#fff; padding:38px 0 18px 0;">
+  <div style="max-width:950px; margin:0 auto;">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:32px;align-items:flex-start;justify-items:center;text-align:center;" class="footer-table">
+      <div>
+        <div style="font-size:0.97rem; color:#d1d5db; padding-left:14px; padding-right:14px;">
+          Advance your future with premium courses, AI tools, and valuable resources.
+        </div>
+      </div>
+      <div>
+        <div style="font-weight:600; font-size:1.09rem; margin-bottom:7px;">Quick Links</div>
+        <ul style="list-style:none; padding:0; margin:0; font-size:0.97rem;">
+          <li style="margin-bottom:4px;"><a href="powerbi.html" style="color:#fff; text-decoration:none;">Power BI</a></li>
+          <li style="margin-bottom:4px;"><a href="aitools.html" style="color:#fff; text-decoration:none;">AI Tools</a></li>
+          <li style="margin-bottom:4px;"><a href="courses.html" style="color:#fff; text-decoration:none;">All Courses</a></li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-weight:600; font-size:1.09rem; margin-bottom:7px;">Follow Us</div>
+        <div style="margin-bottom:10px;">
+            <div style="margin-bottom:10px;">
+           <a href="https://www.youtube.com/channel/UClGGQ59Z_VawCYuElS1dJ2A" target="_blank" title="YouTube" style="margin:0 7px; display:inline-block;">
+    <svg width="26" height="26" viewBox="0 0 48 48">
+      <path fill="#999" d="M44.8 13.8c-.5-2-2.1-3.6-4-4.1C37.1 8.5 24 8.5 24 8.5s-13.1 0-16.8 1.2c-1.9.5-3.5 2.1-4 4.1C2.5 17.5 2.5 24 2.5 24s0 6.5.7 10.2c.5 2 2.1 3.6 4 4.1C10.9 39.5 24 39.5 24 39.5s13.1 0 16.8-1.2c1.9-.5 3.5-2.1 4-4.1.7-3.7.7-10.2.7-10.2s0-6.5-.7-10.2z"/>
+      <polygon fill="#fff" points="20,31 32,24 20,17"/>
+    </svg>
+  </a>
+          <a href="https://www.instagram.com/richdatatech?igsh=MWl0eHdoZGdoeWVxeA==" target="_blank" title="Instagram" style="margin:0 7px; display:inline-block;">
+            <svg width="30" height="30" viewBox="0 0 448 512"><path fill="#999" d="M224 202.66A53.34 53.34 0 1 0 277.34 256 53.38 53.38 0 0 0 224 202.66zm124.71-41a54 54 0 0 0-30.37-30.37C286.82 118.09 256 112 224 112s-62.82 6.09-94.34 19.29a54 54 0 0 0-30.37 30.37C118.09 161.18 112 192 112 224s6.09 62.82 19.29 94.34a54 54 0 0 0 30.37 30.37C161.18 393.91 192 400 224 400s62.82-6.09 94.34-19.29a54 54 0 0 0 30.37-30.37C393.91 286.82 400 256 400 224s-6.09-62.82-19.29-94.34z"/></svg>
+          </a>
+          <a href="https://www.facebook.com/profile.php?id=61581771099083" target="_blank" title="Facebook" style="margin:0 7px; display:inline-block;">
+            <svg width="26" height="26" viewBox="0 0 320 512"><path fill="#999" d="M279.14 288l14.22-92.66h-88.91V136.89c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S264.43 0 225.36 0c-73.22 0-121.26 44.38-121.26 124.72V195.3H22.89V288h81.21v224h100.2V288z"/></svg>
+          </a>
+        </div>
+        <div style="font-size:0.99rem; margin-top:5px;">
+          <span>Email:</span> <a href="mailto:rich@richdatatech.com" style="color:#fff; text-decoration:underline;">rich@richdatatech.com</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center; margin-top:18px; font-size:0.9rem; color:#b3c2e0; border-top:1px solid #2a4365; padding-top:10px;">
+    © <span id="year"></span> RichDataTech. All rights reserved.
+  </div>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</footer>
+<div id="auth-modal">
+  <div class="modal-box">
+    <button id="close-auth" class="close-btn" title="Close">&times;</button>
+    <h2 id="auth-title" style="font-size:1.22rem;font-weight:600;margin-bottom:1rem;text-align:center;">Login</h2>
+    <input id="email-input" type="email" placeholder="Email" autocomplete="username" />
+    <input id="password-input" type="password" placeholder="Password" autocomplete="current-password" />
+    <button id="action-btn" style="background:#0A699E;color:#fff;width:100%;border-radius:6px;padding:10px 0;margin-bottom:8px;font-weight:600;">Login</button>
+    <a href="#" id="forgot-pass" style="color:#0573ff;font-size:0.91rem;display:block;text-align:center;margin-bottom:10px;">Forgot password?</a>
+    <p id="toggle-link" style="font-size:0.91rem;text-align:center;color:#555;margin-bottom:0;">
+      Don’t have an account? <a href="#" style="color:#0573ff;text-decoration:underline;">Register here</a>
+    </p>
+    <div style="margin-top:18px;border-top:1px solid #e5e7eb;padding-top:12px;">
+      <button id="google-login" style="background:#4285f4;color:#fff;width:100%;border-radius:6px;padding:10px 0;margin-bottom:8px;font-weight:600;">Continue with Google</button>
+      <button id="github-login" style="background:#23272a;color:#fff;width:100%;border-radius:6px;padding:10px 0;font-weight:600;">Continue with GitHub</button>
+    </div>
+    <p id="auth-message" style="text-align:left;font-size:10px;margin-top:0px;color:green;"></p>
+  </div>
+</div>
+
+<script type="module">
+// ===== EDIT THESE AT TOP FOR CONVENIENCE =====
+const courseIdFree = "demo"; // stream
+const lessonIdFree = 1;
+const extFree = ".m3u8";
+const totalLessonsFree = 10;
+
+const courseIdPaid = "powerbi"; // stream
+const lessonIdPaid = 1;
+const extPaid = ".m3u8";
+const totalLessonsPaid = 8;
+// =============================================
+
+// Firebase setup
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signOut,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  sendPasswordResetEmail, GoogleAuthProvider, GithubAuthProvider,
+  signInWithPopup
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, onSnapshot, setDoc, collection, addDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// Firebase Config 
+const firebaseConfig = {
+  apiKey: "AIzaSyBorPU13tVHj-o-28ADUkrXE944GIWhGOI",
+  authDomain: "course2-f1bdb.firebaseapp.com",
+  projectId: "course2-f1bdb",
+  storageBucket: "course2-f1bdb.appspot.com",
+  messagingSenderId: "954972853845",
+  appId: "1:954972853845:web:8bb39ddce360654214e6dc"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const COURSE_COLLECTION = "course2";
+const STRIPE_PRICE_ID = "price_1SI39SJOLIr6wNsm0X9paTaI";
+
+let isRegisterMode = false;
+let unsubscribeAccess = null;
+
+// UI elements
+const openAuthBtn = document.getElementById("open-auth-btn");
+const closeAuth = document.getElementById("close-auth");
+const authModal = document.getElementById("auth-modal");
+const authTitle = document.getElementById("auth-title");
+const actionBtn = document.getElementById("action-btn");
+const toggleLink = document.querySelector("#toggle-link a");
+const authMessage = document.getElementById("auth-message");
+const forgotPass = document.getElementById("forgot-pass");
+const loggedInSpan = document.getElementById("logged-in-span");
+const statusSpan = document.getElementById("status-span");
+const emailInput = document.getElementById("email-input");
+const passwordInput = document.getElementById("password-input");
+
+// Modal logic (unchanged)
+function showModal() { authModal.classList.add("active"); }
+function hideModal() { authModal.classList.remove("active"); authMessage.textContent = ""; }
+
+openAuthBtn.addEventListener("click", (e) => {
+  if (openAuthBtn.textContent === "Logout") {
+    showLoggedInSpan("Logged Out!");
+    setTimeout(() => {
+      signOut(auth).then(() => {
+        location.reload();
+      });
+    }, 400); // Wait 4s before actually logging out and reloading
+  } else {
+    showModal();
+  }
+});
+
+closeAuth.addEventListener("click", hideModal);
+window.addEventListener("mousedown", (e) => {
+  if (authModal.classList.contains("active") && e.target === authModal) hideModal();
+});
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && authModal.classList.contains("active")) hideModal();
+});
+
+function showMsg(msg, color="green") {
+  authMessage.textContent = msg;
+  authMessage.style.color = color;
+  setTimeout(()=>authMessage.textContent="",4000);
+}
+
+// Show/hide logged-in message below button and auto-hide after 4s
+function showLoggedInSpan(msg) {
+  loggedInSpan.textContent = msg;
+  loggedInSpan.classList.remove("hidden");
+  clearTimeout(showLoggedInSpan._timer);
+  showLoggedInSpan._timer = setTimeout(() => {
+    loggedInSpan.classList.add("hidden");
+  }, 4000);
+}
+
+// Toggle login/register
+toggleLink.addEventListener("click", e => {
+  e.preventDefault();
+  isRegisterMode = !isRegisterMode;
+  authTitle.textContent = isRegisterMode ? "Register" : "Login";
+  actionBtn.textContent = isRegisterMode ? "Register" : "Login";
+  toggleLink.innerHTML = isRegisterMode
+    ? `Already have an account? <a href="#" style="color:#0573ff;text-decoration:underline;">Login</a>`
+    : `Don’t have an account? <a href="#" style="color:#0573ff;text-decoration:underline;">Register here</a>`;
+});
+[emailInput, passwordInput].forEach(input => {
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      actionBtn.click();
+    }
+  });
+});
+actionBtn.addEventListener("click", async () => {
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+  if (!email || !password) return showMsg("Enter email & password", "red");
+  try {
+    if (isRegisterMode) {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await ensureUserRecord(cred.user);
+      showMsg("Registered successfully!");
+      showLoggedInSpan(`Welcome! ${cred.user.email}`);
+    } else {
+      await signInWithEmailAndPassword(auth, email, password);
+      showMsg("Logged in!");
+      showLoggedInSpan(`Welcome!${email}`);
+    }
+    hideModal();
+  } catch (err) { showMsg(err.message, "red"); }
+});
+forgotPass.addEventListener("click", async (e) => {
+  e.preventDefault();
+  const email = emailInput.value.trim();
+  if (!email) return showMsg("Enter your email first", "red");
+  try {
+    await sendPasswordResetEmail(auth, email);
+    showMsg("Password reset email sent!");
+  } catch (err) { showMsg(err.message, "red"); }
+});
+
+const googleBtn = document.getElementById("google-login");
+const githubBtn = document.getElementById("github-login");
+const googleProvider = new GoogleAuthProvider();
+const githubProvider = new GithubAuthProvider();
+googleBtn.addEventListener("click", ()=>handleOAuthLogin(googleProvider));
+githubBtn.addEventListener("click", ()=>handleOAuthLogin(githubProvider));
+
+async function handleOAuthLogin(provider) {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    await ensureUserRecord(result.user);
+    hideModal();
+    showLoggedInSpan(`Welcome back! ${result.user.email}`);
+  } catch (err) { showMsg(err.message, "red"); }
+}
+
+
+async function ensureUserRecord(user) {
+  const userRef = doc(db, "course2", user.uid);
+  const snap = await getDoc(userRef);
+  if (!snap.exists()) {
+    // Create purchases map with paid1...paid10 all false
+    const purchases = {};
+    for (let i = 1; i <= 10; i++) purchases[`paid${i}`] = false;
+    await setDoc(userRef, {
+      email: user.email,
+      createdAt: new Date(),
+      provider: user.providerData[0].providerId,
+      purchases 
+    });
+  }
+}
+
+
+
+
+// Video.js and HLS.js are loaded from CDN at the top
+function getLessonProgressHTML(current, total) {
+  const percent = Math.round((current / total) * 100);
+  return `
+    <div class="progress-bar-row">
+      <span class="progress-bar-label">Lesson: ${current}/${total}</span>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" style="width:${percent}%"></div>
+      </div>
+      <span class="progress-bar-percentage">${percent}% Completed</span>
+    </div>
+  `;
+}
+
+function renderFreeContent() {
+  const freeVideoSrc = `https://richdatatech.vercel.app/api/secure-video/playlist?courseId=${courseIdFree}&lessonId=${lessonIdFree}&ext=${extFree}`;
+  document.getElementById("course-content").innerHTML = `
+    <h4 style="color:#fff;text-align:center;margin-bottom:25px;font-size:2rem;font-weight:bold;">🔓 Free Power BI Lesson ${lessonIdFree} Preview</h4>
+    <div class="video-container" style="margin:0 auto 18px auto;max-width:1000px;width:100%;">
+      <video id="free-video"
+        class="video-js vjs-default-skin"
+        style="width:1000px;max-width:100%;border-radius:13px;display:block;margin:0 auto;box-shadow:0 4px 18px rgba(10,105,158,0.11);"
+        controls preload="auto" playsinline>
+      </video>
+    </div>
+    <div class="course-nav" style="display:flex;justify-content:space-between;align-items:center;max-width:1000px;margin:18px auto 26px auto;width:100%;">
+      <a href="../courses.html" class="nav-btn">← Back</a>
+      <h2 style="color:#fff;font-size:1.3rem;margin:0;text-align:center;font-weight:600;">Lesson ${lessonIdFree} Preview</h2>
+      <a href="powerbi1.html" class="nav-btn">Next →</a>
+    </div>
+    <div class="video-boxes-row" style="display:flex;flex-wrap:wrap;gap:10px;max-width:1000px;margin:0 auto 48px auto;">
+      <div class="video-box" style="flex:1 1 330px;background:#fff;border-radius:12px;border:1.5px solid #e5e7eb;box-shadow:0 2px 10px rgba(10,105,158,0.04);padding:30px 20px 28px 20px;margin-top:0;box-sizing:border-box;min-width:0;">
+        <h3 style="color:#0A699E;font-size:1.2rem;margin-bottom:0.7rem;">Free Preview: Power BI Lesson ${lessonIdFree}</h3>
+        <p>This is a <strong style="color:#0A699E;">free preview</strong> of our Power BI beginner course.<br>Enjoy the introductory tips and see what you’ll unlock as a member.</p>
+        <ul style="margin-top:1.1rem;color:#111;">
+          <li>How to import data into Power BI</li>
+          <li>Basic Power Query steps</li>
+          <li>Building your first visual</li>
+        </ul>
+      </div>
+      <div class="video-box" style="flex:1 1 330px;background:#fff;border-radius:12px;border:1.5px solid #0A699E;box-shadow:0 2px 10px rgba(10,105,158,0.04);padding:30px 20px 28px 20px;margin-top:0;box-sizing:border-box;min-width:0;">
+        <h3 style="color:#0A699E;margin-bottom:0.7rem;text-align:center;">Unlock Full Lesson</h3>
+        <p style="color:#444;margin-bottom:1.2rem;text-align:center;">
+          Get full access to all premium lessons and resources by upgrading now!
+        </p>
+        <button id="buy-now-btn" class="buy-now-btn">Buy Now to Unlock</button>
+        <p style="margin-top:0.55rem;text-align:center;font-size:12px;color:#888;">One-time payment, instant access.</p>
+      </div>
+    </div>
+  `;
+  // Setup HLS video player for free demo
+  if (window.videojs && window.videojs.getPlayer) {
+    try { const existing = window.videojs.getPlayer("free-video"); if (existing) existing.dispose(); } catch (e) {}
+  } else if (window.videojs && window.videojs.players && window.videojs.players["free-video"]) {
+    try { window.videojs.players["free-video"].dispose(); } catch (e) {}
+  }
+  const freePlayer = window.videojs("free-video", {
+    fluid: true,
+    autoplay: true,
+    controls: true,
+    preload: "auto"
+  });
+  const videoEl = freePlayer.el().querySelector("video");
+  freePlayer.muted(false);
+  if (window.Hls && !window.videojs.browser.IS_SAFARI) {
+    const hls = new window.Hls();
+    hls.loadSource(freeVideoSrc);
+    hls.attachMedia(videoEl);
+  } else {
+    freePlayer.src({ src: freeVideoSrc, type: "application/x-mpegURL" });
+  }
+  freePlayer.ready(() => {
+    freePlayer.muted(false);
+    const playPromise = freePlayer.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {});
+    }
+  });
+  videoEl.addEventListener("contextmenu", e => e.preventDefault());
+  setTimeout(() => {
+    const buyBtn = document.getElementById("buy-now-btn");
+    if (buyBtn) buyBtn.onclick = typeof handleStripeCheckout === "function"
+      ? handleStripeCheckout
+      : () => alert("Payment not wired up");
+  }, 0);
+}
+
+async function showPaidVideoAndContent() {
+  const user = auth.currentUser;
+  if (!user) return;
+  const idToken = await user.getIdToken();
+  const paidVideoSrc = `https://richdatatech.vercel.app/api/secure-video/playlist?courseId=${courseIdPaid}&lessonId=${lessonIdPaid}&ext=${extPaid}&token=${idToken}`;
+  document.getElementById("course-content").innerHTML = `
+    <h4 style="color:#fff;text-align:center;margin-bottom:25px;font-size:2rem;font-weight:bold;">🎓 Paid Power BI Lesson ${lessonIdPaid}</h4>
+    <div class="video-container" style="margin:0 auto 18px auto;max-width:1000px;width:100%;">
+      <video id="secure-video"
+        class="video-js vjs-default-skin"
+        style="width:1000px;max-width:100%;border-radius:13px;display:block;margin:0 auto;box-shadow:0 4px 18px rgba(10,105,158,0.11);"
+        controls preload="auto" playsinline>
+      </video>
+      ${getLessonProgressHTML(lessonIdPaid, totalLessonsPaid)}
+    </div>
+    <div class="course-nav" style="display:flex;justify-content:space-between;align-items:center;max-width:1000px;margin:18px auto 26px auto;width:100%;">
+      <a href="../courses.html" class="nav-btn">← Back</a>
+      <h2 style="color:#fff;font-size:1.3rem;margin:0;text-align:center;font-weight:600;">Lesson ${lessonIdPaid}</h2>
+      <a href="powerbi1.html" class="nav-btn">Next →</a>
+    </div>
+    <div class="video-boxes-row" style="display:flex;flex-wrap:wrap;gap:10px;max-width:1000px;margin:0 auto 48px auto;">
+      <div class="video-box" style="flex:1 1 330px;background:#fff;border-radius:12px;border:1.5px solid #e5e7eb;box-shadow:0 2px 10px rgba(10,105,158,0.04);padding:30px 20px 28px 20px;margin-top:0;box-sizing:border-box;min-width:0;">
+        <h3 style="color:#0A699E;font-size:1.2rem;margin-bottom:0.7rem;">Paid Power BI Lesson ${lessonIdPaid}</h3>
+        <p>This is a <strong style="color:#16a34a;">members-only</strong> lesson in the Power BI beginner course.<br>You have full access to the lesson video and content!</p>
+      </div>
+      <div class="video-box" style="flex:1 1 330px;background:#fff;border-radius:12px;border:1.5px solid #0A699E;box-shadow:0 2px 10px rgba(10,105,158,0.04);padding:30px 20px 28px 20px;margin-top:0;box-sizing:border-box;min-width:0;">
+        <h3 style="color:#0A699E;margin-bottom:0.7rem;">Lesson Focus</h3>
+        <ul style="margin-top:1.1rem;color:#111;">
+          <li>Loading Excel and CSV data into Power BI</li>
+          <li>Basic Power Query cleanup</li>
+          <li>Simple visuals and charts</li>
+          <li>Saving your first report</li>
+        </ul>
+      </div>
+    </div>
+  `;
+  // Setup paid HLS video player
+  if (window.videojs && window.videojs.getPlayer) {
+    try { const existing = window.videojs.getPlayer("secure-video"); if (existing) existing.dispose(); } catch (e) {}
+  } else if (window.videojs && window.videojs.players && window.videojs.players["secure-video"]) {
+    try { window.videojs.players["secure-video"].dispose(); } catch (e) {}
+  }
+  const paidPlayer = window.videojs("secure-video", {
+    fluid: true,
+    autoplay: true,
+    controls: true,
+    preload: "auto"
+  });
+  const videoEl = paidPlayer.el().querySelector("video");
+  paidPlayer.muted(false);
+  if (window.Hls && !window.videojs.browser.IS_SAFARI) {
+    const hls = new window.Hls();
+    hls.loadSource(paidVideoSrc);
+    hls.attachMedia(videoEl);
+  } else {
+    paidPlayer.src({ src: paidVideoSrc, type: "application/x-mpegURL" });
+  }
+  paidPlayer.ready(() => {
+    paidPlayer.muted(false);
+    const playPromise = paidPlayer.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {});
+    }
+  });
+  videoEl.addEventListener("contextmenu", e => e.preventDefault());
+}
+
+// Stripe Extension checkout logic (NO API CALL!)
+async function handleStripeCheckout() {
+  const user = auth.currentUser;
+  if (!user) return alert("You must log in to purchase.");
+
+  const checkoutSessionsRef = collection(db, "customers", user.uid, "checkout_sessions");
+  const docRef = await addDoc(checkoutSessionsRef, {
+    price: STRIPE_PRICE_ID,
+    mode: "payment",
+    success_url: window.location.href,
+    cancel_url: window.location.href,
+    metadata: { unlock_key: "paid1" }
+  });
+
+  onSnapshot(docRef, (snap) => {
+    const data = snap.data();
+    if (data?.url) {
+      window.location.assign(data.url);
+    } else if (data?.error) {
+      alert("Stripe error: " + data.error.message);
+    }
+  });
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    openAuthBtn.textContent = "Logout";
+    showLoggedInSpan("Welcome back!");
+    listenForAccess(user.uid);
+  } else {
+    openAuthBtn.textContent = "Login / Register";
+    if (!loggedInSpan.classList.contains("hidden")) {
+      showLoggedInSpan("Logged Out");
+    }
+    if (unsubscribeAccess) unsubscribeAccess();
+    renderFreeContent();
+  }
+});
+
+function listenForAccess(uid) {
+  if (unsubscribeAccess) unsubscribeAccess();
+  const ref = doc(db, COURSE_COLLECTION, uid);
+  unsubscribeAccess = onSnapshot(ref, (snap) => {
+    if (snap.exists() && snap.data().purchases?.paid1) {
+      showPaidVideoAndContent();
+    } else {
+      renderFreeContent();
+    }
+  });
+}
+
+renderFreeContent();
+</script>
+</body>
+</html>
