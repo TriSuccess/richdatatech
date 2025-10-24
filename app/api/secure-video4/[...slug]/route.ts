@@ -191,8 +191,10 @@ export async function GET(req: NextRequest) {
           const entitled = await requireEntitlement(uid, decoded?.email || null);
           if (!entitled) return new Response("Payment required", { status: 402, headers: corsHeaders });
         } catch (err) {
-          if (DEBUG) console.log("[segment] Firestore entitlement check failed:", err);
-          // If Firestore is broken, still allow access (better UX than blocking)
+          if (DEBUG) console.log("[segment] Firestore entitlement check failed, allowing access anyway:", err);
+          // NOTE: Firestore credentials appear broken on Vercel (DECODER error).
+          // Allowing token-only access for now. Client-side UI gates are still active.
+          // TODO: Fix Firebase private key format on Vercel (ensure real newlines, not \\n)
         }
       }
 
@@ -253,8 +255,10 @@ export async function GET(req: NextRequest) {
         const entitled = await requireEntitlement(uid, decoded?.email || null);
         if (!entitled) return new Response("Payment required", { status: 402, headers: corsHeaders });
       } catch (err) {
-        if (DEBUG) console.log("[playlist] Firestore entitlement check failed:", err);
-        // If Firestore is broken, still allow access (better UX than blocking)
+        if (DEBUG) console.log("[playlist] Firestore entitlement check failed, allowing access anyway:", err);
+        // NOTE: Firestore credentials appear broken on Vercel (DECODER error).
+        // Allowing token-only access for now. Client-side UI gates are still active.
+        // TODO: Fix Firebase private key format on Vercel (ensure real newlines, not \\n)
       }
     }
 
