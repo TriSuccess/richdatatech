@@ -222,13 +222,14 @@ export async function GET(req: NextRequest) {
     if (ext === ".m3u8" && !isFreePlaylist && token) {
       const rewritten = await rewritePlaylistWithToken(videoRes, token);
       const headers = new Headers(corsHeaders);
-      headers.set("Content-Type", "application/x-mpegURL");
+      headers.set("Content-Type", "application/vnd.apple.mpegurl");
       headers.set("Cache-Control", "no-store");
       return new Response(rewritten, { status: 200, headers });
     }
 
     const headers = new Headers(corsHeaders);
-    headers.set("Content-Type", getContentType(file));
+  if (ext === ".m3u8") headers.set("Content-Type", "application/vnd.apple.mpegurl");
+  else headers.set("Content-Type", getContentType(file));
     if (videoRes.headers.get("content-length")) headers.set("Content-Length", videoRes.headers.get("content-length")!);
     if (videoRes.headers.get("content-range")) headers.set("Content-Range", videoRes.headers.get("content-range")!);
     headers.set("Accept-Ranges", "bytes");
