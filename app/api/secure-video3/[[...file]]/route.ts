@@ -8,8 +8,7 @@
  * - Rewrites protected playlists so segment URLs go back to this proxy with token
  * - Returns appropriate CORS headers including exposed range headers
  *
- * Drop this file into your Next.js App Router `app/api/secure-video4/[...slug]/route.ts`
- * and deploy to Vercel. Ensure environment variables are set:
+ * Deploy to Vercel. Ensure environment variables are set:
  * - FIREBASE_PROJECT_ID
  * - FIREBASE_CLIENT_EMAIL
  * - FIREBASE_SERVICE_ACCOUNT_KEY (with \n replaced as real newlines)
@@ -37,7 +36,7 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
-// Allowed origins you trust (adjust as needed)
+// Allowed origins - adjust as needed
 const allowedOrigins = [
   "https://course2-f1bdb.web.app",
   "https://www.course2-f1bdb.web.app",
@@ -58,7 +57,7 @@ function getCorsHeaders(origin?: string) {
     "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept, Range, X-Requested-With",
     "Access-Control-Max-Age": "600",
     "Access-Control-Allow-Credentials": "true",
-    // Expose these headers so clients (HLS players) can read Content-Range / Length
+    // Expose these headers so HLS players can read ranges/lengths
     "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges",
     Vary: "Origin",
   };
@@ -93,8 +92,6 @@ function getContentType(file: string) {
  *   proxy paths (/api/secure-video4/<filename>?token=...), ensuring the player
  *   requests segments through this server.
  * - Relative .ts URIs receive ?token=... appended if not present.
- *
- * Adjust upstreamBase if your original playlist references a different host/path.
  */
 async function rewritePlaylistWithToken(playlistRes: Response, token: string) {
   const playlistText = await playlistRes.text();
@@ -151,13 +148,10 @@ async function requireEntitlement(uid: string) {
       const data = snap.data() as any;
       console.log(`[secure-video4] ${coll}/${uid} => keys: ${Object.keys(data || {}).join(", ")}`);
       const purchases = data?.purchases || data?.metadata || data?.entitlements || data;
-      // check multiple possible shapes
       if ((purchases && purchases.paid1 === true) || (data && data.paid1 === true) || (data?.entitlements?.paid1 === true)) {
         console.log(`[secure-video4] entitlement OK in ${coll}/${uid}`);
         return true;
       }
-      // Also tolerate nested forms like { purchases: { "paid_1": true } } if necessary,
-      // but prefer explicit paid1 key naming from the webhook.
     } catch (e) {
       console.warn(`[secure-video4] error checking ${coll}/${uid}:`, e);
     }
@@ -174,7 +168,6 @@ export async function OPTIONS(req: NextRequest) {
 }
 
 // GET handler - handles playlist (.m3u8), mp4 and .ts segment requests.
-// Route is catch-all, so segments come in here as pathname ending with .ts.
 export async function GET(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
   const corsHeaders = getCorsHeaders(origin);
