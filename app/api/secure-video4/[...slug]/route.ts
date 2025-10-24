@@ -129,6 +129,8 @@ function isTruthyPaid(v: any): boolean {
 async function requireEntitlement(uid: string, email?: string | null) {
   // Accept paid1 from either top-level or purchases.paid1 in any of these collections (UID docs only by default)
   const collectionsToCheck = ["course2", "users", "users_id"];
+  let lastError: any = null;
+  
   for (const coll of collectionsToCheck) {
     try {
       const refUid = db.collection(coll).doc(uid);
@@ -140,9 +142,11 @@ async function requireEntitlement(uid: string, email?: string | null) {
       if (DEBUG) console.log(`[entitlement] ${coll}/${uid} top.paid1=${top} nested.purchases.paid1=${nested}`);
       if (top || nested) return true;
     } catch (e) {
+      lastError = e;
       if (DEBUG) console.log(`[entitlement] error reading ${coll}/${uid}:`, e);
     }
   }
+  
   // Optional: fallback to email-keyed docs when explicitly allowed
   if (ALLOW_EMAIL_DOC_IDS && email) {
     const emailVariants = [email, email.toLowerCase()];
@@ -158,11 +162,16 @@ async function requireEntitlement(uid: string, email?: string | null) {
           if (DEBUG) console.log(`[entitlement] ${coll}/${eid} top.paid1=${etop} nested.purchases.paid1=${enested}`);
           if (etop || enested) return true;
         } catch (ee) {
+          lastError = ee;
           if (DEBUG) console.log(`[entitlement] error reading ${coll}/${eid}:`, ee);
         }
       }
     }
   }
+  
+  // If we got any errors accessing Firestore, throw so caller can decide to allow or deny
+  if (lastError) throw lastError;
+  
   return false;
 }
 
