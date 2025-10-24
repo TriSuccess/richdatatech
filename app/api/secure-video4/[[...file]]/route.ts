@@ -71,13 +71,35 @@ function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext
   return true;
 }
 
+async function rewritePlaylistWithToken(playlistRes: Response, token: string) {
+  const playlistText = await playlistRes.text();
+  const tokenParam = `token=${token}`;
+  // Append token to every .ts segment URI if not already present
+  return playlistText.replace(
+    /([a-zA-Z0-9_\-\/\.]+\.ts)(\?[^ \n\r]*)?/g,
+    (match, p1, p2) => {
+      if (p2 && p2.includes('token=')) return match;
+      return `${p1}${p2 ? p2 + '&' : '?'}${tokenParam}`;
+    }
+  );
+}
+
 async function requireEntitlement(uid: string) {
-  // course2/<uid> with purchases.paid1 === true
-  const ref = db.collection("course2").doc(uid);
-  const snap = await ref.get();
-  if (!snap.exists) return false;
-  const data = snap.data() as any;
-  return !!(data && data.purchases && data.purchases.paid1 === true);
+  // Accept purchases.paid1 === true from one of these collections
+  const collectionsToCheck = ["course2", "users", "users_id"];
+  for (const coll of collectionsToCheck) {
+    try {
+      const ref = db.collection(coll).doc(uid);
+      const snap = await ref.get();
+      if (!snap.exists) continue;
+      const data = snap.data() as any;
+      const purchases = data?.purchases || {};
+      if (purchases && purchases.paid1 === true) return true;
+    } catch (e) {
+      // ignore and continue next collection
+    }
+  }
+  return false;
 }
 
 // OPTIONS handler
@@ -104,11 +126,13 @@ export async function GET(req: NextRequest) {
       let uid: string | null = null;
 
       if (!isFree) {
+        let token: string | null = null;
         const authHeader = req.headers.get("authorization");
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        if (authHeader && authHeader.startsWith("Bearer ")) token = authHeader.substring(7);
+        if (!token) token = searchParams.get("token");
+        if (!token) {
           return new Response("Unauthorized", { status: 401, headers: corsHeaders });
         }
-        const token = authHeader.substring(7);
         let decoded: any;
         try { decoded = await getAuth().verifyIdToken(token); } catch {
           return new Response("Unauthorized", { status: 401, headers: corsHeaders });
@@ -153,13 +177,15 @@ export async function GET(req: NextRequest) {
 
     const isFreePlaylist = isPublicPlaylist(courseId, lessonId, ext);
     let uid: string | null = null;
+    let token: string | null = null;
 
     if (!isFreePlaylist) {
       const authHeader = req.headers.get("authorization");
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      if (authHeader && authHeader.startsWith("Bearer ")) token = authHeader.substring(7);
+      if (!token) token = searchParams.get("token");
+      if (!token) {
         return new Response("Unauthorized", { status: 401, headers: corsHeaders });
       }
-      const token = authHeader.substring(7);
       let decoded: any;
       try { decoded = await getAuth().verifyIdToken(token); } catch {
         return new Response("Unauthorized", { status: 401, headers: corsHeaders });
@@ -190,6 +216,15 @@ export async function GET(req: NextRequest) {
     const videoRes = await fetch(videoUrl, { headers: fetchHeaders });
     if (!videoRes.ok || !videoRes.body) {
       return new Response("Video not found", { status: 404, headers: corsHeaders });
+    }
+
+    // If protected m3u8 and token exists, rewrite TS references to include token query for wider compatibility
+    if (ext === ".m3u8" && !isFreePlaylist && token) {
+      const rewritten = await rewritePlaylistWithToken(videoRes, token);
+      const headers = new Headers(corsHeaders);
+      headers.set("Content-Type", "application/x-mpegURL");
+      headers.set("Cache-Control", "no-store");
+      return new Response(rewritten, { status: 200, headers });
     }
 
     const headers = new Headers(corsHeaders);
