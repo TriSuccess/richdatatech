@@ -9,6 +9,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
+const DEBUG = process.env.DEBUG_SECURE_VIDEO === '1' || process.env.DEBUG_SECURE_VIDEO === 'true';
 
 // --- Firebase Admin Init ---
 if (!getApps().length) {
@@ -84,19 +85,28 @@ async function rewritePlaylistWithToken(playlistRes: Response, token: string) {
   );
 }
 
+function isTruthyPaid(v: any): boolean {
+  if (v === true) return true;
+  if (typeof v === 'string') return /^(true|1|yes|y)$/i.test(v.trim());
+  if (typeof v === 'number') return v === 1;
+  return false;
+}
+
 async function requireEntitlement(uid: string) {
-  // Accept purchases.paid1 === true from one of these collections
+  // Accept paid1 from either top-level or purchases.paid1 in any of these collections (UID docs only)
   const collectionsToCheck = ["course2", "users", "users_id"];
   for (const coll of collectionsToCheck) {
     try {
-      const ref = db.collection(coll).doc(uid);
-      const snap = await ref.get();
-      if (!snap.exists) continue;
-      const data = snap.data() as any;
-      const purchases = data?.purchases || {};
-      if (purchases && purchases.paid1 === true) return true;
+      const refUid = db.collection(coll).doc(uid);
+      const snapUid = await refUid.get();
+      if (!snapUid.exists) { if (DEBUG) console.log(`[entitlement] ${coll}/${uid} not found`); continue; }
+      const data = snapUid.data() as any;
+      const top = isTruthyPaid(data?.paid1);
+      const nested = isTruthyPaid(data?.purchases?.paid1);
+      if (DEBUG) console.log(`[entitlement] ${coll}/${uid} top.paid1=${top} nested.purchases.paid1=${nested}`);
+      if (top || nested) return true;
     } catch (e) {
-      // ignore and continue next collection
+      if (DEBUG) console.log(`[entitlement] error reading ${coll}/${uid}:`, e);
     }
   }
   return false;
@@ -140,7 +150,7 @@ export async function GET(req: NextRequest) {
         uid = decoded?.uid || null;
         if (!uid) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
 
-        const entitled = await requireEntitlement(uid);
+  const entitled = await requireEntitlement(uid);
         if (!entitled) return new Response("Payment required", { status: 402, headers: corsHeaders });
       }
 
@@ -193,7 +203,7 @@ export async function GET(req: NextRequest) {
       uid = decoded?.uid || null;
       if (!uid) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
 
-      const entitled = await requireEntitlement(uid);
+  const entitled = await requireEntitlement(uid);
       if (!entitled) return new Response("Payment required", { status: 402, headers: corsHeaders });
     }
 
