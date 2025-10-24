@@ -1,19 +1,12 @@
 /**
- * app/api/secure-video4/[...slug]/route.ts
+ * Debuggable secure HLS proxy for demo + paid content.
  *
- * Secure HLS proxy for demo + paid content.
- * - Verifies Firebase ID token (from Authorization header or ?token=)
- * - Checks entitlement (purchases.paid1 === true) across common collections
- * - Proxies upstream .m3u8 and .ts files using Basic auth to upstream host
- * - Rewrites protected playlists so segment URLs go back to this proxy with token
- * - Returns appropriate CORS headers including exposed range headers
+ * Deploy this version temporarily to gather diagnostic info:
+ * - It logs token verification and Firestore checks.
+ * - If you call the playlist endpoint with &debug=1 it returns a JSON
+ *   report of which collections/documents exist and whether paid1 === true.
  *
- * Deploy to Vercel. Ensure environment variables are set:
- * - FIREBASE_PROJECT_ID
- * - FIREBASE_CLIENT_EMAIL
- * - FIREBASE_SERVICE_ACCOUNT_KEY (with \n replaced as real newlines)
- * - CPANEL_USERNAME
- * - CPANEL_PASSWORD
+ * IMPORTANT: remove debug=1 / revert to production code after debugging.
  */
 
 import { initializeApp, cert, getApps } from "firebase-admin/app";
@@ -57,7 +50,6 @@ function getCorsHeaders(origin?: string) {
     "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept, Range, X-Requested-With",
     "Access-Control-Max-Age": "600",
     "Access-Control-Allow-Credentials": "true",
-    // Expose these headers so HLS players can read ranges/lengths
     "Access-Control-Expose-Headers": "Content-Length, Content-Range, Accept-Ranges",
     Vary: "Origin",
   };
@@ -86,54 +78,56 @@ function getContentType(file: string) {
   return "application/octet-stream";
 }
 
-/**
- * Rewrite playlist so:
- * - Absolute upstream .ts URLs that point to upstreamBase are rewritten to
- *   proxy paths (/api/secure-video4/<filename>?token=...), ensuring the player
- *   requests segments through this server.
- * - Relative .ts URIs receive ?token=... appended if not present.
- */
+/** Rewrites playlist: absolute upstream .ts => /api/secure-video4/<file>?token=...; relative URIs get ?token appended */
 async function rewritePlaylistWithToken(playlistRes: Response, token: string) {
   const playlistText = await playlistRes.text();
   const tokenParam = `token=${encodeURIComponent(token)}`;
-
-  // Upstream base used by the original playlists on your source host
   const upstreamBase = "https://www.richdatatech.com/videos/";
 
-  // Replace any URI that ends with .ts (absolute or relative)
   const rewritten = playlistText.replace(/([^\s,]+?\.ts)(\?[^ \n\r]*)?/g, (match, uri, qs) => {
-    // If token already present in the querystring, leave as-is
     if ((qs || "").includes("token=")) return match;
-
-    // Try to detect absolute upstream references to rewrite them to proxy
     try {
-      // Use upstreamBase as base so relative URIs can be parsed too
       const maybeUrl = new URL(uri, upstreamBase);
       if (maybeUrl.href.startsWith(upstreamBase)) {
-        // Extract filename and rewrite to proxy endpoint
         const filename = maybeUrl.pathname.split("/").pop();
-        if (filename) {
-          // Proxy path that this route handles
-          return `/api/secure-video4/${encodeURIComponent(filename)}?${tokenParam}`;
-        }
+        if (filename) return `/api/secure-video4/${encodeURIComponent(filename)}?${tokenParam}`;
       }
     } catch (e) {
-      // ignore parse errors and treat as relative below
+      // ignore parse errors
     }
-
-    // Fallback: append token to relative URI
     return `${uri}${qs ? qs + "&" : "?"}${tokenParam}`;
   });
 
   return rewritten;
 }
 
-/**
- * Robust entitlement check:
- * - Check multiple common collections for an entry with doc id === uid
- * - Accept purchases.paid1 === true, data.paid1 === true, or entitlements.paid1 === true
- * - Log findings to Vercel logs for troubleshooting
- */
+/** Return detailed debug info for the given uid across common collections */
+async function checkCollectionsDebug(uid: string) {
+  const collectionsToCheck = ["course2", "users", "users_id", "customers", "stripe_customers"];
+  const out: Record<string, any> = {};
+  for (const coll of collectionsToCheck) {
+    try {
+      const ref = db.collection(coll).doc(uid);
+      const snap = await ref.get();
+      if (!snap.exists) {
+        out[coll] = { exists: false };
+        continue;
+      }
+      const data = snap.data();
+      // Only include a small subset of fields to avoid huge payloads
+      const snippet = JSON.stringify(data, (k, v) => (k && k.length > 250 ? "[truncated]" : v), 2);
+      // Determine whether paid1 present in common shapes
+      const purchases = data?.purchases || data?.metadata || data?.entitlements || data;
+      const paid1 = !!((purchases && purchases.paid1 === true) || (data && data.paid1 === true) || (data?.entitlements?.paid1 === true));
+      out[coll] = { exists: true, paid1, snippet: snippet ? snippet.slice(0, 2000) : null };
+    } catch (err) {
+      out[coll] = { error: String(err) };
+    }
+  }
+  return out;
+}
+
+/** Robust entitlement check used by playback (non-debug) */
 async function requireEntitlement(uid: string) {
   const collectionsToCheck = ["course2", "users", "users_id", "customers", "stripe_customers"];
   console.log(`[secure-video4] requireEntitlement: checking uid=${uid}`);
@@ -160,14 +154,14 @@ async function requireEntitlement(uid: string) {
   return false;
 }
 
-// OPTIONS handler - return CORS headers for preflight
+// OPTIONS handler
 export async function OPTIONS(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
   const headers = getCorsHeaders(origin);
   return new Response(null, { status: 204, headers });
 }
 
-// GET handler - handles playlist (.m3u8), mp4 and .ts segment requests.
+// GET handler
 export async function GET(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
   const corsHeaders = getCorsHeaders(origin);
@@ -179,15 +173,11 @@ export async function GET(req: NextRequest) {
     if (pathname.endsWith(".ts")) {
       const parts = pathname.split("/");
       const tsFileName = parts.pop();
-      if (!tsFileName) {
-        return new Response("Not Found", { status: 404, headers: corsHeaders });
-      }
+      if (!tsFileName) return new Response("Not Found", { status: 404, headers: corsHeaders });
 
       const isFree = isPublicSegment(tsFileName);
-      let uid: string | null = null;
 
       if (!isFree) {
-        // get token from query or Authorization header
         let token: string | null = searchParams.get("token");
         if (!token) {
           const authHeader = req.headers.get("authorization");
@@ -198,16 +188,16 @@ export async function GET(req: NextRequest) {
           return new Response("Unauthorized", { status: 401, headers: corsHeaders });
         }
 
-        // verify token and check entitlement
         let decoded: any;
         try {
           decoded = await getAuth().verifyIdToken(token);
-          uid = decoded?.uid || null;
-          console.log(`[secure-video4] segment token verified uid=${uid} file=${tsFileName}`);
         } catch (err) {
           console.warn("[secure-video4] segment token verification failed:", err);
           return new Response("Unauthorized", { status: 401, headers: corsHeaders });
         }
+
+        const uid = decoded?.uid || null;
+        console.log(`[secure-video4] segment token verified uid=${uid} file=${tsFileName}`);
 
         if (!uid) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
 
@@ -215,8 +205,7 @@ export async function GET(req: NextRequest) {
         if (!entitled) return new Response("Payment required", { status: 402, headers: corsHeaders });
       }
 
-      // Proxy the .ts file from upstream protected host using Basic auth
-      const FOLDER = "pbic7i"; // upstream folder on your origin
+      const FOLDER = "pbic7i";
       const videoUrl = `https://www.richdatatech.com/videos/${FOLDER}/${encodeURIComponent(tsFileName)}`;
       const username = process.env.CPANEL_USERNAME!;
       const password = process.env.CPANEL_PASSWORD!;
@@ -273,6 +262,21 @@ export async function GET(req: NextRequest) {
 
       if (!uid) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
 
+      // If debug=1 is present, return a JSON report of Firestore checks for this uid
+      const debugMode = searchParams.get("debug") === "1";
+      if (debugMode) {
+        console.log(`[secure-video4] DEBUG mode requested for uid=${uid}`);
+        try {
+          const report = await checkCollectionsDebug(uid);
+          const jsonHeaders = new Headers(corsHeaders);
+          jsonHeaders.set("Content-Type", "application/json");
+          return new Response(JSON.stringify({ uid, report }, null, 2), { status: 200, headers: jsonHeaders });
+        } catch (err) {
+          console.error("[secure-video4] debug check failed:", err);
+          return new Response(JSON.stringify({ error: String(err) }), { status: 500, headers: corsHeaders });
+        }
+      }
+
       const entitled = await requireEntitlement(uid);
       if (!entitled) return new Response("Payment required", { status: 402, headers: corsHeaders });
     }
@@ -281,9 +285,8 @@ export async function GET(req: NextRequest) {
       return new Response("Invalid course or lesson", { status: 403, headers: corsHeaders });
     }
 
-    // Upstream file mapping
     const FOLDER = "pbic7i";
-    const file = `${FOLDER}/${courseId}${lessonId}${ext}`; // e.g., pbic7i/powerbi1.m3u8
+    const file = `${FOLDER}/${courseId}${lessonId}${ext}`;
     const videoUrl = `https://www.richdatatech.com/videos/${file}`;
     const username = process.env.CPANEL_USERNAME!;
     const password = process.env.CPANEL_PASSWORD!;
@@ -299,7 +302,6 @@ export async function GET(req: NextRequest) {
       return new Response("Video not found", { status: 404, headers: corsHeaders });
     }
 
-    // If protected m3u8, rewrite segments to proxy + token so the player always hits this proxy
     if (ext === ".m3u8" && !isFreePlaylist) {
       if (!token) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
       const rewritten = await rewritePlaylistWithToken(videoRes, token);
@@ -309,7 +311,6 @@ export async function GET(req: NextRequest) {
       return new Response(rewritten, { status: 200, headers });
     }
 
-    // Otherwise pass-through (public playlist or mp4)
     const headers = new Headers(corsHeaders);
     if (ext === ".m3u8") headers.set("Content-Type", "application/vnd.apple.mpegurl");
     else headers.set("Content-Type", getContentType(file));
