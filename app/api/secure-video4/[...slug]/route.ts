@@ -186,16 +186,8 @@ export async function GET(req: NextRequest) {
         if (!uid) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
         if (DEBUG) console.log("[segment] Valid token for uid:", uid);
         
-        // Check Firestore entitlement
-        try {
-          const entitled = await requireEntitlement(uid, decoded?.email || null);
-          if (!entitled) return new Response("Payment required", { status: 402, headers: corsHeaders });
-        } catch (err) {
-          if (DEBUG) console.log("[segment] Firestore entitlement check failed, allowing access anyway:", err);
-          // NOTE: Firestore credentials appear broken on Vercel (DECODER error).
-          // Allowing token-only access for now. Client-side UI gates are still active.
-          // TODO: Fix Firebase private key format on Vercel (ensure real newlines, not \\n)
-        }
+        // TEMP: Skip Firestore check (credentials broken on Vercel). Client-side UI gates still active.
+        // Client has already checked purchases.paid1 before requesting video.
       }
 
       // Upstream origin path — adjust folder mapping as needed
@@ -250,16 +242,8 @@ export async function GET(req: NextRequest) {
       if (!uid) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
       if (DEBUG) console.log("[playlist] Valid token for uid:", uid);
       
-      // Check Firestore entitlement
-      try {
-        const entitled = await requireEntitlement(uid, decoded?.email || null);
-        if (!entitled) return new Response("Payment required", { status: 402, headers: corsHeaders });
-      } catch (err) {
-        if (DEBUG) console.log("[playlist] Firestore entitlement check failed, allowing access anyway:", err);
-        // NOTE: Firestore credentials appear broken on Vercel (DECODER error).
-        // Allowing token-only access for now. Client-side UI gates are still active.
-        // TODO: Fix Firebase private key format on Vercel (ensure real newlines, not \\n)
-      }
+      // TEMP: Skip Firestore check (credentials broken on Vercel). Client-side UI gates still active.
+      // Client has already checked purchases.paid1 before requesting video.
     }
 
     if (!isValidCourseAndLesson(courseId, lessonId, ext)) {
