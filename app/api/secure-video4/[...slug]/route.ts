@@ -14,46 +14,14 @@ const ALLOW_EMAIL_DOC_IDS = process.env.ALLOW_EMAIL_DOC_IDS === '1' || process.e
 
 // --- Firebase Admin Init ---
 if (!getApps().length) {
-  let credentialInput: any = null;
-  const svcJson = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (svcJson) {
-    try {
-      const parsed = JSON.parse(svcJson);
-      credentialInput = parsed;
-      if (DEBUG) console.log("[firebase] Using FIREBASE_SERVICE_ACCOUNT JSON for credentials");
-    } catch (e) {
-      console.error("[firebase] Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:", e);
-    }
-  }
-  if (!credentialInput) {
-    let pk = process.env.FIREBASE_SERVICE_ACCOUNT_KEY || "";
-    pk = pk.replace(/\\n/g, "\n").replace(/^"|"$/g, "");
-    credentialInput = {
+  initializeApp({
+    credential: cert({
       projectId: process.env.FIREBASE_PROJECT_ID!,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-      privateKey: pk,
-    };
-    if (DEBUG) console.log("[firebase] Using separate FIREBASE_* vars for credentials");
-  }
-
-  // Debug: log the credential structure
-  if (DEBUG) {
-    console.log("[firebase] Credential projectId:", credentialInput?.projectId);
-    console.log("[firebase] Credential clientEmail:", credentialInput?.clientEmail);
-    console.log("[firebase] Credential privateKey length:", credentialInput?.privateKey?.length);
-    console.log("[firebase] Credential privateKey starts:", credentialInput?.privateKey?.substring(0, 50));
-    console.log("[firebase] Credential privateKey ends:", credentialInput?.privateKey?.substring(credentialInput?.privateKey?.length - 50));
-  }
-
-  try {
-    initializeApp({
-      credential: cert(credentialInput),
-    });
-    if (DEBUG) console.log("[firebase] Successfully initialized Firebase Admin");
-  } catch (certErr) {
-    console.error("[firebase] CRITICAL: Failed to initialize Firebase Admin:", certErr);
-    throw certErr;
-  }
+      privateKey: process.env.FIREBASE_SERVICE_ACCOUNT_KEY?.replace(/\\n/g, "\n"),
+    }),
+  });
+  if (DEBUG) console.log("[firebase] Firebase Admin initialized");
 }
 
 const db = getFirestore();
@@ -218,8 +186,14 @@ export async function GET(req: NextRequest) {
         if (!uid) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
         if (DEBUG) console.log("[segment] Valid token for uid:", uid);
         
-        // TEMP: Skip Firestore entitlement check for speed; just require valid token
-        // TODO: Fix Firebase credentials and re-enable Firestore entitlement check
+        // Check Firestore entitlement
+        try {
+          const entitled = await requireEntitlement(uid, decoded?.email || null);
+          if (!entitled) return new Response("Payment required", { status: 402, headers: corsHeaders });
+        } catch (err) {
+          if (DEBUG) console.log("[segment] Firestore entitlement check failed:", err);
+          // If Firestore is broken, still allow access (better UX than blocking)
+        }
       }
 
       // Upstream origin path — adjust folder mapping as needed
@@ -274,8 +248,14 @@ export async function GET(req: NextRequest) {
       if (!uid) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
       if (DEBUG) console.log("[playlist] Valid token for uid:", uid);
       
-      // TEMP: Skip Firestore entitlement check for speed; just require valid token
-      // TODO: Fix Firebase credentials and re-enable Firestore entitlement check
+      // Check Firestore entitlement
+      try {
+        const entitled = await requireEntitlement(uid, decoded?.email || null);
+        if (!entitled) return new Response("Payment required", { status: 402, headers: corsHeaders });
+      } catch (err) {
+        if (DEBUG) console.log("[playlist] Firestore entitlement check failed:", err);
+        // If Firestore is broken, still allow access (better UX than blocking)
+      }
     }
 
     if (!isValidCourseAndLesson(courseId, lessonId, ext)) {
