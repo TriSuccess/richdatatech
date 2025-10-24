@@ -21,6 +21,10 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3000",
   "https://www.richdatatech.com",
+  "https://richdatatech.com",
+  "https://richdatatech.vercel.app",
+  "http://localhost:8000",
+  "http://172.20.10.10:8000",
 ];
 
 function getCorsHeaders(origin?: string) {
