@@ -10,15 +10,34 @@ import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
 const DEBUG = process.env.DEBUG_SECURE_VIDEO === '1' || process.env.DEBUG_SECURE_VIDEO === 'true';
+const ALLOW_EMAIL_DOC_IDS = process.env.ALLOW_EMAIL_DOC_IDS === '1' || process.env.ALLOW_EMAIL_DOC_IDS === 'true';
 
 // --- Firebase Admin Init ---
 if (!getApps().length) {
-  initializeApp({
-    credential: cert({
+  let credentialInput: any = null;
+  const svcJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (svcJson) {
+    try {
+      const parsed = JSON.parse(svcJson);
+      credentialInput = parsed;
+      if (DEBUG) console.log("[firebase] Using FIREBASE_SERVICE_ACCOUNT JSON for credentials");
+    } catch (e) {
+      console.error("[firebase] Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:", e);
+    }
+  }
+  if (!credentialInput) {
+    let pk = process.env.FIREBASE_SERVICE_ACCOUNT_KEY || "";
+    pk = pk.replace(/\\n/g, "\n").replace(/^"|"$/g, "");
+    credentialInput = {
       projectId: process.env.FIREBASE_PROJECT_ID!,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-      privateKey: process.env.FIREBASE_SERVICE_ACCOUNT_KEY?.replace(/\\n/g, "\n"),
-    }),
+      privateKey: pk,
+    };
+    if (DEBUG) console.log("[firebase] Using separate FIREBASE_* vars for credentials");
+  }
+
+  initializeApp({
+    credential: cert(credentialInput),
   });
 }
 
@@ -92,8 +111,8 @@ function isTruthyPaid(v: any): boolean {
   return false;
 }
 
-async function requireEntitlement(uid: string) {
-  // Accept paid1 from either top-level or purchases.paid1 in any of these collections (UID docs only)
+async function requireEntitlement(uid: string, email?: string | null) {
+  // Accept paid1 from either top-level or purchases.paid1 in any of these collections (UID docs only by default)
   const collectionsToCheck = ["course2", "users", "users_id"];
   for (const coll of collectionsToCheck) {
     try {
@@ -107,6 +126,26 @@ async function requireEntitlement(uid: string) {
       if (top || nested) return true;
     } catch (e) {
       if (DEBUG) console.log(`[entitlement] error reading ${coll}/${uid}:`, e);
+    }
+  }
+  // Optional: fallback to email-keyed docs when explicitly allowed
+  if (ALLOW_EMAIL_DOC_IDS && email) {
+    const emailVariants = [email, email.toLowerCase()];
+    for (const coll of collectionsToCheck) {
+      for (const eid of emailVariants) {
+        try {
+          const refEmail = db.collection(coll).doc(eid);
+          const snapEmail = await refEmail.get();
+          if (!snapEmail.exists) { if (DEBUG) console.log(`[entitlement] ${coll}/${eid} not found`); continue; }
+          const edata = snapEmail.data() as any;
+          const etop = isTruthyPaid(edata?.paid1);
+          const enested = isTruthyPaid(edata?.purchases?.paid1);
+          if (DEBUG) console.log(`[entitlement] ${coll}/${eid} top.paid1=${etop} nested.purchases.paid1=${enested}`);
+          if (etop || enested) return true;
+        } catch (ee) {
+          if (DEBUG) console.log(`[entitlement] error reading ${coll}/${eid}:`, ee);
+        }
+      }
     }
   }
   return false;
@@ -147,10 +186,10 @@ export async function GET(req: NextRequest) {
         try { decoded = await getAuth().verifyIdToken(token); } catch {
           return new Response("Unauthorized", { status: 401, headers: corsHeaders });
         }
-        uid = decoded?.uid || null;
+    uid = decoded?.uid || null;
         if (!uid) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
 
-  const entitled = await requireEntitlement(uid);
+  const entitled = await requireEntitlement(uid, decoded?.email || null);
         if (!entitled) return new Response("Payment required", { status: 402, headers: corsHeaders });
       }
 
@@ -200,10 +239,10 @@ export async function GET(req: NextRequest) {
       try { decoded = await getAuth().verifyIdToken(token); } catch {
         return new Response("Unauthorized", { status: 401, headers: corsHeaders });
       }
-      uid = decoded?.uid || null;
+    uid = decoded?.uid || null;
       if (!uid) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
 
-  const entitled = await requireEntitlement(uid);
+  const entitled = await requireEntitlement(uid, decoded?.email || null);
       if (!entitled) return new Response("Payment required", { status: 402, headers: corsHeaders });
     }
 
