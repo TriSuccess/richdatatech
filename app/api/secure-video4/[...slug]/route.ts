@@ -58,13 +58,14 @@ function getContentType(file: string) {
   return "application/octet-stream";
 }
 
+
 function isPublicPlaylist(courseId: string, lessonId: string | number, ext: string) {
   const n = Number(lessonId);
-  return courseId === "demo" && Number.isInteger(n) && n >= 1 && n <= 100 && ext === ".m3u8";
+  return (courseId === "demo" || courseId === "bluedemo") && Number.isInteger(n) && n >= 1 && n <= 100 && ext === ".m3u8";
 }
 function isPublicSegment(tsFileName: string) {
-  // demo1_0000.ts etc.
-  return /^demo([1-9]|[1-9][0-9]|100)_.+\.ts$/.test(tsFileName);
+  // demo1_0000.ts, bluedemo1_0000.ts, etc.
+  return /^(demo|bluedemo)([1-9]|[1-9][0-9]|100)_.+\.ts$/.test(tsFileName);
 }
 function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext: string) {
   if (!courseId || typeof courseId !== "string") return false;
