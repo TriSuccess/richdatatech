@@ -274,17 +274,34 @@ export async function GET(req: NextRequest) {
       const manifestText = await videoRes.text();
       if (DEBUG) console.log("[manifest] Original manifest (first 500 chars):", manifestText.substring(0, 500));
       
-      // Rewrite segment references to point to proxy endpoint
-      // Replace filenames like "init-stream0.m4s" with "/api/secure-video5/init-stream0.m4s"
-      let rewritten = manifestText.replace(/(["\']?)([a-zA-Z0-9_\-]+\.m4s|[a-zA-Z0-9_\-]+\.mp4)\1/g, (match, quote, filename) => {
-        const proxyPath = `/api/secure-video5/${filename}`;
-        if (DEBUG) console.log("[manifest] Rewriting segment:", filename, "->", proxyPath);
-        return `${quote}${proxyPath}${quote}`;
-      });
+      // Rewrite all segment references in DASH manifest
+      // Match patterns like: media="filename.m4s", <Representation>, initialization="file.m4s", etc.
+      let rewritten = manifestText
+        // Handle media="filename" and initialization="filename" attributes (including template patterns with $Number%)
+        .replace(/(media|initialization)="([^"]+)"/g, (match, attr, path) => {
+          // Check if it contains $Number$ or $RepresentationID$ (template placeholders)
+          if (path.includes('$')) {
+            // It's a template pattern - wrap the entire thing in the proxy URL
+            return `${attr}="/api/secure-video5/${path}"`;
+          } else {
+            // It's a literal filename
+            return `${attr}="/api/secure-video5/${path}"`;
+          }
+        })
+        // Handle media='filename' and initialization='filename' with single quotes
+        .replace(/(media|initialization)='([^']+)'/g, (match, attr, path) => {
+          if (path.includes('$')) {
+            return `${attr}='/api/secure-video5/${path}'`;
+          } else {
+            return `${attr}='/api/secure-video5/${path}'`;
+          }
+        })
+        // Handle bare filenames in RepresentationIndex or BaseURL tags
+        .replace(/<BaseURL>([^<]*)<\/BaseURL>/g, '<BaseURL>/api/secure-video5/$1</BaseURL>');
 
       if (token && !isFreeManifest) {
         // For protected content, add token to segment URLs
-        rewritten = rewritten.replace(/\/api\/secure-video5\/([a-zA-Z0-9_\-\.]+)/g, (match, filename) => {
+        rewritten = rewritten.replace(/\/api\/secure-video5\/([a-zA-Z0-9_\-\.]+\.(m4s|mp4))/g, (match) => {
           return `${match}?token=${encodeURIComponent(token)}`;
         });
       }
