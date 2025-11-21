@@ -52,9 +52,9 @@ function getCorsHeaders(origin?: string) {
 }
 
 function getContentType(file: string) {
-  if (file.endsWith(".mp4")) return "video/mp4";
   if (file.endsWith(".mpd")) return "application/dash+xml";
-  if (file.endsWith(".m4s")) return "video/mp4";
+  if (file.endsWith(".m4s")) return "video/iso.segment";
+  if (file.endsWith(".mp4")) return "video/mp4";
   return "application/octet-stream";
 }
 
@@ -64,8 +64,8 @@ function isPublicPlaylist(courseId: string, lessonId: string | number, ext: stri
   return (courseId === "demo" || courseId === "bluedemo" || courseId === "purpledemo") && Number.isInteger(n) && n >= 1 && n <= 100 && ext === ".mpd";
 }
 function isPublicSegment(segmentFileName: string) {
-  // demo1_init.mp4, demo1_chunk_0001.m4s, bluedemo1_init.mp4, bluedemo1_chunk_0001.m4s, purpledemo1_init.mp4, purpledemo1_segment_00000.m4s, etc.
-  return /^(demo|bluedemo|purpledemo)([1-9]|[1-9][0-9]|100)_(init\.(mp4|m4s)|chunk_\d+\.m4s|segment_\d+\.m4s)$/.test(segmentFileName);
+  // demo1_init.m4s, demo1_segment_0000.m4s, bluedemo1_init.m4s, bluedemo1_segment_0000.m4s, purpledemo1_init.m4s, purpledemo1_segment_00000.m4s, etc.
+  return /^(demo|bluedemo|purpledemo)([1-9]|[1-9][0-9]|100)_(init\.m4s|chunk_\d+\.m4s|segment_\d+\.m4s)$/.test(segmentFileName);
 }
 function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext: string) {
   if (!courseId || typeof courseId !== "string") return false;
