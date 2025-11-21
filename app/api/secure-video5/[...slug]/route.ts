@@ -265,12 +265,32 @@ export async function GET(req: NextRequest) {
 
     const videoRes = await fetch(videoUrl, { headers: fetchHeaders });
     if (!videoRes.ok || !videoRes.body) {
+      if (DEBUG) console.log("[manifest] Video not found at", videoUrl1, 'or', videoUrl2);
       return new Response("Video not found", { status: 404, headers: corsHeaders });
     }
 
-    // If protected .mpd and token exists, rewrite segment references to include token query for wider compatibility
-    if (ext === ".mpd" && !isFreeManifest && token) {
-      const rewritten = await rewriteManifestWithToken(videoRes, token);
+    // For DASH manifests, always rewrite segment paths to use the proxy
+    if (ext === ".mpd") {
+      const manifestText = await videoRes.text();
+      if (DEBUG) console.log("[manifest] Original manifest (first 500 chars):", manifestText.substring(0, 500));
+      
+      // Rewrite segment references to point to proxy endpoint
+      // Replace filenames like "init-stream0.m4s" with "/api/secure-video5/init-stream0.m4s"
+      let rewritten = manifestText.replace(/(["\']?)([a-zA-Z0-9_\-]+\.m4s|[a-zA-Z0-9_\-]+\.mp4)\1/g, (match, quote, filename) => {
+        const proxyPath = `/api/${VIDEO_ENDPOINT}/${filename}`;
+        if (DEBUG) console.log("[manifest] Rewriting segment:", filename, "->", proxyPath);
+        return `${quote}${proxyPath}${quote}`;
+      });
+
+      if (token && !isFreeManifest) {
+        // For protected content, add token to segment URLs
+        rewritten = rewritten.replace(/\/api\/secure-video5\/([a-zA-Z0-9_\-\.]+)/g, (match, filename) => {
+          return `${match}?token=${encodeURIComponent(token)}`;
+        });
+      }
+
+      if (DEBUG) console.log("[manifest] Rewritten manifest (first 500 chars):", rewritten.substring(0, 500));
+      
       const headers = new Headers(corsHeaders);
       headers.set("Content-Type", "application/dash+xml");
       headers.set("Cache-Control", "no-store");
