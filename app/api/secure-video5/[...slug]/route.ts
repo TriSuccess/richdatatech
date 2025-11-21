@@ -277,7 +277,7 @@ export async function GET(req: NextRequest) {
       // Rewrite segment references to point to proxy endpoint
       // Replace filenames like "init-stream0.m4s" with "/api/secure-video5/init-stream0.m4s"
       let rewritten = manifestText.replace(/(["\']?)([a-zA-Z0-9_\-]+\.m4s|[a-zA-Z0-9_\-]+\.mp4)\1/g, (match, quote, filename) => {
-        const proxyPath = `/api/${VIDEO_ENDPOINT}/${filename}`;
+        const proxyPath = `/api/secure-video5/${filename}`;
         if (DEBUG) console.log("[manifest] Rewriting segment:", filename, "->", proxyPath);
         return `${quote}${proxyPath}${quote}`;
       });
