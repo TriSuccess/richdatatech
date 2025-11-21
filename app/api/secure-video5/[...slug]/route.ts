@@ -253,7 +253,7 @@ export async function GET(req: NextRequest) {
 
     // Map course to upstream folder if needed
     const FOLDER = "pbic7i"; // adjust per course if you add new folders
-    const file = `${FOLDER}/${courseId}${lessonId}${ext}`; // e.g., pbic7i/powerbi1.mpd
+    const file = `${FOLDER}/${courseId}${lessonId}${ext}`; // e.g., pbic7i/purple1.mpd
     const videoUrl = `https://www.richdatatech.com/videos/${file}`;
     const username = process.env.CPANEL_USERNAME!;
     const password = process.env.CPANEL_PASSWORD!;
