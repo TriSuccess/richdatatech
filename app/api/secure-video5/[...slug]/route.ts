@@ -265,7 +265,7 @@ export async function GET(req: NextRequest) {
 
     const videoRes = await fetch(videoUrl, { headers: fetchHeaders });
     if (!videoRes.ok || !videoRes.body) {
-      if (DEBUG) console.log("[manifest] Video not found at", videoUrl1, 'or', videoUrl2);
+      if (DEBUG) console.log("[manifest] Video not found at", videoUrl);
       return new Response("Video not found", { status: 404, headers: corsHeaders });
     }
 
