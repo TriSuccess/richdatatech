@@ -300,8 +300,13 @@ export async function GET(req: NextRequest) {
         .replace(/<BaseURL>([^<]*)<\/BaseURL>/g, '<BaseURL>/api/secure-video5/$1</BaseURL>');
 
       if (token && !isFreeManifest) {
-        // For protected content, add token to segment URLs
-        rewritten = rewritten.replace(/\/api\/secure-video5\/([a-zA-Z0-9_\-\.]+\.(m4s|mp4))/g, (match) => {
+        // For protected content, add token to both literal filenames AND template patterns
+        // Literal filenames: /api/secure-video5/purple1_init.m4s
+        rewritten = rewritten.replace(/\/api\/secure-video5\/([a-zA-Z0-9_\-\.]+\.(m4s|mp4))(?![a-zA-Z0-9$%_\-])/g, (match) => {
+          return `${match}?token=${encodeURIComponent(token)}`;
+        });
+        // Template patterns: /api/secure-video5/purple1_segment_$Number%05d$.m4s
+        rewritten = rewritten.replace(/\/api\/secure-video5\/([a-zA-Z0-9_\-]+\$[^"']*\.(m4s|mp4))/g, (match) => {
           return `${match}?token=${encodeURIComponent(token)}`;
         });
       }
