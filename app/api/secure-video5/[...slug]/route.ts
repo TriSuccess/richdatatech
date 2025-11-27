@@ -67,6 +67,11 @@ function isPublicSegment(segmentFileName: string) {
   // demo1_init.m4s, demo1_segment_0000.m4s, bluedemo1-init-stream0.m4s, bluedemo1-chunk-stream0-00001.m4s, purpledemo1-init-stream0.m4s, yellowdemo1-init-stream0.m4s, yellowdemo1-chunk-stream0-00001.m4s, etc.
   return /^(demo|bluedemo|purpledemo|yellowdemo)([1-9]|[1-9][0-9]|100)[-_](init(\.m4s|-stream\d+\.m4s)|chunk[-_](stream\d+[-_])?\d+\.m4s|segment[-_]\d+\.m4s)$/.test(segmentFileName);
 }
+function isValidProtectedSegment(segmentFileName: string) {
+  // Validates protected member video segments: blue1_init.m4s, yellow5_segment_00000.m4s, purple3-init-stream0.m4s, blue2-chunk-stream1-00003.m4s, powerbi1_init.m4s, etc.
+  // Matches: courseId (letters) + lessonNum (1-100) + underscore/hyphen + init/chunk/segment patterns
+  return /^[a-zA-Z]+([1-9]|[1-9][0-9]|100)[-_](init(\.m4s|-stream\d+\.m4s)|chunk[-_](stream\d+[-_])?\d+\.m4s|segment[-_]\d+\.m4s)$/.test(segmentFileName);
+}
 function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext: string) {
   if (!courseId || typeof courseId !== "string") return false;
   const lessonNum = Number(lessonId);
@@ -169,6 +174,11 @@ export async function GET(req: NextRequest) {
       let uid: string | null = null;
 
       if (!isFree) {
+        // Validate that this is a valid protected segment filename before proceeding
+        if (!isValidProtectedSegment(segmentFileName)) {
+          if (DEBUG) console.log("[segment] Invalid protected segment filename:", segmentFileName);
+          return new Response("Not Found", { status: 404, headers: corsHeaders });
+        }
         if (DEBUG) console.log("[segment]", segmentFileName, "is protected, checking token");
         let token: string | null = null;
         const authHeader = req.headers.get("authorization");
