@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Git Push Tool</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    
+    .input-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      color: #555;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+      font-family: inherit;
+    }
+    
+    input[type="text"]:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 25px;
+    }
+    
+    button {
+      flex: 1;
+      padding: 15px 25px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn-push {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .btn-push:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-push:active {
+      transform: translateY(0);
+    }
+    
+    .btn-status {
+      background: #f0f0f0;
+      color: #555;
+    }
+    
+    .btn-status:hover {
+      background: #e0e0e0;
+    }
+    
+    .output {
+      margin-top: 25px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 10px;
+      border-left: 4px solid #667eea;
+      display: none;
+    }
+    
+    .output.show {
+      display: block;
+    }
+    
+    .output pre {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 12px;
+      color: #333;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .loading.show {
+      display: block;
+    }
+    
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .success {
+      color: #10b981;
+      font-weight: 600;
+    }
+    
+    .error {
+      color: #ef4444;
+      font-weight: 600;
+    }
+    
+    .info-box {
+      background: #e0e7ff;
+      border: 1px solid #667eea;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #4c51bf;
+      word-break: break-all;
+      line-height: 1.6;
+    }
+    
+    #workingDir {
+      display: block;
+      margin-top: 5px;
+      font-size: 12px;
+    }
+    
+    .quick-commits {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    
+    .quick-commit {
+      background: #e0e7ff;
+      color: #4c51bf;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid #c7d2fe;
+      transition: all 0.2s;
+    }
+    
+    .quick-commit:hover {
+      background: #c7d2fe;
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 Quick Git Push</h1>
+    <p class="subtitle">Push your changes to GitHub/Vercel in one click</p>
+    
+    <div class="info-box">
+      📂 Working directory:<strong id="workingDir">Loading...</strong>
+    </div>
+    
+    <div class="input-group">
+      <label for="commitMsg">Commit Message</label>
+      <textarea id="commitMsg" placeholder="e.g., Updated video routes for new DASH format">Updated files</textarea>
+      <div class="quick-commits">
+        <span class="quick-commit" onclick="setCommit('Updated files')">Updated files</span>
+        <span class="quick-commit" onclick="setCommit('Fixed video playback')">Fixed video playback</span>
+        <span class="quick-commit" onclick="setCommit('Updated backend routes')">Updated backend routes</span>
+        <span class="quick-commit" onclick="setCommit('Added new content')">Added new content</span>
+        <span class="quick-commit" onclick="setCommit('Bug fixes')">Bug fixes</span>
+      </div>
+    </div>
+    
+    <div class="input-group">
+      <label for="branchName">Branch Name</label>
+      <input type="text" id="branchName" value="main" placeholder="main">
+    </div>
+    
+    <div class="button-group">
+      <button class="btn-status" onclick="checkStatus()">
+        📊 Check Status
+      </button>
+      <button class="btn-push" onclick="gitPush()">
+        ⬆️ Push to GitHub
+      </button>
+    </div>
+    
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Running git commands...</p>
+    </div>
+    
+    <div class="output" id="output">
+      <pre id="outputText"></pre>
+    </div>
+  </div>
+
+  <script>
+    // Fetch and show the current working directory from the server
+    async function loadWorkingDir() {
+      try {
+        const response = await fetch('http://localhost:3001/workdir');
+        const data = await response.json();
+        document.getElementById('workingDir').textContent = data.path;
+      } catch (error) {
+        document.getElementById('workingDir').textContent = 'Server not running - click "Check Status" to connect';
+      }
+    }
+    
+    loadWorkingDir();
+    
+    function setCommit(message) {
+      document.getElementById('commitMsg').value = message;
+    }
+    
+    async function runGitCommand(command) {
+      const response = await fetch('http://localhost:3001/git', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    }
+    
+    function showOutput(text, isError = false) {
+      const output = document.getElementById('output');
+      const outputText = document.getElementById('outputText');
+      outputText.textContent = text;
+      outputText.className = isError ? 'error' : 'success';
+      output.classList.add('show');
+    }
+    
+    function hideOutput() {
+      document.getElementById('output').classList.remove('show');
+    }
+    
+    function showLoading(show = true) {
+      const loading = document.getElementById('loading');
+      if (show) {
+        loading.classList.add('show');
+        hideOutput();
+      } else {
+        loading.classList.remove('show');
+      }
+    }
+    
+    async function checkStatus() {
+      showLoading(true);
+      try {
+        const result = await runGitCommand('git status');
+        showLoading(false);
+        showOutput(result.output || result.error, !!result.error);
+      } catch (error) {
+        showLoading(false);
+        showOutput(`❌ Error: ${error.message}\n\nMake sure the helper server is running!\nRun: node git-helper-server.js`, true);
+      }
+    }
+    
+    async function gitPush() {
+      const commitMsg = document.getElementById('commitMsg').value.trim();
+      const branch = document.getElementById('branchName').value.trim();
+      
+      if (!commitMsg) {
+        alert('Please enter a commit message!');
+        return;
+      }
+      
+      if (!branch) {
+        alert('Please enter a branch name!');
+        return;
+      }
+      
+      showLoading(true);
+      let fullOutput = '';
+      
+      try {
+        // Step 1: git add .
+        fullOutput += '📦 Adding files...\n';
+        const addResult = await runGitCommand('git add .');
+        fullOutput += addResult.output || addResult.error || '✅ Files staged\n';
+        fullOutput += '\n';
+        
+        // Step 2: git commit
+        fullOutput += '💾 Committing changes...\n';
+        const commitResult = await runGitCommand(`git commit -m "${commitMsg}"`);
+        fullOutput += commitResult.output || commitResult.error || '✅ Changes committed\n';
+        fullOutput += '\n';
+        
+        // Step 3: git push
+        fullOutput += '⬆️ Pushing to GitHub...\n';
+        const pushResult = await runGitCommand(`git push origin ${branch}`);
+        fullOutput += pushResult.output || pushResult.error || '✅ Pushed successfully\n';
+        fullOutput += '\n';
+        
+        fullOutput += '\n🎉 SUCCESS! Your changes are now on GitHub and will deploy to Vercel shortly!\n';
+        
+        showLoading(false);
+        showOutput(fullOutput, false);
+      } catch (error) {
+        showLoading(false);
+        fullOutput += `\n❌ Error: ${error.message}\n\nMake sure the helper server is running!\nRun: node git-helper-server.js`;
+        showOutput(fullOutput, true);
+      }
+    }
+  </script>
+</body>
+</html>

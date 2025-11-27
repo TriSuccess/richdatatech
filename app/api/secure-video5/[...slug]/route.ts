@@ -64,8 +64,8 @@ function isPublicPlaylist(courseId: string, lessonId: string | number, ext: stri
   return (courseId === "demo" || courseId === "bluedemo" || courseId === "purpledemo" || courseId === "yellowdemo") && Number.isInteger(n) && n >= 1 && n <= 100 && ext === ".mpd";
 }
 function isPublicSegment(segmentFileName: string) {
-  // demo1_init.m4s, demo1_segment_0000.m4s, bluedemo1_init.m4s, bluedemo1_segment_0000.m4s, purpledemo1_init.m4s, purpledemo1_segment_00000.m4s, yellowdemo1_init.m4s, yellowdemo1_segment_00000.m4s, etc.
-  return /^(demo|bluedemo|purpledemo|yellowdemo)([1-9]|[1-9][0-9]|100)_(init\.m4s|chunk_\d+\.m4s|segment_\d+\.m4s)$/.test(segmentFileName);
+  // demo1_init.m4s, demo1_segment_0000.m4s, bluedemo1-init-stream0.m4s, bluedemo1-chunk-stream0-00001.m4s, purpledemo1-init-stream0.m4s, yellowdemo1-init-stream0.m4s, yellowdemo1-chunk-stream0-00001.m4s, etc.
+  return /^(demo|bluedemo|purpledemo|yellowdemo)([1-9]|[1-9][0-9]|100)[-_](init(\.m4s|-stream\d+\.m4s)|chunk[-_](stream\d+[-_])?\d+\.m4s|segment[-_]\d+\.m4s)$/.test(segmentFileName);
 }
 function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext: string) {
   if (!courseId || typeof courseId !== "string") return false;
