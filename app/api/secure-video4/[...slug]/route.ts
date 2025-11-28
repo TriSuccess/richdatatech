@@ -61,11 +61,11 @@ function getContentType(file: string) {
 
 function isPublicPlaylist(courseId: string, lessonId: string | number, ext: string) {
   const n = Number(lessonId);
-  return (courseId === "demo" || courseId === "bluedemo" || courseId === "purpledemo" || courseId === "yellowdemo") && Number.isInteger(n) && n >= 1 && n <= 100 && ext === ".m3u8";
+  return (courseId === "demo" || courseId === "bluedemo" || courseId === "purpledemo" || courseId === "yellowdemo" || courseId === "powerbidemo") && Number.isInteger(n) && n >= 1 && n <= 100 && ext === ".m3u8";
 }
 function isPublicSegment(tsFileName: string) {
-  // demo1_0000.ts, bluedemo1_0000.ts, purpledemo1_0000.ts, yellowdemo1_0000.ts, etc.
-  return /^(demo|bluedemo|purpledemo|yellowdemo)([1-9]|[1-9][0-9]|100)_.+\.ts$/.test(tsFileName);
+  // demo1_0000.ts, bluedemo1_0000.ts, purpledemo1_0000.ts, yellowdemo1_0000.ts, powerbidemo1_0000.ts, etc.
+  return /^(demo|bluedemo|purpledemo|yellowdemo|powerbidemo)([1-9]|[1-9][0-9]|100)_.+\.ts$/.test(tsFileName);
 }
 function isValidCourseAndLesson(courseId: string, lessonId: string | number, ext: string) {
   if (!courseId || typeof courseId !== "string") return false;
